@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:cq="http://www.day.com/jcr/cq/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:mix="http://www.jcp.org/jcr/mix/1.0"
+    jcr:mixinTypes="[mix:lockable]"
+    jcr:primaryType="cq:Template"
+    jcr:title="iCiDigital - Standard Template"
+    allowedPaths="/content(/.*)?"
+    ranking="{Long}1">
+    <jcr:content
+        cq:allowedTemplates="[/apps/icidigital/templates/.*]"
+        jcr:primaryType="cq:PageContent"
+        sling:resourceType="icidigital/components/templates/page"/>
+</jcr:root>

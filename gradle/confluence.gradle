@@ -1,0 +1,104 @@
+buildscript {
+    repositories {
+        maven {
+            url "http://relic.lab.webapps.rr.com/artifactory/repo"
+        }
+    }
+    dependencies {
+        classpath "org.codehaus.groovy:groovy-xmlrpc:0.8"
+    }
+}
+
+import groovy.net.xmlrpc.XMLRPCServerProxy
+import org.xml.sax.SAXException
+
+
+def throwCredentialsHelp() {
+    throw new IllegalStateException("""
+You need to set the 'confluence.username' and 'confluence.password' properties.
+
+If you want to do it on the command line:
+  ./gradlew -Pconfluence.username=XXXX -Pconfluence.password=XXXX {taskname}
+
+If you want to set it "permanently", add them to your ~/.gradle/gradle.properties file.
+(Create the file if it does not already exist.)
+""")
+}
+
+
+@SuppressWarnings("GroovyMissingReturnStatement")
+String getUsername(Map args) {
+    if (args.containsKey('username')) {
+        return args.username
+    }
+    else if (project.hasProperty('confluence.username')) {
+        return project.'confluence.username'
+    }
+    else {
+        throwCredentialsHelp()
+    }
+}
+
+
+@SuppressWarnings("GroovyMissingReturnStatement")
+String getPassword(Map args) {
+    if (args.containsKey('password')) {
+        args.username
+    }
+    else if (project.hasProperty('confluence.password')) {
+        project.'confluence.password'
+    }
+    else {
+        throwCredentialsHelp()
+    }
+}
+
+
+@SuppressWarnings("GroovyVariableNotAssigned")
+def doInConfluence(Map args, cls) {
+    args.confluenceProxy = new XMLRPCServerProxy("http://mystropedia.corp.mystrotv.com/rpc/xmlrpc").confluence2
+    args.token = args.confluenceProxy.login(getUsername(args), getPassword(args))
+    try {
+        cls.call(args)
+    }
+    finally {
+        args.confluenceProxy.logout(args.token)
+    }
+}
+
+
+project.ext.putPage = { Map arg ->
+    doInConfluence(arg) { Map args ->
+        Map newPage = [space: args.spaceName, title: args.pageName]
+        if (args.containsKey('parentId')) newPage.parentId = args.parentId
+
+        try {
+            def oldPage = args.confluenceProxy.getPage(args.token, args.spaceName, args.pageName)
+            newPage.version = oldPage.version
+            newPage.id = oldPage.id
+        }
+        catch (SAXException exp) {
+            // The page does not yet exist
+            if (!exp.message.contains("it does not exist")) throw exp
+        }
+
+        newPage.content = args.content
+        logger.info "Writing to Confluence \"${args.spaceName} | ${args.pageName}\""
+        args.confluenceProxy.storePage(args.token, newPage)
+    }
+}
+
+
+project.ext.getPage = { Map arg ->
+    doInConfluence(arg) { Map args ->
+        try {
+            return args.confluenceProxy.getPage(args.token, args.spaceName, args.pageName)
+        }
+        catch (SAXException exp) {
+            // The page does not yet exist
+            if (!exp.message.contains("it does not exist")) throw exp
+            logger.warn "Could not find Confluence \"${args.spaceName} | ${args.pageName}\""
+            return null
+        }
+    }
+}

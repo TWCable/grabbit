@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:cq="http://www.day.com/jcr/cq/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
+    jcr:primaryType="cq:Page">
+    <assets/>
+    <clientlibs/>
+    <favicon.ico/>
+    <jcr:content
+        cq:lastModified="{Date}2013-07-11T14:45:00.184-04:00"
+        cq:lastModifiedBy="admin"
+        cq:template="/libs/wcm/core/templates/designpage"
+        jcr:primaryType="cq:PageContent"
+        jcr:title="iCiDigital"
+        sling:resourceType="wcm/core/components/designer">
+        <page jcr:primaryType="nt:unstructured">
+        	<header
+        		jcr:primaryType="nt:unstructured"
+        		sling:resourceType="foundation/components/iparsys"
+        		components="[/apps/icidigital/components/content/sample]">
+        		<section jcr:primaryType="nt:unstructured"/>
+       		</header>
+        	<parsys
+        		jcr:primaryType="nt:unstructured"
+        		sling:resourceType="foundation/components/parsys"
+        		components="[/apps/icidigital/components/content/sample]">
+        		<section jcr:primaryType="nt:unstructured"/>
+       		</parsys>
+       		<footer
+        		jcr:primaryType="nt:unstructured"
+        		sling:resourceType="foundation/components/iparsys"
+        		components="[/apps/icidigital/components/content/sample]">
+        		<section jcr:primaryType="nt:unstructured"/>
+       		</footer>
+        </page>
+    </jcr:content>
+</jcr:root>

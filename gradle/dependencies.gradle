@@ -1,0 +1,148 @@
+dependencies {
+    // Library for Groovy
+    compile "org.codehaus.groovy:groovy-all:${groovy_version}"
+
+    /** TWC OSGI Wrapper libraries **/
+    // @Nonnull @Nullable etc annotations
+    compile "com.twc.osgi:javax.jsr305:${jsr305_version}"
+    // CSV file format parsing
+    compile "com.twc.osgi:net.sf.opencsv:${opencsv_version}"
+    // Searching/indexing
+    compile "com.twc.osgi:org.apache.lucene.lucene-core:${lucene_version}"
+    compile "com.twc.osgi:org.apache.solr.solr-solrj:${solr_version}", {
+        exclude group: 'org.codehaus.woodstox', module: 'wstx-asl'
+    }
+    // OAuth support
+    compile "com.twc.osgi:oauth.signpost.signpost-core:${oauth_signpost_version}"
+    // version of camel-core-osgi with relaxed version dependencies so it can work in CQ5
+    compile "com.twc.osgi:org.apache.camel.camel-core-osgi-cq:${camel_version}"
+    // Apache POI for handling MS-Office files
+    compile "com.twc.osgi:org.apache.poi-uber:${poi_version}"
+    // General set of collection classes and utilities
+    compile "com.twc.osgi:com.google.guava:${guava_osgi_version}"
+    // Used as part of the build to create the OSGI-INF/serviceComponents.xml file
+    compile "com.twc.osgi:org.apache.felix.scr.annotations:${scr_annotations_version}"
+
+    // Adobe CQ libraries
+    compile "com.day.cq.wcm:cq-wcm-api:${cq_version}"
+    compile "com.day.cq:cq-tagging:${cq_version}"
+    compile "com.day.cq:cq-search:${cq_version}"
+    //Workflow API
+    compile "com.day.cq.workflow:cq-workflow-api:${cq_version}"
+    compile "com.day.cq:cq-jcrclustersupport:${cq_jcrclustersupport_version}"
+    compile "com.day.cq.dam:cq-dam-api:${cq_version_dam_api}"
+    compile "com.day.cq.dam:cq-dam-core:${cq_version_dam_core}"
+    compile "com.day.cq.dam:cq-dam-commons:${cq_version_dam_commons}"
+    compile "com.day.cq:cq-mailer:${cq_version}"
+    compile "com.day.cq.wcm:cq-wcm-core:${cq_version}"
+    compile "com.day.cq.wcm:cq-wcm-foundation:${cq_version}", {
+        exclude group: "org.slf4j", module: "slf4j-simple"
+    }
+    compile "com.day.cq:cq-commons:${cq_version}"
+    compile "com.day.cq:cq-widgets:${cq_widgets_version}"
+    compile "com.day.commons:day-commons-gfx:${cq_day_commons_version}"
+
+    // Apache Sling libraries
+    compile "org.apache.sling:org.apache.sling.commons.osgi:${sling_commons_osgi_version}"
+    compile "org.apache.sling:org.apache.sling.commons.scheduler:${sling_commons_scheduler_version}"
+    compile "org.apache.sling:org.apache.sling.api:${sling_api_version}"
+    compile "org.apache.sling:org.apache.sling.engine:${sling_engine_version}"
+    compile "org.apache.sling:org.apache.sling.servlets.resolver:${sling_servlets_resolver_version}"
+    compile "org.apache.sling:org.apache.sling.settings:${sling_settings_version}"
+    compile "org.apache.sling:org.apache.sling.jcr.api:${sling_commons_version}"
+    compile "org.apache.sling:org.apache.sling.jcr.base:${sling_jcr_base_version}"
+    compile "org.apache.sling:org.apache.sling.jcr.resource:${sling_jcr_resource_version}"
+    compile "org.apache.sling:org.apache.sling.commons.json:${sling_commons_version_json}"
+    compile "org.apache.sling:org.apache.sling.scripting.jsp.taglib:${sling_scripting_jsp_taglib_version}"
+
+    // Apache Felix libraries
+    compile "org.apache.felix:org.osgi.core:${felix_osgi_version}"
+    compile "org.apache.felix:org.osgi.compendium:${felix_osgi_version}"
+
+    // Apache Camel libraries
+    compile "org.apache.camel:camel-spring:${camel_version}"
+    compile "org.apache.camel:camel-spring-ws:${camel_version}", {
+        exclude group: 'org.springframework.ws', module: 'spring-ws-support'
+    }
+    compile "org.apache.camel:camel-jaxb:${camel_version}"
+    compile "org.apache.camel:camel-groovy:${camel_version}"
+    compile "org.apache.camel:camel-http:${camel_version}"
+
+    compile "joda-time:joda-time:${joda_time_version}"
+
+    // Need the "javax.jms" library for Spring JMS
+    compile "org.glassfish:javax.jms:${jms_version}"
+
+    // HTML parser
+    compile "org.jsoup:jsoup:${jsoup_version}"
+
+    // Working with the JCR
+    compile "javax.jcr:jcr:${jcr_version}"
+    compile "org.apache.jackrabbit:jackrabbit-api:${jackrabbit_version}"
+    compile "org.apache.jackrabbit:jackrabbit-jcr-commons:${jackrabbit_version}"
+
+    // Logging
+    compile "org.slf4j:slf4j-api:${slf4j_version}"
+    compile "org.slf4j:jcl-over-slf4j:${slf4j_version}"
+    runtime "ch.qos.logback:logback-classic:${logback_version}"
+
+    // StAX library
+    compile "org.codehaus.woodstox:woodstox-core-asl:${woodstox_version}"
+
+    // SOAP support
+    compile "javax.jws:com.springsource.javax.jws:${jws_version}"
+
+    // Replication API
+    compile "com.adobe.granite:com.adobe.granite.replication.core:${granite_version}"
+    compile "com.adobe.granite:com.adobe.granite.xssprotection:${xssprotection_version}"
+    // To generate Excel reports
+    compile "com.adobe.granite:com.adobe.granite.poi:${adobe_granite_poi_version}"
+
+    // JSON processing
+    compile "com.google.code.gson:gson:${gson_version}"
+
+    // Servlet/JSP libraries
+    compile "javax.servlet:servlet-api:${servlet_api_version}"
+    compile "javax.servlet.jsp:jsp-api:${jsp_api_version}"
+
+    compile "com.day.commons:day-commons-text:${commons_text_version}"
+
+    // Spring libraries
+    compile "org.springframework.osgi:spring-osgi-core:${spring_osgi_version}"
+    compile "org.springframework:org.springframework.context:${spring_version}"
+    compile "org.springframework:org.springframework.oxm:${spring_version}"
+    compile "org.springframework:org.springframework.jms:${spring_version}"
+    compile "org.springframework.osgi:spring-osgi-extender:${spring_osgi_version}"
+
+    compile "org.apache.commons:commons-lang3:${commons_lang_version}"
+    compile "commons-io:commons-io:${commons_io_version}"
+    compile "commons-collections:commons-collections:${commons_collections_version}"
+
+    // HTTP components libraries
+    compile "org.apache.httpcomponents:httpclient-osgi:${httpcomponents_version}", {
+        exclude module: "httpclient"
+        exclude module: "httpcore"
+        exclude module: "httpclient-cache"
+        exclude module: "httpmime"
+    }
+    compile "org.apache.httpcomponents:httpcore-osgi:${httpcomponents_version}", {
+        exclude module: "httpclient-cache"
+        exclude module: "httpcore"
+        exclude module: "httpcore-nio"
+        exclude module: "httpmime"
+    }
+
+    // Test dependent libraries
+    testRuntime "ch.qos.logback:logback-classic:${logback_version}"
+    // HTTP Client Testing Support
+    testCompile "org.codehaus.groovy.modules.http-builder:http-builder:${http_builder_version}"
+    testCompile "org.apache.camel:camel-test:${camel_version}"
+}
+
+// workaround for http://issues.gradle.org/browse/GRADLE-1682
+configurations.runtime.exclude group: 'org.apache.felix', module: 'org.osgi.foundation'
+configurations.runtime.exclude group: 'org.apache.felix', module: 'javax.servlet'
+
+configurations.compile {
+    exclude group: 'commons-logging', module: 'commons-logging'
+}

@@ -1,0 +1,11 @@
+task getConfigFolders {
+    def configBaseDir = new File(project.projectDir, 'src/main/content/SLING-INF/content/apps/residential/')
+    project.ext.configFolders = []
+    configBaseDir.eachDir { File dir ->
+        if (dir.name ==~ /config\.?.*/) {
+            configFolders.add(dir.name)
+        }
+    }
+}
+
+jar.dependsOn += getConfigFolders

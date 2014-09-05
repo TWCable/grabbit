@@ -1,0 +1,138 @@
+buildscript {
+    repositories {
+        maven {
+            url "http://relic.lab.webapps.rr.com/artifactory/repo"
+        }
+        mavenLocal()
+    }
+
+    dependencies {
+        classpath "com.twc.gradle:twc-gradle:${gradle_plugins_version}"
+
+        classpath "commons-io:commons-io:2.4"
+    }
+}
+
+allprojects {
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+    apply plugin: 'maven'
+
+    repositories {
+        maven {
+            url "http://relic.lab.webapps.rr.com/artifactory/repo"
+        }
+    }
+}
+
+ext.vendor = 'Time Warner Cable - Converged Technology Group - CMS Team'
+ext.organization = "Time Warner Cable"
+
+configure(excludeProjects()) {
+    apply plugin: 'groovy'
+    apply from: "${rootProject.projectDir}/gradle/dependencies.gradle"
+    //apply from: "${rootProject.projectDir}/testutils/gradle/testing.gradle"
+
+    jar.manifest {
+        attributes 'Specification-Version': project.version    
+        attributes 'Bundle-Vendor': project.vendor
+        attributes 'Implementation-Title': project.name
+        attributes 'Implementation-Version': project.version
+        attributes 'Implementation-Vendor': project.vendor
+    }
+}
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('sourceCompatibility')) {
+            project.sourceCompatibility = 1.7
+        }
+        if (project.hasProperty('targetCompatibility')) {
+            project.targetCompatibility = 1.7
+        }
+        if (project.hasProperty('bundleName')) {
+            jar.manifest {
+                attributes 'Bundle-Name': project.bundleName
+                attributes 'Bundle-SymbolicName': project.symbolicName
+                attributes 'Bundle-Description': project.bundleDescription
+            }
+        }
+        // http://forums.gradle.org/gradle/topics/classpath_order_generated_by_eclipse_plugin_causes_problems
+        if (project.plugins.hasPlugin('java')) {
+            project.eclipse.classpath.file.whenMerged { classpath ->
+                def projectRefs = classpath.entries.findAll { entry -> entry.kind == 'src' && entry.path.startsWith('/') }
+                //move the project references to the end of the list:
+                classpath.entries.removeAll(projectRefs)
+                classpath.entries.addAll(projectRefs)
+            }
+        }
+    }
+}
+
+def excludeProjects() {
+    subprojects.findAll { project -> (project.name != 'ui-testing' && project.name != 'osgi-wrappers')}
+}
+
+idea.project.ipr {
+    withXml { provider ->
+        provider.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
+        def codeStyleNode = provider.node.component.find { it.@name == 'ProjectCodeStyleSettingsManager' }
+        if (codeStyleNode == null) {
+            codeStyleNode = provider.node.appendNode('component', [name: 'ProjectCodeStyleSettingsManager'])
+        }
+        codeStyleNode.replaceNode { node ->
+            component(name: 'ProjectCodeStyleSettingsManager') {
+                option(name: "PER_PROJECT_SETTINGS") {
+                    value {
+                        option(name: "OTHER_INDENT_OPTIONS") {
+                            value {
+                                option(name: "INDENT_SIZE", value: "4")
+                                option(name: "CONTINUATION_INDENT_SIZE", value: "4")
+                                option(name: "TAB_SIZE", value: "4")
+                                option(name: "USE_TAB_CHARACTER", value: "false")
+                                option(name: "SMART_TABS", value: "false")
+                                option(name: "LABEL_INDENT_SIZE", value: "0")
+                                option(name: "LABEL_INDENT_ABSOLUTE", value: "false")
+                                option(name: "USE_RELATIVE_INDENTS", value: "false")
+                            }
+                        }
+                        option(name: "CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND", value: "9999")
+                        option(name: "NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND", value: "9999")
+                        XML {
+                            option(name: "XML_LEGACY_SETTINGS_IMPORTED", value: "true")
+                        }
+
+                        // this is needed in addition to the one below, for import settings
+                        GroovyCodeStyleSettings {
+                            option(name: "CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND", value: "9999")
+                            option(name: "NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND", value: "9999")
+                        }
+
+                        // oddly, both "JAVA" and "Java" are used...
+                        ['Groovy', 'JAVA', 'Java', 'Scala'].each {
+                            codeStyleSettings(language: it) {
+                                option(name: "CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND", value: "9999")
+                                option(name: "NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND", value: "9999")
+                                option(name: "BLANK_LINES_AROUND_METHOD", value: "2")
+                                //option(name: "BLANK_LINES_BEFORE_METHOD_BODY", value: "1")
+                                option(name: "ELSE_ON_NEW_LINE", value: "true")
+                                option(name: "CATCH_ON_NEW_LINE", value: "true")
+                                option(name: "FINALLY_ON_NEW_LINE", value: "true")
+                                option(name: "SPACE_AFTER_TYPE_CAST", value: "false")
+                                option(name: "INDENT_SIZE", value: "2")
+                                option(name: "TAB_SIZE", value: "4")
+
+                                // both this level and 'indentOptions' are used
+                                option(name: "CONTINUATION_INDENT_SIZE", value: "4")
+                                indentOptions {
+                                    option(name: "CONTINUATION_INDENT_SIZE", value: "4")
+                                }
+                            }
+                        }
+                    }
+                }
+                option(name: "USE_PER_PROJECT_SETTINGS", value: "true")
+            }
+        }
+    }
+}
