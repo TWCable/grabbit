@@ -31,7 +31,7 @@ ext.organization = "Time Warner Cable"
 configure(excludeProjects()) {
     apply plugin: 'groovy'
     apply from: "${rootProject.projectDir}/gradle/dependencies.gradle"
-    //apply from: "${rootProject.projectDir}/testutils/gradle/testing.gradle"
+    apply from: "${rootProject.projectDir}/testutils/gradle/testing.gradle"
 
     jar.manifest {
         attributes 'Specification-Version': project.version    

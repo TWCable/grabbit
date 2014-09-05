@@ -1,6 +1,6 @@
 package com.twc.webcms.sync.servlets
 
-import com.twc.webcms.sync.services.HelloWorldService
+import com.twc.webcms.sync.services.SyncService
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.felix.scr.annotations.sling.SlingServlet
@@ -14,10 +14,10 @@ import javax.servlet.ServletException
 @CompileStatic
 @Slf4j
 @SlingServlet( methods = ['GET'], paths = ["/bin/icidigital/getWorld"] )
-class HelloWorldServlet extends SlingAllMethodsServlet{
+class SyncServlet extends SlingAllMethodsServlet{
 
     @Reference
-    HelloWorldService helloWorldService
+    SyncService helloWorldService
 
     @Override
     public void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException, IOException{

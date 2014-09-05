@@ -1,5 +1,5 @@
 package com.twc.webcms.sync.services
 
-interface HelloWorldService {
+interface SyncService {
     public String getMessage()
 }

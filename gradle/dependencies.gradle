@@ -132,6 +132,8 @@ dependencies {
         exclude module: "httpmime"
     }
 
+    compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.protobuf-java:${servicemix_protobuf_java_version}"
+
     // Test dependent libraries
     testRuntime "ch.qos.logback:logback-classic:${logback_version}"
     // HTTP Client Testing Support
