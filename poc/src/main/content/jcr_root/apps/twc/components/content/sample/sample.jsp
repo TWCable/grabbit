@@ -1,5 +1,5 @@
-<%@ taglib prefix="ici" uri="http://www.icidigital.com/custom/taglibs" %>
-<%@include file="/apps/icidigital/global.jsp"%>
+<%@ taglib prefix="ici" uri="http://www.twc.com/custom/taglibs" %>
+<%@include file="/apps/twc/global.jsp"%>
 <%@page session="false" %>
 
 <c:set var="title" value="<%= properties.get("./title", "Default Value")%>" />

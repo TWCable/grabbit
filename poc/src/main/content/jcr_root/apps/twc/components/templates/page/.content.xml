@@ -4,6 +4,6 @@
     jcr:mixinTypes="[mix:lockable]"
     jcr:primaryType="cq:Component"
     componentGroup=".hidden"
-    cq:designPath="/etc/designs/iCiDigital"
-    jcr:title="iCiDigital Standard Template"
+    cq:designPath="/etc/designs/twc"
+    jcr:title="twc Standard Template"
     />

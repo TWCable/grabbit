@@ -1,4 +1,4 @@
-<%@include file="/apps/icidigital/global.jsp"%>
+<%@include file="/apps/twc/global.jsp"%>
 <%@page session="false"%>
 <%-- for sidekick --%>
 <cq:include script="/libs/wcm/core/components/init/init.jsp"/>

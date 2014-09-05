@@ -3,10 +3,10 @@
         version="2.0">
     <tlib-version>1.0</tlib-version>
     <short-name>custom</short-name>
-    <uri>http://www.icidigital.com/custom/taglibs</uri>
+    <uri>http://www.twc.com/custom/taglibs</uri>
     <tag>
         <name>Hello</name>
-        <tag-class>com.icidigital.util.taglibs.HelloTag</tag-class>
+        <tag-class>com.twc.util.taglibs.HelloTag</tag-class>
         <body-content>empty</body-content>
         <attribute>
             <name>name</name>

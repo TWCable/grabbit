@@ -13,7 +13,7 @@ import javax.servlet.ServletException
 
 @CompileStatic
 @Slf4j
-@SlingServlet( methods = ['GET'], paths = ["/bin/icidigital/getWorld"] )
+@SlingServlet( methods = ['GET'], paths = ["/bin/sync/doSync"] )
 class SyncServlet extends SlingAllMethodsServlet{
 
     @Reference

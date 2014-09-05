@@ -1,5 +1,5 @@
 <%@include file="/libs/foundation/global.jsp"%>
-<%@taglib prefix="ici" uri="http://www.icidigital.com/custom/taglibs"%>
+<%@taglib prefix="ici" uri="http://www.twc.com/custom/taglibs"%>
 <%@page session="false"
         import="com.day.cq.wcm.api.WCMMode" %>
 <%

@@ -3,6 +3,6 @@
     Defines which repository items are generally included
 -->
 <workspaceFilter vesion="1.0">
-    <filter root="/apps/icidigital" />
-    <filter root="/etc/clientlibs/icidigital" />
+    <filter root="/apps/twc" />
+    <filter root="/etc/clientlibs/twc" />
 </workspaceFilter>

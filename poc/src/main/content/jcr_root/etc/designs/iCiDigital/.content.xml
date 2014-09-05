@@ -9,25 +9,25 @@
         cq:lastModifiedBy="admin"
         cq:template="/libs/wcm/core/templates/designpage"
         jcr:primaryType="cq:PageContent"
-        jcr:title="iCiDigital"
+        jcr:title="twc"
         sling:resourceType="wcm/core/components/designer">
         <page jcr:primaryType="nt:unstructured">
         	<header
         		jcr:primaryType="nt:unstructured"
         		sling:resourceType="foundation/components/iparsys"
-        		components="[/apps/icidigital/components/content/sample]">
+        		components="[/apps/twc/components/content/sample]">
         		<section jcr:primaryType="nt:unstructured"/>
        		</header>
         	<parsys
         		jcr:primaryType="nt:unstructured"
         		sling:resourceType="foundation/components/parsys"
-        		components="[/apps/icidigital/components/content/sample]">
+        		components="[/apps/twc/components/content/sample]">
         		<section jcr:primaryType="nt:unstructured"/>
        		</parsys>
        		<footer
         		jcr:primaryType="nt:unstructured"
         		sling:resourceType="foundation/components/iparsys"
-        		components="[/apps/icidigital/components/content/sample]">
+        		components="[/apps/twc/components/content/sample]">
         		<section jcr:primaryType="nt:unstructured"/>
        		</footer>
         </page>
