@@ -1,5 +1,6 @@
 package com.twc.webcms.sync.servlets
 
+import com.twc.webcms.sync.proto.AddressBookProtos
 import com.twc.webcms.sync.services.SyncService
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -21,7 +22,14 @@ class SyncServlet extends SlingAllMethodsServlet{
 
     @Override
     public void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException, IOException{
+
+        AddressBookProtos.Person.Builder builder = AddressBookProtos.Person.newBuilder()
+        AddressBookProtos.Person person = builder.setId(1).setEmail("AnEmail").build()
+
+        response.contentType = "application/octet-stream"
         response.getWriter().write(helloWorldService.getMessage())
+
+        person.writeTo(response.getWriter())
     }
 
 

@@ -1,0 +1,8 @@
+<node>
+    <primaryNodeType>sling:OsgiConfig</primaryNodeType>
+    <property>
+        <name>message</name>
+        <value>Hello World!</value>
+        <type>String</type>
+    </property>
+</node>

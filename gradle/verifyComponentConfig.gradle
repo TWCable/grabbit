@@ -171,7 +171,7 @@ class Component implements Comparable {
     }
 
     @Lazy Collection<ConfigFile> configFiles = {
-        def configBaseFolder = "/src/main/content/SLING-INF/content/apps/residential/"
+        def configBaseFolder = "/src/main/content/SLING-INF/content/apps/poc/"
         File baseDir = new File(projectDir, configBaseFolder)
         if(!baseDir.exists()) {
             throw new Exception("Config nodes folder ${projectDir}${configBaseFolder} missing");
