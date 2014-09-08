@@ -5,6 +5,7 @@ apply from: "${rootProject.projectDir}/gradle/verifyComponentConfig.gradle"
 apply plugin: 'osgi'
 apply plugin: 'scr'
 apply plugin: 'sling-bundle'
+apply plugin: 'protobuf'
 
 // remove "mvn install" since it's not needed and causes a conflict
 def installTask = tasks.findByPath('install')
@@ -95,3 +96,20 @@ configurations.cq_package {
 }
 
 bundle.installPath = '/apps/install/${nativeStartLevel}'
+
+idea {
+    module {
+        // The whole build dir is excluded by default, but we need build/generated-sources,
+        // which contains the generated proto classes.
+        excludeDirs = [
+            file("$buildDir/classes"),
+            file("$buildDir/docs"),
+            file("$buildDir/dependency-cache"),
+            file("$buildDir/libs"),
+            file("$buildDir/reports"),
+            file("$buildDir/resources"),
+            file("$buildDir/test-results"),
+            file("$buildDir/tmp"),
+        ]
+    }
+}

@@ -9,9 +9,12 @@ buildscript {
     dependencies {
         classpath "com.twc.gradle:twc-gradle:${gradle_plugins_version}"
 
+        classpath "ws.antonov.gradle.plugins:gradle-plugin-protobuf:${protobuf_gradle_plugin_version}"
+
         classpath "commons-io:commons-io:2.4"
     }
 }
+
 
 allprojects {
     apply plugin: 'idea'
@@ -70,7 +73,7 @@ subprojects {
 }
 
 def excludeProjects() {
-    subprojects.findAll { project -> (project.name != 'ui-testing' && project.name != 'osgi-wrappers')}
+    subprojects.findAll { project -> (project.name != 'proto' && project.name != 'osgi-wrappers')}
 }
 
 idea.project.ipr {
@@ -131,7 +134,7 @@ idea.project.ipr {
                         }
                     }
                 }
-                option(name: "USE_PER_PROJECT_SETTINGS", value: "true")
+                option(name: "USE_PER_PROJECT_SETTINGS0", value: "true")
             }
         }
     }
