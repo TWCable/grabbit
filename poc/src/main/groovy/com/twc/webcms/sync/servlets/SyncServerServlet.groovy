@@ -15,7 +15,7 @@ import javax.servlet.ServletException
 @CompileStatic
 @Slf4j
 @SlingServlet( methods = ['GET'], paths = ["/bin/sync/doSync"] )
-class SyncServlet extends SlingAllMethodsServlet{
+class SyncServerServlet extends SlingAllMethodsServlet{
 
     @Reference
     SyncService helloWorldService
@@ -24,12 +24,9 @@ class SyncServlet extends SlingAllMethodsServlet{
     public void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException, IOException{
 
         AddressBookProtos.Person.Builder builder = AddressBookProtos.Person.newBuilder()
-        AddressBookProtos.Person person = builder.setId(1).setEmail("AnEmail").build()
+        AddressBookProtos.Person person = builder.setId(1).setEmail("AnEmail").setName("APerson").build()
 
-        response.contentType = "application/octet-stream"
-        response.getWriter().write(helloWorldService.getMessage())
-
-        person.writeTo(response.getWriter())
+        person.writeDelimitedTo(response.getOutputStream())
     }
 
 

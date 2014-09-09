@@ -12,9 +12,9 @@ if (installTask != null) tasks.remove(installTask)
 
 apply plugin: 'cqpackage'
 
-ext.bundleName = 'TWC Omega WEBCMS'
-ext.bundleDescription = 'TWC Omega WEBCMS'
-ext.symbolicName = "com.twc.webcms"
+ext.bundleName = 'TWC Omega WEBCMS Content Sync'
+ext.bundleDescription = 'TWC Omega WEBCMS Content Sync'
+ext.symbolicName = "com.twc.webcms.poc"
 
 dependencies {
     // Google ReCaptcha
@@ -99,7 +99,7 @@ configurations.cq_package {
     exclude group: 'com.day.commons', module: 'day-commons-any'
 }
 
-bundle.installPath = '/apps/install/${nativeStartLevel}'
+bundle.installPath = '/apps/poc/install/${nativeStartLevel}'
 
 idea {
     module {
