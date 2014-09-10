@@ -1,0 +1,19 @@
+package com.twc.webcms.sync.proto;
+
+option java_package = "com.twc.webcms.sync.proto";
+option java_outer_classname = "NodeProtos";
+
+message Node {
+    required string name = 1;
+    required Properties properties = 2;
+}
+
+message Properties {
+    repeated Property property = 1;
+}
+
+message Property {
+    required string name = 1;
+    required int32 type = 2;
+    optional string value = 3;
+}

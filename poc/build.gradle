@@ -1,5 +1,5 @@
-apply from: "${rootProject.projectDir}/gradle/verifyComponentConfig.gradle"
-apply from: "${rootProject.projectDir}/gradle/utils.gradle"
+//apply from: "${rootProject.projectDir}/gradle/verifyComponentConfig.gradle"
+//apply from: "${rootProject.projectDir}/gradle/utils.gradle"
 
 apply plugin: 'osgi'
 apply plugin: 'scr'
@@ -35,9 +35,9 @@ jar {
 
 jar.manifest {
 
-    attributes 'Sling-Initial-Content': project.configFolders.collect {
-        "SLING-INF/content/apps/poc/${it}; overwrite:=true; uninstall:=true; path:=/apps/poc/${it}"
-    }.join(', ')
+//    attributes 'Sling-Initial-Content': project.configFolders.collect {
+//        "SLING-INF/content/apps/poc/${it}; overwrite:=true; uninstall:=true; path:=/apps/poc/${it}"
+//    }.join(', ')
 
     attributes 'Bundle-Name': project.bundleName
     attributes 'Bundle-SymbolicName': project.symbolicName
