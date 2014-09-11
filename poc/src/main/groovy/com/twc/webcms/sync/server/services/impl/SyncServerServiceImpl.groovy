@@ -49,6 +49,7 @@ class SyncServerServiceImpl implements SyncServerService{
             while(nodeIterator.hasNext()) {
                 NodeProtos.Node nodeProto = getNodeProto(nodeIterator.next())
                 nodeProto.writeDelimitedTo(servletOutputStream)
+                servletOutputStream.flush()
             }
         }
     }

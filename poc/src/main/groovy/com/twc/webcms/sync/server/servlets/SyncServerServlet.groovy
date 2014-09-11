@@ -22,6 +22,7 @@ class SyncServerServlet extends SlingSafeMethodsServlet{
     @Override
     public void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException, IOException{
         final String rootPath = request.queryString.split("=")[1]
+        response.contentType = "application/octet-stream"
         syncServerService.getProtosForRootPath(rootPath, response.outputStream)
     }
 
