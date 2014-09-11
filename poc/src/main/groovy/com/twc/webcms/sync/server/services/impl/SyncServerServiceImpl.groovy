@@ -12,11 +12,13 @@ import org.apache.jackrabbit.commons.flat.TreeTraverser
 import org.apache.sling.api.resource.Resource
 import org.apache.sling.api.resource.ResourceResolver
 import org.apache.sling.api.resource.ResourceResolverFactory
+import org.apache.sling.jcr.api.SlingRepository
 import org.osgi.service.component.ComponentContext
 import org.apache.felix.scr.annotations.Reference
 
 import javax.jcr.Property
 import javax.jcr.PropertyType
+import javax.jcr.Session
 import javax.servlet.ServletOutputStream
 
 
@@ -29,6 +31,11 @@ class SyncServerServiceImpl implements SyncServerService{
     @Reference(bind = 'setResourceResolverFactory')
     ResourceResolverFactory resourceResolverFactory
 
+    @Reference
+    SlingRepository slingRepository
+
+
+
     @Activate
     protected void activate(ComponentContext ctx){
 
@@ -36,9 +43,9 @@ class SyncServerServiceImpl implements SyncServerService{
 
     public void getProtosForRootPath(String rootPath, ServletOutputStream servletOutputStream) {
 
-        JcrUtil.withResourceResolver(resourceResolverFactory) { ResourceResolver resourceResolver ->
-            Resource rootResource = resourceResolver.getResource(rootPath)
-            Iterator<javax.jcr.Node> nodeIterator = TreeTraverser.nodeIterator(rootResource.adaptTo(javax.jcr.Node))
+        JcrUtil.withSession(slingRepository, "admin") { Session session ->
+            javax.jcr.Node rootNode = session.getNode(rootPath)
+            Iterator<javax.jcr.Node> nodeIterator = TreeTraverser.nodeIterator(rootNode)
             while(nodeIterator.hasNext()) {
                 NodeProtos.Node nodeProto = getNodeProto(nodeIterator.next())
                 nodeProto.writeDelimitedTo(servletOutputStream)
