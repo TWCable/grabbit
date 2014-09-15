@@ -1,0 +1,28 @@
+<node>
+    <primaryNodeType>sling:OsgiConfig</primaryNodeType>
+    <property>
+        <name>sync.server.hostname</name>
+        <value>localhost</value>
+        <type>String</type>
+    </property>
+    <property>
+        <name>sync.server.port</name>
+        <value>4503</value>
+        <type>String</type>
+    </property>
+    <property>
+        <name>sync.server.uri</name>
+        <value>/bin/server/sync</value>
+        <type>String</type>
+    </property>
+    <property>
+        <name>sync.root.path</name>
+        <value>/content/twc/en/checkout</value>
+        <type>String</type>
+    </property>
+    <property>
+        <name>sync.enabled</name>
+        <value>false</value>
+        <type>Boolean</type>
+    </property>
+</node>

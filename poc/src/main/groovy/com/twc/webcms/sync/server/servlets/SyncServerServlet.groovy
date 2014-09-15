@@ -14,7 +14,7 @@ import javax.servlet.ServletException
 @CompileStatic
 @Slf4j
 @SlingServlet( methods = ['GET'], paths = ["/bin/server/sync"] )
-class SyncServerServlet extends SlingSafeMethodsServlet{
+class SyncServerServlet extends SlingSafeMethodsServlet {
 
     @Reference(bind='setSyncServerService')
     SyncServerService syncServerService
@@ -25,6 +25,4 @@ class SyncServerServlet extends SlingSafeMethodsServlet{
         response.contentType = "application/octet-stream"
         syncServerService.getProtosForRootPath(rootPath, response.outputStream)
     }
-
-
 }
