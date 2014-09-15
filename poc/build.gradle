@@ -97,6 +97,7 @@ configurations.cq_package {
     
     exclude group: 'com.day.commons', module: 'day-commons-gfx'
     exclude group: 'com.day.commons', module: 'day-commons-any'
+    exclude group: 'com.google.code.findbugs', module: 'jsr305'
 }
 
 bundle.installPath = '/apps/poc/install/${nativeStartLevel}'

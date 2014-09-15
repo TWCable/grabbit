@@ -3,8 +3,6 @@ dependencies {
     compile "org.codehaus.groovy:groovy-all:${groovy_version}"
 
     /** TWC OSGI Wrapper libraries **/
-    // @Nonnull @Nullable etc annotations
-    compile "com.twc.osgi:javax.jsr305:${jsr305_version}"
     // CSV file format parsing
     compile "com.twc.osgi:net.sf.opencsv:${opencsv_version}"
     // Searching/indexing
@@ -18,10 +16,12 @@ dependencies {
     compile "com.twc.osgi:org.apache.camel.camel-core-osgi-cq:${camel_version}"
     // Apache POI for handling MS-Office files
     compile "com.twc.osgi:org.apache.poi-uber:${poi_version}"
-    // General set of collection classes and utilities
-    compile "com.twc.osgi:com.google.guava:${guava_osgi_version}"
     // Used as part of the build to create the OSGI-INF/serviceComponents.xml file
     compile "com.twc.osgi:org.apache.felix.scr.annotations:${scr_annotations_version}"
+
+    //Google libraries
+    compile "com.google.guava:guava:${guava_version}"
+    compile "com.google.code.findbugs:jsr305:${jsr305_version}"
 
     // Adobe CQ libraries
     compile "com.day.cq.wcm:cq-wcm-api:${cq_version}"

@@ -6,6 +6,8 @@ import com.twc.webcms.sync.proto.NodeProtos
 import com.twc.webcms.sync.utils.unmarshaller.ProtobufUnmarshaller
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import org.apache.commons.httpclient.Credentials
+import org.apache.commons.httpclient.UsernamePasswordCredentials
 import org.apache.felix.scr.annotations.Activate
 import org.apache.felix.scr.annotations.Component
 import org.apache.felix.scr.annotations.Property as ScrProperty
@@ -65,8 +67,9 @@ class SyncClientServiceImpl implements SyncClientService {
     SlingRepository slingRepository
 
     public void doSync() {
-        final String syncPath = "http://${syncServerHostname}:${syncServerPort}${syncServerUri}?rootPath=${syncRootPath}"
+        final String syncPath = "http://admin:admin@${syncServerHostname}:${syncServerPort}${syncServerUri}?rootPath=${syncRootPath}"
         DefaultHttpClient client = new DefaultHttpClient()
+
         //create the get request
         HttpGet get = new HttpGet(syncPath)
 
