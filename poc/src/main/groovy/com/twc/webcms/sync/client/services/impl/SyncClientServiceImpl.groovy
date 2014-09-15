@@ -6,8 +6,6 @@ import com.twc.webcms.sync.proto.NodeProtos
 import com.twc.webcms.sync.utils.unmarshaller.ProtobufUnmarshaller
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import org.apache.commons.httpclient.Credentials
-import org.apache.commons.httpclient.UsernamePasswordCredentials
 import org.apache.felix.scr.annotations.Activate
 import org.apache.felix.scr.annotations.Component
 import org.apache.felix.scr.annotations.Property as ScrProperty
@@ -15,8 +13,14 @@ import org.apache.felix.scr.annotations.Reference
 import org.apache.felix.scr.annotations.Service
 import org.apache.http.HttpEntity
 import org.apache.http.HttpResponse
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
+import org.apache.http.client.CredentialsProvider
 import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.protocol.BasicHttpContext
+import org.apache.http.protocol.HttpContext
 import org.apache.sling.jcr.api.SlingRepository
 import org.osgi.service.component.ComponentContext
 
@@ -67,29 +71,34 @@ class SyncClientServiceImpl implements SyncClientService {
     SlingRepository slingRepository
 
     public void doSync() {
-        final String syncPath = "http://admin:admin@${syncServerHostname}:${syncServerPort}${syncServerUri}?rootPath=${syncRootPath}"
+        final String syncPath = "http://${syncServerHostname}:${syncServerPort}${syncServerUri}?rootPath=${syncRootPath}"
         DefaultHttpClient client = new DefaultHttpClient()
 
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider()
+        credentialsProvider.setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT), new UsernamePasswordCredentials("admin", "admin"))
+        client.setCredentialsProvider(credentialsProvider)
         //create the get request
         HttpGet get = new HttpGet(syncPath)
+
 
         try {
             HttpResponse status = client.execute(get)
             HttpEntity responseEntity = status.entity
+            ProtobufUnmarshaller protobufUnmarshaller = new ProtobufUnmarshaller()
             JcrUtil.withSession(slingRepository, "admin") { Session session ->
                 while (true) {
                     try{
                         NodeProtos.Node nodeProto = NodeProtos.Node.parseDelimitedFrom(responseEntity.content)
                         if(!nodeProto) {
-                            log.info "Received all data from Server for Sync. Completed unmarshalling."
+                            log.info "Received all data from Server for Sync. Completed unmarshalling. Total nodes : ${protobufUnmarshaller.count}"
                             session.save()
                             break;
                         }
-                        ProtobufUnmarshaller.unmarshall(nodeProto, session)
+                        protobufUnmarshaller.unmarshall(nodeProto, session)
                     }
                     catch (final Exception e) {
                         log.warn "Exception while unmarshalling received Protobuf", e
-                        session.save()
+                        //session.save()
                         break
                     }
                 }

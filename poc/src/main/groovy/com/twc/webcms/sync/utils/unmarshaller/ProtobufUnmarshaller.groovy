@@ -8,6 +8,7 @@ import org.apache.jackrabbit.commons.JcrUtils
 
 import javax.jcr.Node as JcrNode
 import javax.jcr.Session
+import javax.jcr.nodetype.NodeType
 
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 
@@ -20,17 +21,46 @@ class ProtobufUnmarshaller {
         2. Fails for syncs like /checkout-mocks which store "jcr:data" properties
         3. Doesn't work for multiple value properties
     */
-    static void unmarshall(Node nodeProto, Session session) {
+    int count
+
+    public ProtobufUnmarshaller() {
+        count = 0;
+    }
+
+    void unmarshall(Node nodeProto, Session session) {
         log.info "Received NodeProto: ${nodeProto}"
         List<Property> properties = nodeProto.properties.propertyList
         final String primaryType = properties.find { Property protoProperty -> protoProperty.name == JCR_PRIMARYTYPE }.value
         log.info "Primary Type: ${primaryType}"
-        JcrNode currentNode = JcrUtils.getOrCreateByPath(nodeProto.name, primaryType, session)
-        properties.each { Property protoProperty ->
-            if( ![JCR_PRIMARYTYPE, "jcr:createdBy", "jcr:created"].contains(protoProperty.name) && protoProperty.hasValue() ) {
-                log.info "Current Property: ${protoProperty}"
-                currentNode.setProperty(protoProperty.name, protoProperty.value)
+
+        if(primaryType == "nt:file") {
+            def temp = nodeProto.name.split("/")
+            final String fileName = temp.last()
+            final String parentName = nodeProto.name.replaceAll("/${fileName}", "")
+            final JcrNode parentNode = JcrUtils.getOrCreateByPath(parentName, null, session)
+            JcrNode fileNode = JcrUtils.getOrAddNode(parentNode, fileName, NodeType.NT_FILE)
+            JcrUtils.getOrAddNode(fileNode, JcrNode.JCR_CONTENT, NodeType.NT_RESOURCE)
+            count++
+        }
+        else {
+            JcrNode currentNode = JcrUtils.getOrCreateByPath(nodeProto.name, primaryType, session)
+            properties.each { Property protoProperty ->
+                if( ![
+                        JCR_PRIMARYTYPE,
+                        "jcr:createdBy",
+                        "jcr:created",
+                        "jcr:uuid",
+                        "cq:lastReplicatedBy",
+                        "cq:lastReplicated",
+                        "cq:lastReplicationAction",
+                        "cq:lastReplicationStatus",
+                        "cq:lastPublishedBy",
+                        "cq:lastPublished"].contains(protoProperty.name) && protoProperty.hasValue() ) {
+                    log.debug "Current Property: ${protoProperty}"
+                    currentNode.setProperty(protoProperty.name, protoProperty.value)
+                }
             }
+            count++
         }
     }
 }
