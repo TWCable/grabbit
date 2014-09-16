@@ -19,8 +19,6 @@ import org.apache.http.client.CredentialsProvider
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.protocol.BasicHttpContext
-import org.apache.http.protocol.HttpContext
 import org.apache.sling.jcr.api.SlingRepository
 import org.osgi.service.component.ComponentContext
 
@@ -41,6 +39,14 @@ class SyncClientServiceImpl implements SyncClientService {
     public static final String SYNC_SERVER_PORT = "sync.server.port"
     private String syncServerPort
 
+    @ScrProperty(label = "Sync Server Username", description = "Sync Server Username")
+    public static final String SYNC_SERVER_USERNAME = "sync.server.username"
+    private String syncServerUsername
+
+    @ScrProperty(label = "Sync Server Password", description = "Sync Server Password")
+    public static final String SYNC_SERVER_PASSWORD = "sync.server.password"
+    private String syncServerPassword
+
     @ScrProperty(label = "Sync Root Path", description = "Sync Root Path")
     public static final String SYNC_ROOT_PATH = "sync.root.path"
     private String syncRootPath
@@ -58,6 +64,8 @@ class SyncClientServiceImpl implements SyncClientService {
     public void activate(ComponentContext componentContext) {
         syncServerHostname = componentContext.properties[SYNC_SERVER_HOSTNAME] as String
         syncServerPort = componentContext.properties[SYNC_SERVER_PORT] as String
+        syncServerUsername = componentContext.properties[SYNC_SERVER_USERNAME] as String
+        syncServerPassword = componentContext.properties[SYNC_SERVER_PASSWORD] as String
         syncRootPath = componentContext.properties[SYNC_ROOT_PATH] as String
         syncServerUri = componentContext.properties[SYNC_SERVER_URI] as String
         syncEnabled = componentContext.properties[SYNC_ENABLED] as boolean
@@ -75,11 +83,13 @@ class SyncClientServiceImpl implements SyncClientService {
         DefaultHttpClient client = new DefaultHttpClient()
 
         CredentialsProvider credentialsProvider = new BasicCredentialsProvider()
-        credentialsProvider.setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT), new UsernamePasswordCredentials("admin", "admin"))
+        credentialsProvider.setCredentials(
+                new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT),
+                new UsernamePasswordCredentials(syncServerUsername, syncServerPassword)
+        )
         client.setCredentialsProvider(credentialsProvider)
         //create the get request
         HttpGet get = new HttpGet(syncPath)
-
 
         try {
             HttpResponse status = client.execute(get)

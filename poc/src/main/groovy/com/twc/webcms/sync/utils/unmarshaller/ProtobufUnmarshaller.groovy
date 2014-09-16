@@ -55,7 +55,8 @@ class ProtobufUnmarshaller {
                         "cq:lastReplicationAction",
                         "cq:lastReplicationStatus",
                         "cq:lastPublishedBy",
-                        "cq:lastPublished"].contains(protoProperty.name) && protoProperty.hasValue() ) {
+                        "cq:lastPublished"
+                    ].contains(protoProperty.name) && protoProperty.hasValue() ) {
                     log.debug "Current Property: ${protoProperty}"
                     currentNode.setProperty(protoProperty.name, protoProperty.value)
                 }
