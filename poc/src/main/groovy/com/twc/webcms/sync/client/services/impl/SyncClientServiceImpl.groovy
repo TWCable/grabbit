@@ -21,6 +21,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.sling.jcr.api.SlingRepository
 import org.osgi.service.component.ComponentContext
+import org.springframework.util.StopWatch
 
 import javax.jcr.Session
 
@@ -59,6 +60,8 @@ class SyncClientServiceImpl implements SyncClientService {
     public static final String SYNC_ENABLED = "sync.enabled"
     private boolean syncEnabled
 
+    @Reference(bind='setSlingRepository')
+    SlingRepository slingRepository
 
     @Activate
     public void activate(ComponentContext componentContext) {
@@ -75,9 +78,6 @@ class SyncClientServiceImpl implements SyncClientService {
         }
     }
 
-    @Reference(bind='setSlingRepository')
-    SlingRepository slingRepository
-
     public void doSync() {
         final String syncPath = "http://${syncServerHostname}:${syncServerPort}${syncServerUri}?rootPath=${syncRootPath}"
         DefaultHttpClient client = new DefaultHttpClient()
@@ -92,24 +92,25 @@ class SyncClientServiceImpl implements SyncClientService {
         HttpGet get = new HttpGet(syncPath)
 
         try {
-            HttpResponse status = client.execute(get)
-            HttpEntity responseEntity = status.entity
-            ProtobufUnmarshaller protobufUnmarshaller = new ProtobufUnmarshaller()
-            JcrUtil.withSession(slingRepository, "admin") { Session session ->
-                while (true) {
-                    try{
-                        NodeProtos.Node nodeProto = NodeProtos.Node.parseDelimitedFrom(responseEntity.content)
-                        if(!nodeProto) {
-                            log.info "Received all data from Server for Sync. Completed unmarshalling. Total nodes : ${protobufUnmarshaller.count}"
-                            session.save()
-                            break;
+            withStopWatch {
+                HttpResponse status = client.execute(get)
+                HttpEntity responseEntity = status.entity
+                ProtobufUnmarshaller protobufUnmarshaller = new ProtobufUnmarshaller()
+                JcrUtil.withSession(slingRepository, "admin") { Session session ->
+                    while (true) {
+                        try{
+                            NodeProtos.Node nodeProto = NodeProtos.Node.parseDelimitedFrom(responseEntity.content)
+                            if(!nodeProto) {
+                                session.save()
+                                log.info "Received all data from Server for Sync. Completed unmarshalling. Total nodes : ${protobufUnmarshaller.count}"
+                                break
+                            }
+                            protobufUnmarshaller.unmarshall(nodeProto, session)
                         }
-                        protobufUnmarshaller.unmarshall(nodeProto, session)
-                    }
-                    catch (final Exception e) {
-                        log.warn "Exception while unmarshalling received Protobuf", e
-                        //session.save()
-                        break
+                        catch (final Exception e) {
+                            log.warn "Exception while unmarshalling received Protobuf", e
+                            break
+                        }
                     }
                 }
             }
@@ -118,4 +119,17 @@ class SyncClientServiceImpl implements SyncClientService {
             log.error "Error while requesting a content sync for syncPath: ${syncPath}", e
         }
     }
+
+    private <T> T withStopWatch(Closure<T> cl) {
+        StopWatch stopWatch = new StopWatch("Content sync from ${syncServerHostname} for Content Path ${syncRootPath}")
+        stopWatch.start()
+
+        T retVal = cl.call()
+
+        stopWatch.stop()
+        log.info stopWatch.shortSummary()
+
+        return retVal
+    }
+
 }

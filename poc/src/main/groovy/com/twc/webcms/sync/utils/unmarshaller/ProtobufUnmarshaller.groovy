@@ -28,10 +28,10 @@ class ProtobufUnmarshaller {
     }
 
     void unmarshall(Node nodeProto, Session session) {
-        log.info "Received NodeProto: ${nodeProto}"
+        log.debug "Received NodeProto: ${nodeProto}"
         List<Property> properties = nodeProto.properties.propertyList
         final String primaryType = properties.find { Property protoProperty -> protoProperty.name == JCR_PRIMARYTYPE }.value
-        log.info "Primary Type: ${primaryType}"
+        log.debug "Primary Type: ${primaryType}"
 
         if(primaryType == "nt:file") {
             def temp = nodeProto.name.split("/")
