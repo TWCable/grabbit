@@ -1,9 +1,13 @@
 package com.twc.webcms.sync.server.services
 
-import com.twc.webcms.sync.proto.NodeProtos
-
 import javax.servlet.ServletOutputStream
 
 interface SyncServerService {
-    public void getProtosForRootPath(String rootPath, ServletOutputStream servletOutputStream)
+
+    /**
+     * Accepts a rootPath, retrieves content and writes it to the {@param servletOutputStream}
+     * @param rootPath
+     * @param servletOutputStream
+     */
+    void getContentForRootPath(String rootPath, ServletOutputStream servletOutputStream)
 }

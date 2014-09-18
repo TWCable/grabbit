@@ -21,11 +21,6 @@
         <type>String</type>
     </property>
     <property>
-        <name>sync.server.uri</name>
-        <value>/bin/server/sync</value>
-        <type>String</type>
-    </property>
-    <property>
         <name>sync.root.path</name>
         <value>/content/twc/en/checkout</value>
         <type>String</type>

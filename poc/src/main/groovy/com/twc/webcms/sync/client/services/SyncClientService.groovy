@@ -1,5 +1,9 @@
 package com.twc.webcms.sync.client.services
 
 interface SyncClientService {
-    public void doSync()
+
+    /**
+     * Uses the OSGi configurations to sync content
+     */
+    void doSync()
 }

@@ -15,5 +15,15 @@ message Properties {
 message Property {
     required string name = 1;
     required int32 type = 2;
-    optional string value = 3;
+    optional Value value = 3;
+    optional Values values = 4;
+}
+
+message Values {
+    repeated Value value = 1;
+}
+
+message Value {
+    optional string stringValue = 1;
+    optional bytes bytesValue = 2;
 }
