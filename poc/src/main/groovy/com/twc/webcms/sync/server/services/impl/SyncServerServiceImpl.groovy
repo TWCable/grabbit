@@ -39,10 +39,14 @@ class SyncServerServiceImpl implements SyncServerService{
             final JcrNode rootNode = session.getNode(rootPath)
             final Iterator<JcrNode> nodeIterator = TreeTraverser.nodeIterator(rootNode)
             while(nodeIterator.hasNext()) {
-                final Node nodeProto = ProtobufMarshaller.toNodeProto(nodeIterator.next())
-                log.debug "Sending proto: ${nodeProto}"
-                nodeProto.writeDelimitedTo(servletOutputStream)
-                servletOutputStream.flush()
+                JcrNode currentNode = nodeIterator.next()
+                //TODO: Access Control Lists nodes are not supported right now. WEBCMS-14033
+                if(!(currentNode.path.contains("rep:policy"))) {
+                    final Node nodeProto = ProtobufMarshaller.toNodeProto(currentNode)
+                    log.debug "Sending proto: ${nodeProto}"
+                    nodeProto.writeDelimitedTo(servletOutputStream)
+                    servletOutputStream.flush()
+                }
             }
         }
     }
