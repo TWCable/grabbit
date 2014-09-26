@@ -19,8 +19,12 @@ apply plugin: 'sonar-runner'
 
 dependencies {
     testCompile "org.spockframework:spock-core:${spock_version}"
+    testCompile "org.spockframework:spock-spring:${spock_version}"
+    testCompile "org.springframework.batch:spring-batch-test:${spring_batch_version}"
+    testCompile "org.springframework:spring-test:${spring_version}"
 
-    testCompile "com.twc.jackalope:jackalope:$jackalope_version"
+
+    testCompile "com.twc.jackalope:jackalope:${jackalope_version}"
 
     testRuntime "cglib:cglib-nodep:${cglib_nodep_version}"
 }

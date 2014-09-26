@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--suppress SpringFacetInspection -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:batch="http://www.springframework.org/schema/batch"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/batch 
+       http://www.springframework.org/schema/batch/spring-batch-2.2.xsd
+       http://www.springframework.org/schema/beans 
+       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+    <import resource="sync-jcrNodes-step.xml" />
+    <import resource="sync-preprocessor-step.xml"/>
+
+    <batch:job id="syncJob" xmlns="http://www.springframework.org/schema/batch">
+        <batch:step id="syncPreprocessor" next="syncJcrNodes">
+            <batch:tasklet>
+                <batch:chunk reader="preprocessReader" writer="preprocessWriter"
+                             processor="preprocessProcessor" commit-interval="1000" skip-limit="0"/>
+            </batch:tasklet>
+        </batch:step>
+        <batch:step id="syncJcrNodes">
+            <batch:tasklet>
+                <batch:chunk reader="jcrNodesReader" writer="jcrNodesWriter"
+                             processor="jcrNodesProcessor" commit-interval="1000" skip-limit="0"/>
+            </batch:tasklet>
+        </batch:step>
+    </batch:job>
+
+    <bean id="jobLauncher"
+          class="org.springframework.batch.core.launch.support.SimpleJobLauncher"
+          p:jobRepository-ref="jobRepository" />
+
+    <bean id="jobRepository"
+          class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean"
+          p:transactionManager-ref="transactionManager" />
+
+    <bean id="transactionManager"
+          class="org.springframework.batch.support.transaction.ResourcelessTransactionManager" />
+</beans>

@@ -1,42 +1,41 @@
-package com.twc.webcms.sync.server.marshaller
+package com.twc.webcms.sync.server.batch.steps.jcrnodes
 
 import com.google.protobuf.ByteString
+import com.twc.webcms.sync.client.unmarshaller.DateUtil
 import com.twc.webcms.sync.proto.NodeProtos
 import com.twc.webcms.sync.proto.NodeProtos.Node
 import com.twc.webcms.sync.proto.NodeProtos.Properties
 import com.twc.webcms.sync.proto.NodeProtos.Property
-import com.twc.webcms.sync.proto.PreProcessorProtos.NamespaceEntry
-import com.twc.webcms.sync.proto.PreProcessorProtos.NamespaceRegistry
-import com.twc.webcms.sync.proto.PreProcessorProtos.Preprocessors
-import com.twc.webcms.sync.client.unmarshaller.DateUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import org.apache.jackrabbit.commons.NamespaceHelper
+import org.springframework.batch.item.ItemProcessor
 
-import javax.annotation.Nonnull
-import javax.annotation.Nullable
 import javax.jcr.Node as JcrNode
 import javax.jcr.Property as JcrProperty
 import javax.jcr.PropertyType
-import javax.jcr.RepositoryException
-import javax.jcr.Session
 import javax.jcr.Value
 
 import static javax.jcr.PropertyType.*
 import static org.apache.jackrabbit.JcrConstants.*
 
-@CompileStatic
+/**
+ * A Custom ItemProcessor that effectively acts as a Marshaller for a Jcr Node.
+ */
 @Slf4j
-class ProtobufMarshaller {
+@CompileStatic
+class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
 
     /**
-     * Accepts a JCR Node and marshals it to a Node of the type NodeProtos
-     * @see NodeProtos
-     * @param jcrNode the node to be marshaled
-     * @return NodeProtos.Node object
+     * Converts a JCR Node to Protocol Buffer Message {@link NodeProtos.Node} object.
      */
-    @Nonnull
-    static Node toNodeProto(JcrNode jcrNode) {
+    @Override
+    Node process(JcrNode jcrNode) throws Exception {
+
+        //TODO: Access Control Lists nodes are not supported right now. WEBCMS-14033
+        if(!jcrNode || jcrNode.path.contains("rep:policy")){
+            log.info "Ignoring current node ${jcrNode}"
+            return null
+        }
 
         final List<JcrProperty> properties = jcrNode.properties.toList()
         Node.Builder nodeBuilder = Node.newBuilder()
@@ -54,31 +53,6 @@ class ProtobufMarshaller {
         nodeBuilder.setProperties(propertiesBuilder.build())
 
         nodeBuilder.build()
-    }
-
-    /**
-     * Marshals the NamespaceRegistry (as a key value pair of prefix:uri) into a Preprocessors Proto message
-     * @param session
-     * @return Preprocessors proto object
-     */
-    @Nullable
-    static Preprocessors toPreprocessorsProto(Session session) {
-        final NamespaceHelper namespaceHelper = new NamespaceHelper(session)
-        try {
-            Preprocessors.Builder preprocessorsBuilder = Preprocessors.newBuilder()
-            NamespaceRegistry.Builder namespaceRegistryBuilder = NamespaceRegistry.newBuilder()
-            namespaceHelper.namespaces.each { String prefix, String uri ->
-                NamespaceEntry.Builder namespaceEntryBuilder = NamespaceEntry.newBuilder()
-                NamespaceEntry namespaceEntry = namespaceEntryBuilder.setUri(uri).setPrefix(prefix).build()
-                namespaceRegistryBuilder.addEntry(namespaceEntry)
-            }
-            Preprocessors preprocessors = preprocessorsBuilder.setNamespaceRegistry(namespaceRegistryBuilder.build()).build()
-            return preprocessors
-        }
-        catch(RepositoryException e) {
-            log.error "Exception in pre-processing step", e
-            return null
-        }
     }
 
     /**
@@ -266,5 +240,4 @@ class ProtobufMarshaller {
         propertyBuilder.setType(jcrProperty.type)
         propertyBuilder.build()
     }
-
 }

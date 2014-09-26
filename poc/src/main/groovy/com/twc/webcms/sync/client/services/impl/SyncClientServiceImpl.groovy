@@ -33,6 +33,8 @@ import javax.jcr.Session
 @SuppressWarnings('GroovyUnusedDeclaration')
 class SyncClientServiceImpl implements SyncClientService {
 
+    public static final int BATCH_SIZE = 1000
+
     @ScrProperty(label = "Sync Server Hostname", description = "Sync Server Hostname")
     public static final String SYNC_SERVER_HOSTNAME = "sync.server.hostname"
     private String syncServerHostname
@@ -93,6 +95,7 @@ class SyncClientServiceImpl implements SyncClientService {
                 HttpResponse status = client.execute(get)
                 HttpEntity responseEntity = status.entity
                 ProtobufUnmarshaller protobufUnmarshaller = new ProtobufUnmarshaller()
+                long count = 0
                 JcrUtil.withSession(slingRepository, "admin") { Session session ->
 
                     //Preprocessor step
@@ -102,6 +105,12 @@ class SyncClientServiceImpl implements SyncClientService {
 
                     while (true) {
                         try{
+                            if(count == BATCH_SIZE) {
+                                //Intermediate save()
+                                log.info "Intermediate session.save()"
+                                session.save()
+                                count = 0
+                            }
                             NodeProtos.Node nodeProto = NodeProtos.Node.parseDelimitedFrom(responseEntity.content)
                             if(!nodeProto) {
                                 session.save()
@@ -109,6 +118,7 @@ class SyncClientServiceImpl implements SyncClientService {
                                 break
                             }
                             protobufUnmarshaller.fromNodeProto(nodeProto, session)
+                            count++
                         }
                         catch (final Exception e) {
                             log.warn "Exception while unmarshalling received Protobuf", e
