@@ -13,7 +13,7 @@ import javax.servlet.ServletException
 
 @CompileStatic
 @Slf4j
-@SlingServlet( methods = ['GET'], paths = ["/bin/twc/server/sync"] )
+@SlingServlet( methods = ['GET'], paths = ["/bin/twc/server/grab"] )
 class SyncServerServlet extends SlingSafeMethodsServlet {
 
     @Reference(bind='setSyncServerService')
@@ -21,8 +21,8 @@ class SyncServerServlet extends SlingSafeMethodsServlet {
 
     @Override
     public void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException, IOException{
-        final String rootPath = request.queryString.split("=")[1]
+        final String path = request.getParameter("path")
         response.contentType = "application/octet-stream"
-        syncServerService.getContentForRootPath(rootPath, response.outputStream)
+        syncServerService.getContentForRootPath(path, response.outputStream)
     }
 }

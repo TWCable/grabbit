@@ -51,9 +51,9 @@ class SyncClientServiceImpl implements SyncClientService {
     public static final String SYNC_SERVER_PASSWORD = "sync.server.password"
     private String syncServerPassword
 
-    @ScrProperty(label = "Sync Root Path", description = "Sync Root Path")
-    public static final String SYNC_ROOT_PATH = "sync.root.path"
-    private String syncRootPath
+    @ScrProperty(label = "Sync Paths", description = "Sync Paths")
+    public static final String SYNC_PATHS = "sync.paths"
+    private String[] syncPaths
 
     @ScrProperty(boolValue = false, label = "Enable Data Sync")
     public static final String SYNC_ENABLED = "sync.enabled"
@@ -64,35 +64,35 @@ class SyncClientServiceImpl implements SyncClientService {
 
     @Activate
     void activate(ComponentContext componentContext) {
+        log.info "Activate\n\n"
         syncServerHostname = componentContext.properties[SYNC_SERVER_HOSTNAME] as String
         syncServerPort = componentContext.properties[SYNC_SERVER_PORT] as String
         syncServerUsername = componentContext.properties[SYNC_SERVER_USERNAME] as String
         syncServerPassword = componentContext.properties[SYNC_SERVER_PASSWORD] as String
-        syncRootPath = componentContext.properties[SYNC_ROOT_PATH] as String
+        syncPaths = componentContext.properties[SYNC_PATHS] as String[]
         syncEnabled = componentContext.properties[SYNC_ENABLED] as boolean
 
         if(syncEnabled) {
-            doSync()
+            doSync(syncPaths as Collection<String>)
         }
     }
 
-    void doSync() {
-        final String SYNC_SERVER_URI = "/bin/twc/server/sync"
-        final String syncPath = "http://${syncServerHostname}:${syncServerPort}${SYNC_SERVER_URI}?rootPath=${syncRootPath}"
-        DefaultHttpClient client = new DefaultHttpClient()
+    @Override
+    void doSync(Collection<String> whiteList) {
+        for(String path: whiteList) {
+            withStopWatch(path) {
+                sync(path)
+            }
+        }
+    }
 
-        CredentialsProvider credentialsProvider = new BasicCredentialsProvider()
-        credentialsProvider.setCredentials(
-                new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT),
-                new UsernamePasswordCredentials(syncServerUsername, syncServerPassword)
-        )
-        client.setCredentialsProvider(credentialsProvider)
+    private void sync(String path) {
+        final String syncPath = "http://${syncServerHostname}:${syncServerPort}/bin/twc/server/grab?path=${path}"
         //create the get request
         HttpGet get = new HttpGet(syncPath)
 
         try {
-            withStopWatch {
-                HttpResponse status = client.execute(get)
+                HttpResponse status = httpClient.execute(get)
                 HttpEntity responseEntity = status.entity
                 ProtobufUnmarshaller protobufUnmarshaller = new ProtobufUnmarshaller()
                 long count = 0
@@ -107,14 +107,14 @@ class SyncClientServiceImpl implements SyncClientService {
                         try{
                             if(count == BATCH_SIZE) {
                                 //Intermediate save()
-                                log.info "Intermediate session.save()"
+                                log.info "Current path: ${path}. session.save() for batch size : ${BATCH_SIZE}"
                                 session.save()
                                 count = 0
                             }
                             NodeProtos.Node nodeProto = NodeProtos.Node.parseDelimitedFrom(responseEntity.content)
                             if(!nodeProto) {
                                 session.save()
-                                log.info "Received all data from Server for Sync. Completed unmarshalling. Total nodes : ${protobufUnmarshaller.nodeCount}"
+                                log.info "Received all data from Server for Path: ${path}. Completed unmarshalling. Total nodes : ${protobufUnmarshaller.nodeCount}"
                                 break
                             }
                             protobufUnmarshaller.fromNodeProto(nodeProto, session)
@@ -126,15 +126,27 @@ class SyncClientServiceImpl implements SyncClientService {
                         }
                     }
                 }
-            }
         }
         catch(Exception e) {
-            log.error "Error while requesting a content sync for syncPath: ${syncPath}", e
+            log.error "Error while requesting a content sync for current Path: ${[path]}", e
         }
+
     }
 
-    private <T> T withStopWatch(Closure<T> closure) {
-        StopWatch stopWatch = new StopWatch("Content sync from ${syncServerHostname} for Content Path ${syncRootPath}")
+    private DefaultHttpClient getHttpClient() {
+        DefaultHttpClient client = new DefaultHttpClient()
+
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider()
+        credentialsProvider.setCredentials(
+                new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT),
+                new UsernamePasswordCredentials(syncServerUsername, syncServerPassword)
+        )
+        client.setCredentialsProvider(credentialsProvider)
+        client
+    }
+
+    private <T> T withStopWatch(String currentPath, Closure<T> closure) {
+        StopWatch stopWatch = new StopWatch("Content sync from ${syncServerHostname} for Current Path ${currentPath}")
         stopWatch.start()
 
         T retVal = closure.call()

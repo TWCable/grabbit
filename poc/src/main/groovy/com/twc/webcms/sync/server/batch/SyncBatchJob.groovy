@@ -52,21 +52,24 @@ class SyncBatchJob {
     @CompileStatic
     static class Builder {
         private ConfigurableApplicationContext configAppContext
+        private String path
 
         protected Builder(ConfigurableApplicationContext configurableApplicationContext) {
             this.configAppContext = configurableApplicationContext
         }
 
-        Builder configureSteps(@Nonnull Iterator<Map.Entry<String, String>> namespacesIterator,
+        Builder configure(@Nonnull Iterator<Map.Entry<String, String>> namespacesIterator,
                                @Nonnull Iterator<JcrNode> nodeIterator,
-                               @Nonnull ServletOutputStream servletOutputStream) {
+                               @Nonnull ServletOutputStream servletOutputStream,
+                               @Nonnull String path) {
             if(namespacesIterator == null) throw new IllegalArgumentException("namespacesIterator == null")
             if(nodeIterator == null) throw new IllegalArgumentException("nodeIterator == null")
             if(servletOutputStream == null) throw new IllegalArgumentException("servletOutputStream == null")
+            if(path == null) throw new IllegalArgumentException("path == null")
 
             syncPreprocessorStep(namespacesIterator, servletOutputStream)
             syncJcrNodesStep(nodeIterator, servletOutputStream)
-
+            this.path = path
             return this
         }
 
@@ -75,6 +78,7 @@ class SyncBatchJob {
                     (Job) configAppContext.getBean("syncJob"),
                     new JobParametersBuilder()
                     .addLong("timestamp", System.currentTimeMillis())
+                    .addString("Current Path", path)
                     .toJobParameters()
             )
         }

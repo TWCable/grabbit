@@ -21,8 +21,14 @@
         <type>String</type>
     </property>
     <property>
-        <name>sync.root.path</name>
-        <value>/content/twc/en/checkout</value>
+        <name>sync.paths</name>
+        <values>
+            <value>/etc/tags</value>
+            <value>/content/residential-admin/ProductCatalog</value>
+            <value>/content/residential-admin/checkout-mocks</value>
+            <value>/content/twc/en/checkout</value>
+            <value>/content/twc/en/residential-home/.</value>
+        </values>
         <type>String</type>
     </property>
     <property>

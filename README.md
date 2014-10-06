@@ -42,7 +42,8 @@ Client can ask for any `valid` content from server by hitting this servlet. The 
 For eg: If Author is acting "Client", it can be configured to trigger a Sync by going to 
 `/apps/poc/config/com.twc.webcms.sync.client.services.impl.SyncClientServiceImpl` in CRXDE Lite and configure the OSGi configs :
 
-`sync.root.path` : The `rootPath` parameter
+`sync.paths` : The `paths` to sync
+A path of the type `/a/b/.` indicates a non-recursive sync of all the sub-nodes for `b`
 
 `sync.server.hostmane` : The Hostname of the Server
 

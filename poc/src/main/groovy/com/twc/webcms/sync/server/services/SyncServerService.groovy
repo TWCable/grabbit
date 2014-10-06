@@ -6,8 +6,8 @@ interface SyncServerService {
 
     /**
      * Accepts a rootPath, retrieves content and writes it to the {@param servletOutputStream}
-     * @param rootPath
+     * @param path
      * @param servletOutputStream
      */
-    void getContentForRootPath(String rootPath, ServletOutputStream servletOutputStream)
+    void getContentForRootPath(String path, ServletOutputStream servletOutputStream)
 }

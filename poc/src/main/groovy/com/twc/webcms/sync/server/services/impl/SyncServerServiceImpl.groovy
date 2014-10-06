@@ -2,6 +2,7 @@ package com.twc.webcms.sync.server.services.impl
 
 import com.twc.webcms.sync.jcr.JcrUtil
 import com.twc.webcms.sync.server.batch.SyncBatchJob
+import com.twc.webcms.sync.server.services.NonRecursiveIterator
 import com.twc.webcms.sync.server.services.SyncServerService
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -32,22 +33,39 @@ class SyncServerServiceImpl implements SyncServerService{
     @Reference(bind='setConfigurableApplicationContext')
     ConfigurableApplicationContext configurableApplicationContext
 
-    void getContentForRootPath(@Nonnull String rootPath, @Nonnull ServletOutputStream servletOutputStream) {
+
+    void getContentForRootPath(@Nonnull String path, @Nonnull ServletOutputStream servletOutputStream) {
+
+        if(path == null) throw new IllegalStateException("path == null")
+        if(servletOutputStream == null) throw new IllegalStateException("servletOutputStream == null")
 
         JobLauncher jobLauncher = (JobLauncher) configurableApplicationContext.getBean(JobLauncher)
 
         JcrUtil.withSession(slingRepository, "admin") { Session session ->
-            final JcrNode rootNode = session.getNode(rootPath)
-            final Iterator<JcrNode> nodeIterator = TreeTraverser.nodeIterator(rootNode)
+            Iterator<JcrNode> nodeIterator
 
-            SyncBatchJob batchJob = configuredSyncBatchJob(session, nodeIterator, servletOutputStream)
+            //If the path is of type "/a/b/.", that means we should not do a recursive search of b's children
+            //We should stop after getting all the children of b
+            if(path.split("/").last() == "." ) {
+                final String actualPath = path.substring(0, path.length() - 2)
+                final JcrNode rootNode = session.getNode(actualPath)
+                nodeIterator = new NonRecursiveIterator(rootNode)
+            }
+            else {
+                final JcrNode rootNode = session.getNode(path)
+                nodeIterator = TreeTraverser.nodeIterator(rootNode)
+            }
+
+            SyncBatchJob batchJob = configuredSyncBatchJob(session, nodeIterator, servletOutputStream, path)
             jobLauncher.run(batchJob.getJob(), batchJob.getJobParameters())
         }
     }
 
-    private SyncBatchJob configuredSyncBatchJob(Session session, Iterator<JcrNode> nodeIterator, ServletOutputStream servletOutputStream) {
+    private SyncBatchJob configuredSyncBatchJob(Session session, Iterator<JcrNode> nodeIterator,
+                                                ServletOutputStream servletOutputStream, String path) {
         SyncBatchJob batchJob = SyncBatchJob.withApplicationContext(configurableApplicationContext)
-                .configureSteps(new NamespaceHelper(session).namespaces.iterator(), nodeIterator, servletOutputStream)
+                .configure(new NamespaceHelper(session).namespaces.iterator(),
+                                nodeIterator, servletOutputStream, path)
                 .build()
         batchJob
     }
