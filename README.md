@@ -60,7 +60,7 @@ Once these properties are set, `Save` them. Saving will kick of the Sync.
 
 Currently, there is no UI component to this that will give any 'notifications' of the status of the sync.
 
-Current monitoring is to go to `errors.log` on the CLient and look for the message some thing like : 
+Current monitoring is to go to `sync-client.log` on the CLient and look for the message some thing like : 
 
 ```
 
