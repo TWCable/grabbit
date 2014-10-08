@@ -1,6 +1,6 @@
 package com.twc.webcms.sync.server.servlets
 
-import com.twc.webcms.sync.server.services.SyncServerService
+import com.twc.webcms.sync.server.services.ServerService
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.felix.scr.annotations.Reference
@@ -17,7 +17,7 @@ import javax.servlet.ServletException
 class SyncServerServlet extends SlingSafeMethodsServlet {
 
     @Reference(bind='setSyncServerService')
-    SyncServerService syncServerService
+    ServerService syncServerService
 
     @Override
     public void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException, IOException{

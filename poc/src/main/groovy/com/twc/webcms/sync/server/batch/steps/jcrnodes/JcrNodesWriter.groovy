@@ -1,6 +1,7 @@
 package com.twc.webcms.sync.server.batch.steps.jcrnodes
 
 import com.twc.webcms.sync.proto.NodeProtos
+import com.twc.webcms.sync.server.batch.ServerBatchJobContext
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.springframework.batch.core.ItemWriteListener
@@ -20,15 +21,6 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
 
     private ServletOutputStream servletOutputStream
 
-    /**
-     * {@link JcrNodesWriter#servletOutputStream} must be set before using JcrNodesWriter using this method
-     * @param the servletOutputStream for current execution
-     */
-    public void setServletOutputStream(@Nonnull ServletOutputStream servletOutputStream) {
-        if(servletOutputStream == null) throw new IllegalArgumentException("servletOutputStream == null")
-        this.servletOutputStream = servletOutputStream
-    }
-
     @Override
     void write(List<? extends NodeProtos.Node> nodeProtos) throws Exception {
         if(servletOutputStream == null) throw new IllegalStateException("servletOutputStream must be set.")
@@ -41,7 +33,8 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
 
     @Override
     void beforeWrite(List items) {
-        //no-op
+        ServerBatchJobContext serverBatchJobContext = ServerBatchJobContext.THREAD_LOCAL.get()
+        this.servletOutputStream = serverBatchJobContext.servletOutputStream
     }
 
     @Override

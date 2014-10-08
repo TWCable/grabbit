@@ -2,7 +2,7 @@
     <primaryNodeType>sling:OsgiConfig</primaryNodeType>
     <property>
         <name>org.apache.sling.commons.log.file</name>
-        <value>logs/sync-client.log</value>
+        <value>logs/batch-client.log</value>
         <type>String</type>
     </property>
 
@@ -14,7 +14,7 @@
 
     <property>
         <name>org.apache.sling.commons.log.names</name>
-        <value>com.twc.webcms.sync.client.services.impl.SyncClientServiceImpl</value>
+        <value>com.twc.webcms.sync.client.batch</value>
         <type>String</type>
     </property>
 

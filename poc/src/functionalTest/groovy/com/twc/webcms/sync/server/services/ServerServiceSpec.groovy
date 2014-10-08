@@ -1,7 +1,7 @@
 package com.twc.webcms.sync.server.services
 
 import com.twc.jackalope.NodeBuilder as FakeNodeBuilder
-import com.twc.webcms.sync.server.services.impl.SyncServerServiceImpl
+import com.twc.webcms.sync.server.services.impl.DefaultServerService
 import com.twc.webcms.sync.testutils.MockServletOutputStream
 import org.apache.sling.jcr.api.SlingRepository
 import org.springframework.context.ConfigurableApplicationContext
@@ -13,8 +13,8 @@ import spock.lang.Subject
 import static com.twc.jackalope.JCRBuilder.*
 import static com.twc.jackalope.JcrConstants.NT_FILE
 
-@Subject(SyncServerService)
-class SyncServerServiceSpec extends Specification {
+@Subject(ServerService)
+class ServerServiceSpec extends Specification {
 
     @Shared
     SlingRepository slingRepository
@@ -23,11 +23,11 @@ class SyncServerServiceSpec extends Specification {
     ConfigurableApplicationContext configurableApplicationContext
 
     @Shared
-    SyncServerService syncServerService
+    ServerService syncServerService
 
     def setup() {
 
-        configurableApplicationContext = new ClassPathXmlApplicationContext("META-INF/spring/sync-batch-job.xml")
+        configurableApplicationContext = new ClassPathXmlApplicationContext("META-INF/spring/server-batch-job.xml")
 
         FakeNodeBuilder fakeNodeBuilder =
                 node("default.groovy",
@@ -43,7 +43,7 @@ class SyncServerServiceSpec extends Specification {
 
         slingRepository = repository(fakeNodeBuilder).build()
 
-        syncServerService = new SyncServerServiceImpl(slingRepository: slingRepository,
+        syncServerService = new DefaultServerService(slingRepository: slingRepository,
                 configurableApplicationContext: configurableApplicationContext)
 
     }

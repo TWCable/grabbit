@@ -1,9 +1,9 @@
 package com.twc.webcms.sync.server.services.impl
 
 import com.twc.webcms.sync.jcr.JcrUtil
-import com.twc.webcms.sync.server.batch.SyncBatchJob
+import com.twc.webcms.sync.server.batch.ServerBatchJob
 import com.twc.webcms.sync.server.services.NonRecursiveIterator
-import com.twc.webcms.sync.server.services.SyncServerService
+import com.twc.webcms.sync.server.services.ServerService
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.felix.scr.annotations.Component
@@ -12,7 +12,6 @@ import org.apache.felix.scr.annotations.Service
 import org.apache.jackrabbit.commons.NamespaceHelper
 import org.apache.jackrabbit.commons.flat.TreeTraverser
 import org.apache.sling.jcr.api.SlingRepository
-import org.springframework.batch.core.launch.JobLauncher
 import org.springframework.context.ConfigurableApplicationContext
 
 import javax.annotation.Nonnull
@@ -23,9 +22,9 @@ import javax.servlet.ServletOutputStream
 @Slf4j
 @CompileStatic
 @Component(label = "Content Sync Server Service", description = "Content Sync Server Service", immediate = true, metatype = true, enabled = true)
-@Service(SyncServerService)
+@Service(ServerService)
 @SuppressWarnings('GroovyUnusedDeclaration')
-class SyncServerServiceImpl implements SyncServerService{
+class DefaultServerService implements ServerService{
 
     @Reference(bind='setSlingRepository')
     SlingRepository slingRepository
@@ -38,8 +37,6 @@ class SyncServerServiceImpl implements SyncServerService{
 
         if(path == null) throw new IllegalStateException("path == null")
         if(servletOutputStream == null) throw new IllegalStateException("servletOutputStream == null")
-
-        JobLauncher jobLauncher = (JobLauncher) configurableApplicationContext.getBean(JobLauncher)
 
         JcrUtil.withSession(slingRepository, "admin") { Session session ->
             Iterator<JcrNode> nodeIterator
@@ -56,17 +53,17 @@ class SyncServerServiceImpl implements SyncServerService{
                 nodeIterator = TreeTraverser.nodeIterator(rootNode)
             }
 
-            SyncBatchJob batchJob = configuredSyncBatchJob(session, nodeIterator, servletOutputStream, path)
-            jobLauncher.run(batchJob.getJob(), batchJob.getJobParameters())
+            ServerBatchJob batchJob = configuredServerBatchJob(session, nodeIterator, servletOutputStream, path)
+            batchJob.run()
         }
     }
 
-    private SyncBatchJob configuredSyncBatchJob(Session session, Iterator<JcrNode> nodeIterator,
+    private ServerBatchJob configuredServerBatchJob(Session session, Iterator<JcrNode> nodeIterator,
                                                 ServletOutputStream servletOutputStream, String path) {
-        SyncBatchJob batchJob = SyncBatchJob.withApplicationContext(configurableApplicationContext)
-                .configure(new NamespaceHelper(session).namespaces.iterator(),
-                                nodeIterator, servletOutputStream, path)
-                .build()
+        ServerBatchJob batchJob = new ServerBatchJob.ConfigurationBuilder(configurableApplicationContext)
+                                    .andConfiguration(new NamespaceHelper(session).namespaces.iterator(),nodeIterator,servletOutputStream)
+                                    .andPath(path)
+                                    .build()
         batchJob
     }
 }

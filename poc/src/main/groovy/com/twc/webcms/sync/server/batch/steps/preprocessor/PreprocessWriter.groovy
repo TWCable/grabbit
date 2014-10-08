@@ -3,6 +3,7 @@ package com.twc.webcms.sync.server.batch.steps.preprocessor
 import com.twc.webcms.sync.proto.PreProcessorProtos.NamespaceEntry
 import com.twc.webcms.sync.proto.PreProcessorProtos.NamespaceRegistry
 import com.twc.webcms.sync.proto.PreProcessorProtos.Preprocessors
+import com.twc.webcms.sync.server.batch.ServerBatchJobContext
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.springframework.batch.core.ItemWriteListener
@@ -21,15 +22,6 @@ class PreprocessWriter implements ItemWriter<NamespaceEntry>, ItemWriteListener 
 
     private ServletOutputStream servletOutputStream
 
-    /**
-     * {@link PreprocessWriter#servletOutputStream} must be set before using PreprocessWriter using this method
-     * @param the servletOutputStream for current execution
-     */
-    public void setServletOutputStream(ServletOutputStream servletOutputStream) {
-        if(servletOutputStream == null) throw new IllegalArgumentException("servletOutputStream == null")
-        this.servletOutputStream = servletOutputStream
-    }
-
     @Override
     void write(List<? extends NamespaceEntry> namespaceEntries) throws Exception {
         if(servletOutputStream == null) throw new IllegalStateException("servletOutputStream must be set.")
@@ -47,7 +39,8 @@ class PreprocessWriter implements ItemWriter<NamespaceEntry>, ItemWriteListener 
 
     @Override
     void beforeWrite(List items) {
-        //no-op
+        ServerBatchJobContext serverBatchJobContext = ServerBatchJobContext.THREAD_LOCAL.get()
+        this.servletOutputStream = serverBatchJobContext.servletOutputStream
     }
 
     @Override

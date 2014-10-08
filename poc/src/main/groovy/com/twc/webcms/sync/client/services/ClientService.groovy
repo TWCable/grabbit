@@ -1,6 +1,6 @@
 package com.twc.webcms.sync.client.services
 
-interface SyncClientService {
+interface ClientService {
 
     /**
      * This API will perform Content Sync for the given list of paths

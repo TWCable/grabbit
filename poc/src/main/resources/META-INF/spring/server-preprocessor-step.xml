@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+    <description>
+        Steps for syncPreprocessor
+        - "serverPreprocessReader" - Returns the "next()" "namespace prefix -> url" Entry from the provided Namespaces Iterator
+        - "serverPreprocessProcessor" - Effectively a Marshaller, converts a "namespace prefix -> url" Entry to Protobuf Message NamespaceEntry object
+        - "serverPreprocessWriter" - Writes a "chunk" of Protobuf Message NamespaceEntries to the provided Output Stream
+    </description>
+
+    <bean id="serverPreprocessReader" class="com.twc.webcms.sync.server.batch.steps.preprocessor.PreprocessReader"/>
+
+    <bean id="serverPreprocessProcessor" class="com.twc.webcms.sync.server.batch.steps.preprocessor.PreprocessProcessor"/>
+
+    <bean id="serverPreprocessWriter" class="com.twc.webcms.sync.server.batch.steps.preprocessor.PreprocessWriter" />
+</beans>

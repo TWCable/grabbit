@@ -61,17 +61,19 @@ Once these properties are set, `Save` them. Saving will kick of the Sync.
 
 Currently, there is no UI component to this that will give any 'notifications' of the status of the sync.
 
-Current monitoring is to go to `sync-client.log` on the CLient and look for the message some thing like : 
+Current monitoring is to go to `batch-client.log` on the Client and look for the message some thing like : 
 
 ```
 
-Received all data from Server for Sync. Completed unmarshalling. Total nodes : XXXX
+Current Path : xxxx . Total nodes written : xxxx
 
 ...
 
-'Content sync from <server> for Content Path <rootPath>': running time (millis) = xxxxx
+Grab from localhost for Current Path xxxx took : xxxx milliseconds
 
 ```
+
+Server monitoring is to go to `batch-server.log`.
 
 *The current State of the Project is also deployed to `webcms-alpha02.lab.webapps.rr.com:4502` which can act as a Server.*
 

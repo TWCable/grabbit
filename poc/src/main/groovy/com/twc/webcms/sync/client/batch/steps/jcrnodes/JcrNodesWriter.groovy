@@ -1,18 +1,15 @@
-package com.twc.webcms.sync.client.unmarshaller
+package com.twc.webcms.sync.client.batch.steps.jcrnodes
 
+import com.twc.webcms.sync.client.batch.ClientBatchJobContext
+import com.twc.webcms.sync.client.unmarshaller.DateUtil
 import com.twc.webcms.sync.proto.NodeProtos
-import com.twc.webcms.sync.proto.NodeProtos.Node
-import com.twc.webcms.sync.proto.NodeProtos.Property
-import com.twc.webcms.sync.proto.PreProcessorProtos
-import com.twc.webcms.sync.proto.PreProcessorProtos.Preprocessors
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.jackrabbit.commons.JcrUtils
-import org.apache.jackrabbit.commons.NamespaceHelper
 import org.apache.jackrabbit.value.*
+import org.springframework.batch.core.ItemWriteListener
+import org.springframework.batch.item.ItemWriter
 
-import javax.jcr.Node as JcrNode
-import javax.jcr.RepositoryException
 import javax.jcr.Session
 import javax.jcr.Value
 import javax.jcr.nodetype.NodeType
@@ -22,64 +19,57 @@ import static javax.jcr.PropertyType.*
 import static javax.jcr.PropertyType.URI as JcrURI
 import static org.apache.jackrabbit.JcrConstants.*
 
+/**
+ * A Custom ItemWriter that will write the provided Jcr Nodes to the {@link JcrNodesWriter#session}
+ * Will save() the {@link JcrNodesWriter#session} after writing provided Jcr Nodes
+ * @see ItemWriteListener
+ */
 @Slf4j
 @CompileStatic
-class ProtobufUnmarshaller {
+class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
+    private Session session
 
-    private long nodeCount
-
-    public ProtobufUnmarshaller() {
-        this.nodeCount = 0;
+    @Override
+    void beforeWrite(List nodeProtos) {
+        ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()
+        this.session = clientBatchJobContext.session
     }
 
-    long getNodeCount() {
-        nodeCount
+    @Override
+    void afterWrite(List nodeProtos) {
+        log.info "Saving ${nodeProtos.size()} nodes"
+        session.save()
     }
 
-    /**
-     * Un-marshals the NamespaceRegistry (as a key value pair of prefix:uri) and registers the namespaces if they don't
-     * already exist
-     * @param preprocessorsProto
-     * @param session
-     */
-    static void fromPreprocessorsProto(Preprocessors preprocessorsProto, Session session) {
-        try {
-            log.info "Received Preprocessors Proto: ${preprocessorsProto}"
-            final NamespaceHelper namespaceHelper = new NamespaceHelper(session)
-            PreProcessorProtos.NamespaceRegistry namespaceRegistryProto = preprocessorsProto.namespaceRegistry
-            namespaceRegistryProto.entryList.each { PreProcessorProtos.NamespaceEntry namespaceEntry ->
-                namespaceHelper.registerNamespace(namespaceEntry.prefix, namespaceEntry.uri)
-            }
-            session.save()
-        }
-        catch (RepositoryException e) {
-            log.error "Exception while unmarshalling Preprocessors: ${preprocessorsProto}", e
+    @Override
+    void onWriteError(Exception exception, List nodeProtos) {
+        log.error "Exception writing JCR Nodes to current JCR Session : ${session}. ", exception
+    }
+
+    @Override
+    void write(List<? extends NodeProtos.Node> nodeProtos) throws Exception {
+        for(NodeProtos.Node nodeProto : nodeProtos) {
+            writeToJcr(nodeProto, session)
         }
     }
 
-    /**
-     * Un-marshals the Node proto message and writes the node to JCR
-     * @param nodeProto
-     * @param session
-     */
-    void fromNodeProto(Node nodeProto, Session session) {
+    private static void writeToJcr(NodeProtos.Node nodeProto, Session session) {
         log.debug "Received NodeProto: ${nodeProto}"
-        List<Property> properties = nodeProto.properties.propertyList
-        final String primaryType = properties.find { Property protoProperty -> protoProperty.name == JCR_PRIMARYTYPE }.value.stringValue
+        List<NodeProtos.Property> properties = nodeProto.properties.propertyList
+        final String primaryType = properties.find { NodeProtos.Property protoProperty -> protoProperty.name == JCR_PRIMARYTYPE }.value.stringValue
         log.debug "Primary Type: ${primaryType}"
 
         if(primaryType == NT_FILE) {
             def temp = nodeProto.name.split("/")
             final String fileName = temp.last()
             final String parentName = nodeProto.name.replaceAll("/${fileName}", "")
-            final JcrNode parentNode = JcrUtils.getOrCreateByPath(parentName, null, session)
-            JcrNode fileNode = JcrUtils.getOrAddNode(parentNode, fileName, NodeType.NT_FILE)
-            JcrUtils.getOrAddNode(fileNode, JcrNode.JCR_CONTENT, NodeType.NT_RESOURCE)
-            nodeCount++
+            final javax.jcr.Node parentNode = JcrUtils.getOrCreateByPath(parentName, null, session)
+            javax.jcr.Node fileNode = JcrUtils.getOrAddNode(parentNode, fileName, NodeType.NT_FILE)
+            JcrUtils.getOrAddNode(fileNode, javax.jcr.Node.JCR_CONTENT, NodeType.NT_RESOURCE)
         }
         else {
-            JcrNode currentNode = JcrUtils.getOrCreateByPath(nodeProto.name, primaryType, session)
-            properties.each { Property protoProperty ->
+            javax.jcr.Node currentNode = JcrUtils.getOrCreateByPath(nodeProto.name, primaryType, session)
+            properties.each { NodeProtos.Property protoProperty ->
                 if(  JCR_PRIMARYTYPE != protoProperty.name && (protoProperty.hasValue() || protoProperty.hasValues())) {
                     if(protoProperty.name == JCR_MIXINTYPES) {
                         addMixins(protoProperty, currentNode)
@@ -90,7 +80,6 @@ class ProtobufUnmarshaller {
                     }
                 }
             }
-            nodeCount++
         }
     }
 
@@ -99,7 +88,7 @@ class ProtobufUnmarshaller {
      * @param property
      * @param node
      */
-    private static void addMixins(Property property, JcrNode node) {
+    private static void addMixins(NodeProtos.Property property, javax.jcr.Node node) {
         property.values.valueList.each { NodeProtos.Value value ->
             if(node.canAddMixin(value.stringValue)) {
                 node.addMixin(value.stringValue)
@@ -115,7 +104,7 @@ class ProtobufUnmarshaller {
      * @param property
      * @param currentNode
      */
-    private static void addProperty(Property property, JcrNode currentNode) {
+    private static void addProperty(NodeProtos.Property property, javax.jcr.Node currentNode) {
         final int type = property.type
 
         switch(type) {

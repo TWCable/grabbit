@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--suppress SpringFacetInspection -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:batch="http://www.springframework.org/schema/batch"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/batch 
+       http://www.springframework.org/schema/batch/spring-batch-2.2.xsd
+       http://www.springframework.org/schema/beans 
+       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+    <import resource="batch-job-context.xml" />
+    <import resource="server-jcrNodes-step.xml" />
+    <import resource="server-preprocessor-step.xml"/>
+
+    <batch:job id="serverJob" xmlns="http://www.springframework.org/schema/batch">
+        <batch:step id="serverPreprocessor" next="serverJcrNodes">
+            <batch:tasklet>
+                <batch:chunk reader="serverPreprocessReader" writer="serverPreprocessWriter"
+                             processor="serverPreprocessProcessor" commit-interval="1000" skip-limit="0"/>
+            </batch:tasklet>
+        </batch:step>
+        <batch:step id="serverJcrNodes">
+            <batch:tasklet>
+                <batch:chunk reader="serverJcrNodesReader" writer="serverProtobufNodesWriter"
+                             processor="serverJcrNodesProcessor" commit-interval="1000" skip-limit="0"/>
+            </batch:tasklet>
+        </batch:step>
+        <batch:listeners>
+            <listener ref="serverBatchJobListener"/>
+        </batch:listeners>
+    </batch:job>
+
+    <bean id="serverBatchJobListener" class="com.twc.webcms.sync.server.batch.ServerBatchJobExecutionListener" />
+
+</beans>
