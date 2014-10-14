@@ -2,7 +2,7 @@ package com.twc.webcms.sync.server.services.impl
 
 import com.twc.webcms.sync.jcr.JcrUtil
 import com.twc.webcms.sync.server.batch.ServerBatchJob
-import com.twc.webcms.sync.server.services.NonRecursiveIterator
+import com.twc.webcms.sync.server.services.JcrContentRecursiveIterator
 import com.twc.webcms.sync.server.services.ServerService
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -46,7 +46,7 @@ class DefaultServerService implements ServerService{
             if(path.split("/").last() == "." ) {
                 final String actualPath = path.substring(0, path.length() - 2)
                 final JcrNode rootNode = session.getNode(actualPath)
-                nodeIterator = new NonRecursiveIterator(rootNode)
+                nodeIterator = new JcrContentRecursiveIterator(rootNode)
             }
             else {
                 final JcrNode rootNode = session.getNode(path)
