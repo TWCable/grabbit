@@ -74,3 +74,11 @@ Received all data from Server for Sync. Completed unmarshalling. Total nodes : X
 ```
 
 *The current State of the Project is also deployed to `webcms-alpha02.lab.webapps.rr.com:4502` which can act as a Server.*
+
+
+# Accessing the client UI#
+
+Drop the component "Sync service component" under component group "grabbit". Enter comma separated path(s) in the textarea and verify the call to "/bin/grabbit/client/pull" in the Network tab.
+A progress bar would appear on the top of the page indicating the content is being pulled in the form of a loading bar (red line).
+Upon successful completion(status code 200), a modal pop would show "Content pulled successfully" , else "An error occurred while grabbing content." would be displayed.
+
