@@ -1,28 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--suppress SpringFacetInspection -->
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:batch="http://www.springframework.org/schema/batch"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:osgi="http://www.springframework.org/schema/osgi"
        xsi:schemaLocation="http://www.springframework.org/schema/batch
        http://www.springframework.org/schema/batch/spring-batch-2.2.xsd
        http://www.springframework.org/schema/beans
-       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
-       http://www.springframework.org/schema/osgi
-       http://www.springframework.org/schema/osgi/spring-osgi-2.0-m1.xsd">
+       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
 
-    <import resource="batch-job-context.xml"/>
+    <!--
+        Spring beans are by default, Singletons. It is thus important to make sure that your beans, especially,
+        the Tasklets, ItemReaders, ItemWriters, etc. are thread-safe. Otherwise, if you have instance level variables
+        you will have concurrency issues and mutating states for your instance variables.
+        Thus, if you think that your batch job is going to be run in a Concurrent Environment, don't use instance level
+        variables for your readers, writers, processors and tasklets,
+    -->
+
+    <import resource="client-batch-job-context.xml"/>
     <import resource="client-jcrNodes-step.xml" />
+    <import resource="client-preprocessor-step.xml" />
 
-    <batch:job id="clientJob" xmlns="http://www.springframework.org/schema/batch">
+    <batch:job id="clientJob" xmlns="http://www.springframework.org/schema/batch" job-repository="clientJobRepository">
         <batch:step id="clientPreprocessor" next="clientJcrNodes">
-            <batch:tasklet>
-                <batch:chunk reader="clientPreprocessReader" writer="clientPreprocessWriter"
-                             commit-interval="1" skip-limit="0"/>
-            </batch:tasklet>
+            <batch:tasklet ref="clientPreprocessTasklet" transaction-manager="clientTransactionManager"/>
         </batch:step>
         <batch:step id="clientJcrNodes">
-            <batch:tasklet>
+            <batch:tasklet transaction-manager="clientTransactionManager">
                 <batch:chunk reader="clientProtobufNodesReader" writer="clientJcrNodesWriter"
                             commit-interval="1000" skip-limit="0"/>
                 <listeners>
@@ -35,12 +37,11 @@
         </batch:listeners>
     </batch:job>
 
-    <!-- Provides a Spring-OSGi Managed Service reference to ClientBatchJobExecutionListener -->
-    <osgi:reference id="slingRepository" interface="org.apache.sling.jcr.api.SlingRepository"/>
 
     <bean id="clientBatchJobListener" class="com.twc.webcms.sync.client.batch.ClientBatchJobExecutionListener" >
         <property name="slingRepository" ref="slingRepository"/>
     </bean>
 
     <bean id="jcrNodesStepExecutionListener" class="com.twc.webcms.sync.client.batch.steps.jcrnodes.JcrNodesStepExecutionListener" />
+
 </beans>

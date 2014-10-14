@@ -1,18 +1,17 @@
 package com.twc.webcms.sync.client.batch
 
 import groovy.transform.CompileStatic
-import org.springframework.batch.core.Job
-import org.springframework.batch.core.JobParameters
-import org.springframework.batch.core.JobParametersBuilder
-import org.springframework.batch.core.launch.JobLauncher
+import groovy.util.logging.Slf4j
+import org.springframework.batch.core.launch.JobOperator
 import org.springframework.context.ConfigurableApplicationContext
 
 import javax.annotation.Nonnull
 
 /**
  * A simple helper class that given a Application Context and initial configuration conditions, will
- * return a ClientBatchJob instance with a valid {@link Job} and {@link JobParameters}
+ * return a ClientBatchJob instance with a valid {@link JobOperator}
  */
+@Slf4j
 @CompileStatic
 class ClientBatchJob {
 
@@ -22,22 +21,30 @@ class ClientBatchJob {
     public static final String USERNAME = "username"
     public static final String PASSWORD = "password"
 
-    final Job job
-    final JobParameters jobParameters
-    final JobLauncher jobLauncher
+    private final Map<String,String> jobParameters
+    private final JobOperator jobOperator
 
-    protected ClientBatchJob(@Nonnull Job job, @Nonnull JobParameters jobParameters, @Nonnull JobLauncher jobLauncher) {
-        if(job == null) throw new IllegalArgumentException("Job == null")
+    protected ClientBatchJob(@Nonnull Map<String, String> jobParameters, @Nonnull JobOperator jobOperator) {
         if(jobParameters == null) throw new IllegalArgumentException("JobParameters == null")
-        if(jobLauncher == null) throw new IllegalArgumentException("JobLauncher == null")
+        if(jobOperator == null) throw new IllegalArgumentException("jobOperator == null")
 
-        this.job = job
         this.jobParameters = jobParameters
-        this.jobLauncher = jobLauncher
+        this.jobOperator = jobOperator
     }
 
-    public void run() {
-        jobLauncher.run(job, jobParameters)
+    /**
+     * Method to be called to start a job for given specific parameters
+     * @return ID of the current Job's JobExecution instance
+     */
+    public Long start() {
+        final String JOB_NAME = "clientJob"
+        final String jobParametersString = jobParameters.collect { String key, String value ->
+            "${key}=${value}"
+        }.join(",")
+        log.debug "Current Job Params : ${jobParametersString}"
+        final Long jobExecutionId = jobOperator.start(JOB_NAME, jobParametersString)
+        log.info "Kicked off job with ID : ${jobExecutionId}"
+        return jobExecutionId
     }
 
     // **********************************************************************
@@ -107,16 +114,16 @@ class ClientBatchJob {
 
         ClientBatchJob build() {
             return new ClientBatchJob(
-                serverBuilder.configAppContext.getBean("clientJob", Job),
-                new JobParametersBuilder()
-                        .addLong("timestamp", System.currentTimeMillis())
-                        .addString(PATH, pathBuilder.path)
-                        .addString(HOST, serverBuilder.host)
-                        .addString(PORT, serverBuilder.port)
-                        .addString(USERNAME, credentialsBuilder.username)
-                        .addString(PASSWORD, credentialsBuilder.password)
-                        .toJobParameters(),
-                serverBuilder.configAppContext.getBean("jobLauncher", JobLauncher)
+                [
+                        "timestamp": System.currentTimeMillis() as String,
+                        "${PATH}" : pathBuilder.path,
+                        "${HOST}" : serverBuilder.host,
+                        "${PORT}" : serverBuilder.port,
+                        "${USERNAME}" : credentialsBuilder.username,
+                        "${PASSWORD}" : credentialsBuilder.password
+
+                ] as Map<String, String>,
+                serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
             )
         }
     }

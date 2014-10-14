@@ -20,34 +20,34 @@ import static javax.jcr.PropertyType.URI as JcrURI
 import static org.apache.jackrabbit.JcrConstants.*
 
 /**
- * A Custom ItemWriter that will write the provided Jcr Nodes to the {@link JcrNodesWriter#session}
- * Will save() the {@link JcrNodesWriter#session} after writing provided Jcr Nodes
+ * A Custom ItemWriter that will write the provided Jcr Nodes to the {@link JcrNodesWriter#theSession()}
+ * Will save() the {@link JcrNodesWriter#theSession()} after writing provided Jcr Nodes
  * @see ItemWriteListener
  */
 @Slf4j
 @CompileStatic
+@SuppressWarnings('GrMethodMayBeStatic')
 class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
-    private Session session
 
     @Override
     void beforeWrite(List nodeProtos) {
-        ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()
-        this.session = clientBatchJobContext.session
+        //no-op
     }
 
     @Override
     void afterWrite(List nodeProtos) {
         log.info "Saving ${nodeProtos.size()} nodes"
-        session.save()
+        theSession().save()
     }
 
     @Override
     void onWriteError(Exception exception, List nodeProtos) {
-        log.error "Exception writing JCR Nodes to current JCR Session : ${session}. ", exception
+        log.error "Exception writing JCR Nodes to current JCR Session : ${theSession()}. ", exception
     }
 
     @Override
     void write(List<? extends NodeProtos.Node> nodeProtos) throws Exception {
+        Session session = theSession()
         for(NodeProtos.Node nodeProto : nodeProtos) {
             writeToJcr(nodeProto, session)
         }
@@ -205,5 +205,10 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 break
 
         }
+    }
+
+    private Session theSession() {
+        ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()
+        clientBatchJobContext.session
     }
 }

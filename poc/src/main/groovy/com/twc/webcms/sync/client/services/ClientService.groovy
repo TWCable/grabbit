@@ -3,8 +3,9 @@ package com.twc.webcms.sync.client.services
 interface ClientService {
 
     /**
-     * This API will perform Content Sync for the given list of paths
+     * This API will perform Content Grab for the given list of paths
      * @param whiteList : the list of paths to be synced
+     * @return Collection of Job's Execution Ids
      */
-    void doSync(Collection<String> whiteList)
+    Collection<Long> initiateGrab(Collection<String> whiteList)
 }

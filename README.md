@@ -84,3 +84,36 @@ Drop the component "Sync service component" under component group "grabbit". Ent
 A progress bar would appear on the top of the page indicating the content is being pulled in the form of a loading bar (red line).
 Upon successful completion(status code 200), a modal pop would show "Content pulled successfully" , else "An error occurred while grabbing content." would be displayed.
 
+# Initiating Grab/Sync Jobs via command line#
+
+Following shell script (grabbit.sh) can be used to initiate grabbit jobs for one or more paths and checking the status of those jobs.
+
+```shell
+#!/bin/bash
+
+# Simple Script to initialize one or more Sync or Grab jobs for one or more paths
+
+#### Constants
+
+INIT="init" #init => Initialize Sync for given paths delimited by commas
+STATUS="status" #status => Get Status for given JobIds delimited by commas
+HOST="http://localhost:4502"
+INIT_URL="/bin/twc/client/grab"
+STATUS_URL="/bin/twc/client/grab/status"
+
+if [ $1 == $INIT ]; then
+    curl -u admin:admin --request GET $HOST$INIT_URL"?paths="$2
+elif [ $1 == $STATUS ]; then
+    curl -u admin:admin --request GET $HOST$STATUS_URL"?jobIds="$2
+fi
+```
+
+To use this script : 
+
+`sh grabbit.sh init /etc/tags,/content/residential-admin,/content/twc/en/checkout`
+
+This script will return an array of one or more jobIds. You can use these jobIds to run a 'status' query on the same script
+ 
+`sh grabbit.sh status id1,id2,id3`
+
+This status check returns a JSON representation of the same information you see in the Client UI

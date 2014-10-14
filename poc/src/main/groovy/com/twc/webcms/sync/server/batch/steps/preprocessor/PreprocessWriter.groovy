@@ -12,18 +12,18 @@ import org.springframework.batch.item.ItemWriter
 import javax.servlet.ServletOutputStream
 
 /**
- * A Custom ItemWriter that will write the provided Protocol Buffer NamespacesEntries to the {@link PreprocessWriter#servletOutputStream}
- * Will flush the {@link PreprocessWriter#servletOutputStream} after writing provided Protocol Buffer NamespaceEntries
+ * A Custom ItemWriter that will write the provided Protocol Buffer NamespacesEntries to the {@link PreprocessWriter#theServletOutputStream()}
+ * Will flush the {@link PreprocessWriter#theServletOutputStream()} after writing provided Protocol Buffer NamespaceEntries
  * @see ItemWriteListener
  */
 @Slf4j
 @CompileStatic
+@SuppressWarnings('GrMethodMayBeStatic')
 class PreprocessWriter implements ItemWriter<NamespaceEntry>, ItemWriteListener {
-
-    private ServletOutputStream servletOutputStream
 
     @Override
     void write(List<? extends NamespaceEntry> namespaceEntries) throws Exception {
+        ServletOutputStream servletOutputStream = theServletOutputStream()
         if(servletOutputStream == null) throw new IllegalStateException("servletOutputStream must be set.")
 
         NamespaceRegistry.Builder namespaceRegistryBuilder = NamespaceRegistry.newBuilder()
@@ -39,18 +39,22 @@ class PreprocessWriter implements ItemWriter<NamespaceEntry>, ItemWriteListener 
 
     @Override
     void beforeWrite(List items) {
-        ServerBatchJobContext serverBatchJobContext = ServerBatchJobContext.THREAD_LOCAL.get()
-        this.servletOutputStream = serverBatchJobContext.servletOutputStream
+        //no-op
     }
 
     @Override
     void afterWrite(List items) {
-        servletOutputStream.flush()
+        theServletOutputStream().flush()
     }
 
     @Override
     void onWriteError(Exception exception, List items) {
         log.error "Exception occurred while writing the current chunk", exception
+    }
+
+    private ServletOutputStream theServletOutputStream() {
+        ServerBatchJobContext serverBatchJobContext = ServerBatchJobContext.THREAD_LOCAL.get()
+        serverBatchJobContext.servletOutputStream
     }
 
 }

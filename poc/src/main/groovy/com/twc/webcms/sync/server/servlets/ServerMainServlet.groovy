@@ -14,7 +14,7 @@ import javax.servlet.ServletException
 @CompileStatic
 @Slf4j
 @SlingServlet( methods = ['GET'], paths = ["/bin/twc/server/grab"] )
-class SyncServerServlet extends SlingSafeMethodsServlet {
+class ServerMainServlet extends SlingSafeMethodsServlet {
 
     @Reference(bind='setSyncServerService')
     ServerService syncServerService

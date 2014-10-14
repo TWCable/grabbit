@@ -11,18 +11,18 @@ import javax.annotation.Nonnull
 import javax.servlet.ServletOutputStream
 
 /**
- * A Custom ItemWriter that will write the provided Protocol Buffer Nodes to the {@link JcrNodesWriter#servletOutputStream}
- * Will flush the {@link JcrNodesWriter#servletOutputStream} after writing provided Protocol Buffer Nodes
+ * A Custom ItemWriter that will write the provided Protocol Buffer Nodes to the {@link JcrNodesWriter#theServletOutputStream()}
+ * Will flush the {@link JcrNodesWriter#theServletOutputStream()} after writing provided Protocol Buffer Nodes
  * @see ItemWriteListener
  */
 @Slf4j
 @CompileStatic
+@SuppressWarnings('GrMethodMayBeStatic')
 class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
-
-    private ServletOutputStream servletOutputStream
 
     @Override
     void write(List<? extends NodeProtos.Node> nodeProtos) throws Exception {
+        ServletOutputStream servletOutputStream = theServletOutputStream()
         if(servletOutputStream == null) throw new IllegalStateException("servletOutputStream must be set.")
 
         nodeProtos.each { NodeProtos.Node node ->
@@ -33,17 +33,21 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
 
     @Override
     void beforeWrite(List items) {
-        ServerBatchJobContext serverBatchJobContext = ServerBatchJobContext.THREAD_LOCAL.get()
-        this.servletOutputStream = serverBatchJobContext.servletOutputStream
     }
 
     @Override
     void afterWrite(List items) {
-        servletOutputStream.flush()
+        theServletOutputStream().flush()
     }
 
     @Override
     void onWriteError(Exception exception, List items) {
         log.error "Exception occurred while writing the current chunk", exception
     }
+
+    private ServletOutputStream theServletOutputStream() {
+        ServerBatchJobContext serverBatchJobContext = ServerBatchJobContext.THREAD_LOCAL.get()
+        serverBatchJobContext.servletOutputStream
+    }
+
 }

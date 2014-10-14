@@ -106,7 +106,7 @@ class ServerBatchJob {
                     .addLong("timestamp", System.currentTimeMillis())
                     .addString(PATH, pathBuilder.path)
                     .toJobParameters(),
-                    (JobLauncher) configurationBuilder.configAppContext.getBean("jobLauncher" ,JobLauncher)
+                    (JobLauncher) configurationBuilder.configAppContext.getBean("serverJobLauncher" ,JobLauncher)
             )
         }
 

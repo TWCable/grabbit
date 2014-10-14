@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--suppress SpringFacetInspection -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+    <!-- Client JobLauncher -->
+    <bean id="clientJobLauncher"
+          class="org.springframework.batch.core.launch.support.SimpleJobLauncher"
+          p:jobRepository-ref="clientJobRepository"/>
+
+    <!-- In Memory Representation of a Client Job Registry -->
+    <bean id="clientJobRegistry" class="org.springframework.batch.core.configuration.support.MapJobRegistry" />
+
+    <!-- A Client Job Operator that is used to kick of new unique JobExecutions -->
+    <bean id="clientJobOperator" class="org.springframework.batch.core.launch.support.SimpleJobOperator">
+        <property name="jobExplorer" ref="clientJobExplorer"/>
+        <property name="jobRepository" ref="clientJobRepository" />
+        <property name="jobRegistry" ref="clientJobRegistry" />
+        <property name="jobLauncher">
+            <bean parent="clientJobLauncher">
+                <property name="taskExecutor" ref="clientJobLauncherTaskExecutor"/>
+            </bean>
+        </property>
+    </bean>
+
+    <!-- In Memory Representation of a Client Job Explorer used for the Status API -->
+    <bean id="clientJobExplorer" class="org.springframework.batch.core.explore.support.MapJobExplorerFactoryBean">
+        <property name="repositoryFactory" ref="&amp;clientJobRepository"/>
+    </bean>
+
+    <!-- A PostProcessor Bean that will register the "clientJobRegistry" from above -->
+    <bean id="jobRegistryBeanPostProcessor" class="org.springframework.batch.core.configuration.support.JobRegistryBeanPostProcessor">
+        <property name="jobRegistry" ref="clientJobRegistry"/>
+    </bean>
+
+    <!-- In Memory Representation of JobRepository that will have a persistent metadata information about all client Jobs -->
+    <bean id="clientJobRepository"
+          class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean"
+          p:transactionManager-ref="clientTransactionManager" />
+
+    <!-- Client Transaction Manager -->
+    <bean id="clientTransactionManager"
+          class="org.springframework.batch.support.transaction.ResourcelessTransactionManager" />
+
+    <!-- A Bean that provides a ThreadPool for the JobOperator to work with -->
+    <bean id="clientJobLauncherTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="corePoolSize" value="10"/>
+    </bean>
+
+</beans>

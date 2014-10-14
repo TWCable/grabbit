@@ -51,17 +51,22 @@ jar.manifest {
     instruction 'Import-Package', 'org.springframework.batch.item.file; version="[2.2,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.item.support; version="[2.2,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.core.configuration.xml; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.configuration.support; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.explore.support; version="[2.2,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.core.repository.support; version="[2.2,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.core.repository; version="[2.2,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.core.launch.support; version="[2.2,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.core.job.flow.support; version="[2.2,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.core.job.flow.support.state; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.repository.dao; version="[2.2,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.support.transaction; version="[2.2,3.0)"'
     instruction 'Import-Package', 'org.springframework.beans.factory.config; version="[3.1,4.0)"'
     instruction 'Import-Package', 'org.springframework.core.io; version="[3.1,4.0)"'
+    instruction 'Import-Package', 'org.springframework.core.task; version="[3.1,4.0)"'
     instruction 'Import-Package', 'org.springframework.aop; version="[3.1,4.0)"'
     instruction 'Import-Package', 'org.springframework.aop.framework; version="[3.1,4.0)"'
     instruction 'Import-Package', 'org.springframework.aop.scope; version="[3.1,4.0)"'
+    instruction 'Import-Package', 'org.springframework.scheduling.concurrent; version="[3.1,4.0)"'
     instruction 'Import-Package', "org.aopalliance.aop;version=1.0.0"
 
 

@@ -38,19 +38,12 @@ class DefaultClientService implements ClientService {
     public static final String SYNC_SERVER_PASSWORD = "sync.server.password"
     private String syncServerPassword
 
-    @ScrProperty(label = "Sync Paths", description = "Sync Paths")
-    public static final String SYNC_PATHS = "sync.paths"
-    private String[] syncPaths
-
-    @ScrProperty(boolValue = false, label = "Enable Data Sync")
-    public static final String SYNC_ENABLED = "sync.enabled"
-    private boolean syncEnabled
-
     @Reference(bind='setSlingRepository')
     SlingRepository slingRepository
 
     @Reference(bind='setConfigurableApplicationContext')
     ConfigurableApplicationContext configurableApplicationContext
+
 
     @Activate
     void activate(ComponentContext componentContext) {
@@ -59,28 +52,30 @@ class DefaultClientService implements ClientService {
         syncServerPort = componentContext.properties[SYNC_SERVER_PORT] as String
         syncServerUsername = componentContext.properties[SYNC_SERVER_USERNAME] as String
         syncServerPassword = componentContext.properties[SYNC_SERVER_PASSWORD] as String
-        syncPaths = componentContext.properties[SYNC_PATHS] as String[]
-        syncEnabled = componentContext.properties[SYNC_ENABLED] as boolean
-
-        if(syncEnabled) {
-            doSync(syncPaths as Collection<String>)
-        }
     }
 
     @Override
-    void doSync(Collection<String> whiteList) {
+    Collection<Long> initiateGrab(Collection<String> whiteList) {
+
+        Collection<Long> jobExecutionIds = []
         for(String path: whiteList) {
-            sync(path)
+            final Long currentJobExecutionId = initiate(path)
+            if(currentJobExecutionId == -1) throw new IllegalStateException("Failed to initiate job for path: ${path}")
+            jobExecutionIds << currentJobExecutionId
         }
+        return jobExecutionIds
+
     }
 
-    private void sync(String path) {
+    private Long initiate(String path) {
         try {
             ClientBatchJob batchJob = configuredClientBatchJob(syncServerHostname, syncServerPort, syncServerUsername, syncServerPassword, path)
-            batchJob.run()
+            Long id = batchJob.start()
+            return id
         }
         catch(Exception e) {
             log.error "Error while requesting a content sync for current Path: ${[path]}", e
+            return -1
         }
 
     }

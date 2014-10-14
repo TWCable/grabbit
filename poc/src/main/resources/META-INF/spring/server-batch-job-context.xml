@@ -6,14 +6,18 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
 
-    <bean id="jobLauncher"
+    <!-- Server Job Launcher -->
+    <bean id="serverJobLauncher"
           class="org.springframework.batch.core.launch.support.SimpleJobLauncher"
-          p:jobRepository-ref="jobRepository" />
+          p:jobRepository-ref="serverJobRepository" />
 
-    <bean id="jobRepository"
+    <!-- In Memory Representation of JobRepository that will have a persistent metadata information about all server Jobs -->
+    <bean id="serverJobRepository"
           class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean"
-          p:transactionManager-ref="transactionManager" />
+          p:transactionManager-ref="serverTransactionManager" />
 
-    <bean id="transactionManager"
+    <!-- Server Transaction Manager -->
+    <bean id="serverTransactionManager"
           class="org.springframework.batch.support.transaction.ResourcelessTransactionManager" />
+
 </beans>
