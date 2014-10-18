@@ -1,5 +1,6 @@
 package com.twc.webcms.sync.client.batch.steps.jcrnodes
 
+import com.twc.webcms.sync.client.batch.ClientBatchJobContext
 import com.twc.webcms.sync.jcr.JcrUtil
 import com.twc.webcms.sync.proto.NodeProtos
 import spock.lang.Specification
@@ -41,7 +42,8 @@ class JcrNodesWriterSpec extends Specification {
         Session session = JcrUtil.getSession(repository().build(), "admin")
 
         when:
-        new JcrNodesWriter(session: session).write([nodeProto])
+        ClientBatchJobContext.THREAD_LOCAL.set(new ClientBatchJobContext(null, session))
+        new JcrNodesWriter().write([nodeProto])
 
         then:
         JcrNode jcrNode = session.getNode("/default.groovy")
@@ -85,7 +87,8 @@ class JcrNodesWriterSpec extends Specification {
         Session session = JcrUtil.getSession(repository().build(), "admin")
 
         when:
-        new JcrNodesWriter(session: session).write([nodeProto])
+        ClientBatchJobContext.THREAD_LOCAL.set(new ClientBatchJobContext(null, session))
+        new JcrNodesWriter().write([nodeProto])
 
         then:
         JcrNode jcrNode = session.getNode("/default")
