@@ -1,5 +1,5 @@
 task getConfigFolders {
-    def configBaseDir = new File(project.projectDir, 'src/main/content/SLING-INF/content/apps/poc/')
+    def configBaseDir = new File(project.projectDir, 'src/main/content/SLING-INF/content/apps/grabbit/')
     project.ext.configFolders = []
     configBaseDir.eachDir { File dir ->
         if (dir.name ==~ /config\.?.*/) {

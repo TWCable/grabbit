@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--suppress SpringFacetInspection -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+    <description>
+        Steps for serverJcrNodes
+        - "serverJcrNodesReader" - Returns the 'next()' Node from the passed in Lazy Node Iterator
+        - "serverJcrNodesProcessor" - Effectively a Marshaller, converts a JCR Node to Protobuf Message Node object
+        - "serverProtobufNodesWriter" - Writes a "chunk" of Protobuf Message Nodes to the provided Output Stream
+    </description>
+
+    <bean id="serverJcrNodesReader" class="com.twc.grabbit.server.batch.steps.jcrnodes.JcrNodesReader"/>
+
+    <bean id="serverJcrNodesProcessor" class="com.twc.grabbit.server.batch.steps.jcrnodes.JcrNodesProcessor"/>
+
+    <bean id="serverProtobufNodesWriter" class="com.twc.grabbit.server.batch.steps.jcrnodes.JcrNodesWriter" />
+</beans>

@@ -1,0 +1,17 @@
+package com.twc.webcms.grabbit.proto;
+
+option java_package = "com.twc.grabbit.proto";
+option java_outer_classname = "PreProcessorProtos";
+
+message Preprocessors {
+    required NamespaceRegistry namespaceRegistry = 1;
+}
+
+message NamespaceRegistry {
+    repeated NamespaceEntry entry = 1;
+}
+
+message NamespaceEntry {
+    required string prefix = 1;
+    required string uri = 2;
+}
