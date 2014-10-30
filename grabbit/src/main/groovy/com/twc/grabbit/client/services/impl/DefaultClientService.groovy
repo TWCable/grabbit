@@ -1,5 +1,7 @@
 package com.twc.grabbit.client.services.impl
 
+import com.twc.grabbit.client.GrabbitConfiguration
+import com.twc.grabbit.client.GrabbitConfiguration.PathConfiguration
 import com.twc.grabbit.client.batch.ClientBatchJob
 import com.twc.grabbit.client.services.ClientService
 import groovy.transform.CompileStatic
@@ -17,26 +19,10 @@ import org.springframework.context.ConfigurableApplicationContext
 @CompileStatic
 @Component(label = "Grabbit Client Service", description = "Grabbit Client Service", immediate = true, metatype = true, enabled = true)
 @Service(ClientService)
-@SuppressWarnings('GroovyUnusedDeclaration')
+@SuppressWarnings(['GroovyUnusedDeclaration','GrMethodMayBeStatic'])
 class DefaultClientService implements ClientService {
 
     public static final int BATCH_SIZE = 1000
-
-    @ScrProperty(label = "Grabbit Server Hostname", description = "Grabbit Server Hostname")
-    public static final String GRAB_SERVER_HOSTNAME = "grab.server.hostname"
-    private String grabServerHostname
-
-    @ScrProperty(label = "Grabbit Server Port", description = "Grabbit Server Port")
-    public static final String GRAB_SERVER_PORT = "grab.server.port"
-    private String grabServerPort
-
-    @ScrProperty(label = "Grabbit Server Username", description = "Grabbit Server Username")
-    public static final String GRAB_SERVER_USERNAME = "grab.server.username"
-    private String grabServerUsername
-
-    @ScrProperty(label = "Grabbit Server Password", description = "Grabbit Server Password")
-    public static final String GRAB_SERVER_PASSWORD = "grab.server.password"
-    private String grabServerPassword
 
     @Reference(bind='setSlingRepository')
     SlingRepository slingRepository
@@ -46,45 +32,43 @@ class DefaultClientService implements ClientService {
 
 
     @Activate
-    void activate(ComponentContext componentContext) {
+    void activate() {
         log.info "Activate\n\n"
-        grabServerHostname = componentContext.properties[GRAB_SERVER_HOSTNAME] as String
-        grabServerPort = componentContext.properties[GRAB_SERVER_PORT] as String
-        grabServerUsername = componentContext.properties[GRAB_SERVER_USERNAME] as String
-        grabServerPassword = componentContext.properties[GRAB_SERVER_PASSWORD] as String
     }
 
     @Override
-    Collection<Long> initiateGrab(Collection<String> whiteList) {
+    Collection<Long> initiateGrab(GrabbitConfiguration configuration) {
 
         Collection<Long> jobExecutionIds = []
-        for(String path: whiteList) {
-            final Long currentJobExecutionId = initiate(path)
-            if(currentJobExecutionId == -1) throw new IllegalStateException("Failed to initiate job for path: ${path}")
+        for(PathConfiguration pathConfig : configuration.pathConfigurations) {
+            final Long currentJobExecutionId = initiate(configuration.serverHost, configuration.serverPort, configuration.serverUsername,
+                                                        configuration.serverPassword, pathConfig)
+            if(currentJobExecutionId == -1) throw new IllegalStateException("Failed to initiate job for path: ${pathConfig}")
             jobExecutionIds << currentJobExecutionId
         }
         return jobExecutionIds
 
     }
 
-    private Long initiate(String path) {
+    private Long initiate(String host, String port, String username, String password, PathConfiguration pathConfiguration) {
         try {
-            ClientBatchJob batchJob = configuredClientBatchJob(grabServerHostname, grabServerPort, grabServerUsername, grabServerPassword, path)
+            ClientBatchJob batchJob = configuredClientBatchJob(host, port, username, password, pathConfiguration)
             Long id = batchJob.start()
             return id
         }
         catch(Exception e) {
-            log.error "Error while requesting a content sync for current Path: ${[path]}", e
+            log.error "Error while requesting a content sync for current Path: ${[pathConfiguration]}", e
             return -1
         }
 
     }
 
-    private ClientBatchJob configuredClientBatchJob(String host, String port, String username, String password, String path) {
+    private ClientBatchJob configuredClientBatchJob(String host, String port, String username, String password,
+                                                    PathConfiguration pathConfiguration) {
         ClientBatchJob batchJob = new ClientBatchJob.ServerBuilder(configurableApplicationContext)
                                     .andServer(host, port)
                                     .andCredentials(username, password)
-                                    .andPath(path)
+                                    .andConfiguration(pathConfiguration)
                                     .build()
         batchJob
     }

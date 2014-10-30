@@ -1,0 +1,31 @@
+<!--
+This logger is a workaround for a bug in CQ 5.6.1  ( CQ-15099 - Fixed session handling in cq social:IndexService )
+The IndexService seems to be throwing several 'Unclosed Sessions' WARNING exceptions when u write things on Client.
+This bug is reported fixed in AEM 6.0+
+-->
+<node>
+    <primaryNodeType>sling:OsgiConfig</primaryNodeType>
+    <property>
+        <name>org.apache.sling.commons.log.file</name>
+        <value>logs/jackrabbit-sessionImpl.log</value>
+        <type>String</type>
+    </property>
+
+    <property>
+        <name>org.apache.sling.commons.log.level</name>
+        <value>info</value>
+        <type>String</type>
+    </property>
+
+    <property>
+        <name>org.apache.sling.commons.log.names</name>
+        <value>org.apache.jackrabbit.core.SessionImpl</value>
+        <type>String</type>
+    </property>
+
+    <property>
+        <name>org.apache.sling.commons.log.pattern</name>
+        <value>{0,date,dd.MM.yyyy HH:mm:ss.SSS} [{2}] {3} *{4}* {5}</value>
+        <type>String</type>
+    </property>
+</node>

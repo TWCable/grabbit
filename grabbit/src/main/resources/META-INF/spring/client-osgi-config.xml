@@ -9,4 +9,7 @@
     <!-- Provides a Spring-OSGi Managed Service reference to ClientBatchJobExecutionListener -->
     <osgi:reference id="slingRepository" interface="org.apache.sling.jcr.api.SlingRepository"/>
 
+    <!-- Provides a Spring-OSGi Managed Service reference to WorkflowOffTasklet and WorkflowOnTasklet -->
+    <osgi:reference id="workflowManager" interface="com.twc.grabbit.client.batch.workflows.WorkflowManager"/>
+
 </beans>

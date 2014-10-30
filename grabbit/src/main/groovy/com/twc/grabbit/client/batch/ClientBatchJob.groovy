@@ -7,6 +7,8 @@ import org.springframework.context.ConfigurableApplicationContext
 
 import javax.annotation.Nonnull
 
+import static com.twc.grabbit.client.GrabbitConfiguration.PathConfiguration
+
 /**
  * A simple helper class that given a Application Context and initial configuration conditions, will
  * return a ClientBatchJob instance with a valid {@link JobOperator}
@@ -16,6 +18,7 @@ import javax.annotation.Nonnull
 class ClientBatchJob {
 
     public static final String PATH = "path"
+    public static final String WORKFLOW_CONFIGS = "workflowConfigIds"
     public static final String HOST = "host"
     public static final String PORT = "port"
     public static final String USERNAME = "username"
@@ -78,37 +81,39 @@ class ClientBatchJob {
             this.parentBuilder = parentBuilder
         }
 
-        PathBuilder andCredentials(String username, String password) {
+        ConfigurationBuilder andCredentials(String username, String password) {
             this.username = username
             this.password = password
-            return new PathBuilder(this)
+            return new ConfigurationBuilder(this)
         }
     }
 
     @CompileStatic
-    static class PathBuilder {
+    static class ConfigurationBuilder {
         final CredentialsBuilder parentBuilder
-        String path
+        PathConfiguration pathConfiguration
 
-        PathBuilder(CredentialsBuilder parentBuilder) {
+        ConfigurationBuilder(CredentialsBuilder parentBuilder) {
             this.parentBuilder = parentBuilder
         }
 
-        Builder andPath(String path){
-            this.path = path
+        Builder andConfiguration(PathConfiguration config) {
+            this.pathConfiguration = config
             return new Builder(this)
         }
     }
 
     @CompileStatic
     static class Builder {
-        final PathBuilder pathBuilder
+        final ConfigurationBuilder configsBuilder
+        final PathConfiguration pathConfiguration
         final CredentialsBuilder credentialsBuilder
         final ServerBuilder serverBuilder
 
-        Builder(PathBuilder parentBuilder) {
-            this.pathBuilder = parentBuilder
-            this.credentialsBuilder = pathBuilder.parentBuilder
+        Builder(ConfigurationBuilder parentBuilder) {
+            this.configsBuilder = parentBuilder
+            this.pathConfiguration = configsBuilder.pathConfiguration
+            this.credentialsBuilder = configsBuilder.parentBuilder
             this.serverBuilder = credentialsBuilder.parentBuilder
         }
 
@@ -116,12 +121,12 @@ class ClientBatchJob {
             return new ClientBatchJob(
                 [
                         "timestamp": System.currentTimeMillis() as String,
-                        "${PATH}" : pathBuilder.path,
+                        "${PATH}" : pathConfiguration.path,
                         "${HOST}" : serverBuilder.host,
                         "${PORT}" : serverBuilder.port,
                         "${USERNAME}" : credentialsBuilder.username,
-                        "${PASSWORD}" : credentialsBuilder.password
-
+                        "${PASSWORD}" : credentialsBuilder.password,
+                        "${WORKFLOW_CONFIGS}" : pathConfiguration.workflowConfigIds.join("|")
                 ] as Map<String, String>,
                 serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
             )

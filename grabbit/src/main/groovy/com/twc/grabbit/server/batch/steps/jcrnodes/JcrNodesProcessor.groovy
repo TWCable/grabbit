@@ -1,7 +1,7 @@
 package com.twc.grabbit.server.batch.steps.jcrnodes
 
 import com.google.protobuf.ByteString
-import com.twc.grabbit.client.unmarshaller.DateUtil
+import com.twc.grabbit.DateUtil
 import com.twc.grabbit.proto.NodeProtos
 import com.twc.grabbit.proto.NodeProtos.Node
 import com.twc.grabbit.proto.NodeProtos.Properties

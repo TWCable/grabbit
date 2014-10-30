@@ -1,11 +1,13 @@
 package com.twc.grabbit.client.services
 
+import com.twc.grabbit.client.GrabbitConfiguration
+
 interface ClientService {
 
     /**
-     * This API will perform Content Grab for the given list of paths
-     * @param whiteList : the list of paths to be synced
+     * This API will perform Content Grab for the given configuration
+     * @param configuration : the {@link GrabbitConfiguration}
      * @return Collection of Job's Execution Ids
      */
-    Collection<Long> initiateGrab(Collection<String> whiteList)
+    Collection<Long> initiateGrab(GrabbitConfiguration configuration)
 }

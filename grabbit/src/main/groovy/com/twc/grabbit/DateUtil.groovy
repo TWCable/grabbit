@@ -1,4 +1,4 @@
-package com.twc.grabbit.client.unmarshaller
+package com.twc.grabbit
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j

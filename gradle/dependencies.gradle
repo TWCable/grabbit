@@ -6,6 +6,9 @@ dependencies {
     // Used as part of the build to create the OSGI-INF/serviceComponents.xml file
     compile "com.twc.osgi:org.apache.felix.scr.annotations:${scr_annotations_version}"
 
+
+    compile "com.day.cq.workflow:cq-workflow-console:${cq_version_workflow_console}"
+
     //Google libraries
     compile "com.google.guava:guava:${guava_version}"
     compile "com.google.code.findbugs:jsr305:${jsr305_version}"

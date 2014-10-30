@@ -20,10 +20,13 @@
     <import resource="client-preprocessor-step.xml" />
 
     <batch:job id="clientJob" xmlns="http://www.springframework.org/schema/batch" job-repository="clientJobRepository">
-        <batch:step id="clientPreprocessor" next="clientJcrNodes">
+        <batch:step id="clientPreprocessor" next="clientWorkflowOff">
             <batch:tasklet ref="clientPreprocessTasklet" transaction-manager="clientTransactionManager"/>
         </batch:step>
-        <batch:step id="clientJcrNodes">
+        <batch:step id="clientWorkflowOff" next="clientJcrNodes">
+            <batch:tasklet ref="clientWorkflowOffTasklet" transaction-manager="clientTransactionManager"/>
+        </batch:step>
+        <batch:step id="clientJcrNodes" next="clientWorkflowOn">
             <batch:tasklet transaction-manager="clientTransactionManager">
                 <batch:chunk reader="clientProtobufNodesReader" writer="clientJcrNodesWriter"
                             commit-interval="1000" skip-limit="0"/>
@@ -31,6 +34,9 @@
                     <listener ref="jcrNodesStepExecutionListener"/>
                 </listeners>
             </batch:tasklet>
+        </batch:step>
+        <batch:step id="clientWorkflowOn">
+            <batch:tasklet ref="clientWorkflowOnTasklet" transaction-manager="clientTransactionManager"/>
         </batch:step>
         <batch:listeners>
             <listener ref="clientBatchJobListener"/>

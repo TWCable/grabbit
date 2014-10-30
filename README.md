@@ -113,28 +113,60 @@ Following shell script (grabbit.sh) can be used to initiate grabbit jobs for one
 #!/bin/bash
 
 # Simple Script to initialize one or more Sync or Grab jobs for one or more paths
+# Sample usage :
+# Initialize : grabbit.sh init http://localhost:4502 admin admin config.json
+# Status : grabbit.sh status http://localhost:4502 admin admin <id1>,<id2>,..
 
 #### Constants
 
-INIT="init" #init => Initialize Grab for given paths delimited by commas
+INIT="init" #init => Initialize Sync for config file
 STATUS="status" #status => Get Status for given JobIds delimited by commas
-HOST="http://localhost:4502"
 INIT_URL="/bin/twc/client/grab"
 STATUS_URL="/bin/twc/client/grab/status"
 
 if [ $1 == $INIT ]; then
-    curl -u admin:admin --request GET $HOST$INIT_URL"?paths="$2
+    json=`curl -X POST -H "Content-Type: application/json" -d "@$5" -u $3:$3 $2$INIT_URL`
+    echo $json
 elif [ $1 == $STATUS ]; then
-    curl -u admin:admin --request GET $HOST$STATUS_URL"?jobIds="$2
+    json=`curl -u $3:$4 --request GET $2$STATUS_URL"?jobIds="$5`
+    echo $json
 fi
 ```
 
 To use this script : 
 
-`sh grabbit.sh init /etc/tags,/content/residential-admin,/content/twc/en/checkout`
+`sh grabbit.sh init http://localhost:4502 admin admin config.json`
 
 This script will return an array of one or more jobIds. You can use these jobIds to run a 'status' query on the same script
  
-`sh grabbit.sh status id1,id2,id3`
+`sh grabbit.sh status http://localhost:4502 admin admin id1,id2,id3`
 
 This status check returns a JSON representation of the same information you see in the Client UI
+
+Here, `config.json` is the input file that contains configuration information for Grabbit.
+Its format is as follows :
+
+```json
+{
+    "serverUsername" : "admin",
+    "serverPassword" : "admin",
+    "serverHost" : "localhost",
+    "serverPort" : "4503",
+    "pathConfigurations" :  [
+        {
+            "path" : "/content/residential-admin/ProductCatalog",
+            "workflowConfigIds" : []
+        },
+        {
+            "path" : "/content/dam/business",
+            "workflowConfigIds" :
+                [
+                    "/etc/workflow/launcher/config/update_asset_mod",
+                    "/etc/workflow/launcher/config/update_asset_create",
+                    "/etc/workflow/launcher/config/dam_xmp_nested_writeback",
+                    "/etc/workflow/launcher/config/dam_xmp_writeback"
+                ]
+        }
+    ]
+}
+```
