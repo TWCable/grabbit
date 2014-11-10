@@ -80,6 +80,7 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
      * @param jcrProperty
      * @return
      */
+    //TODO : This method needs a refactor http://jira.corp.mystrotv.com/browse/WEBCMS-14014
     private static Property toProperty(JcrProperty jcrProperty) {
         Property.Builder propertyBuilder = Property.newBuilder()
         propertyBuilder.setName(jcrProperty.name)

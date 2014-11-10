@@ -10,11 +10,15 @@ import org.apache.jackrabbit.value.*
 import org.springframework.batch.core.ItemWriteListener
 import org.springframework.batch.item.ItemWriter
 
+import javax.jcr.Node as JcrNode
+import javax.jcr.Property
 import javax.jcr.Session
 import javax.jcr.Value
+import javax.jcr.ValueFormatException
 import javax.jcr.nodetype.NodeType
 import java.text.DecimalFormat
 
+import static javax.jcr.Node.JCR_CONTENT
 import static javax.jcr.PropertyType.*
 import static javax.jcr.PropertyType.URI as JcrURI
 import static org.apache.jackrabbit.JcrConstants.*
@@ -63,12 +67,18 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
             def temp = nodeProto.name.split("/")
             final String fileName = temp.last()
             final String parentName = nodeProto.name.replaceAll("/${fileName}", "")
-            final javax.jcr.Node parentNode = JcrUtils.getOrCreateByPath(parentName, null, session)
-            javax.jcr.Node fileNode = JcrUtils.getOrAddNode(parentNode, fileName, NodeType.NT_FILE)
-            JcrUtils.getOrAddNode(fileNode, javax.jcr.Node.JCR_CONTENT, NodeType.NT_RESOURCE)
+            final JcrNode parentNode = JcrUtils.getOrCreateByPath(parentName, null, session)
+            JcrNode fileNode = JcrUtils.getOrAddNode(parentNode, fileName, NodeType.NT_FILE)
+            JcrNode theNode = JcrUtils.getOrAddNode(fileNode, JCR_CONTENT, NodeType.NT_RESOURCE)
+
+            //TODO : This is a workaround for the case where a chunk gets 'saved' in JCR and the last node was 'nt:file'
+            // If jcr:data is not part of that chunk then you will get a constraint violation exception
+            // To get around that, just add an empty binary jcr:data here with a "temp" value
+            // This will always be overridden by the actual jcr:data value as that will be the next thing received
+            theNode.setProperty(JCR_DATA, new BinaryValue("temp".bytes))
         }
         else {
-            javax.jcr.Node currentNode = JcrUtils.getOrCreateByPath(nodeProto.name, primaryType, session)
+            JcrNode currentNode = JcrUtils.getOrCreateByPath(nodeProto.name, primaryType, session)
             properties.each { NodeProtos.Property protoProperty ->
                 if(  JCR_PRIMARYTYPE != protoProperty.name && (protoProperty.hasValue() || protoProperty.hasValues())) {
                     if(protoProperty.name == JCR_MIXINTYPES) {
@@ -88,7 +98,7 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
      * @param property
      * @param node
      */
-    private static void addMixins(NodeProtos.Property property, javax.jcr.Node node) {
+    private static void addMixins(NodeProtos.Property property, JcrNode node) {
         property.values.valueList.each { NodeProtos.Value value ->
             if(node.canAddMixin(value.stringValue)) {
                 node.addMixin(value.stringValue)
@@ -104,13 +114,28 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
      * @param property
      * @param currentNode
      */
-    private static void addProperty(NodeProtos.Property property, javax.jcr.Node currentNode) {
+    //TODO : This method desperately needs a refactor http://jira.corp.mystrotv.com/browse/WEBCMS-14014
+    private static void addProperty(NodeProtos.Property property, JcrNode currentNode) {
         final int type = property.type
 
         switch(type) {
             case STRING :
                 if(!property.hasValues()) {
-                    currentNode.setProperty(property.name, new StringValue(property.value.stringValue), STRING)
+                    try {
+                        currentNode.setProperty(property.name, new StringValue(property.value.stringValue), STRING)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Multivalued property can not be set to a single value")) {
+                            //If this is the exception, that means that a property with the name already exists
+                            final Property currentProperty = currentNode.getProperty(property.name)
+                            if(currentProperty.multiple) {
+                                //This is an edge case where the incoming property is single valued but the property
+                                //already on JCR is a multi-valued property
+                                final Value[] values = [ new StringValue(property.value.stringValue) ]
+                                currentNode.setProperty(property.name, values, STRING)
+                            }
+                        }
+                    }
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new StringValue(value.stringValue) }
@@ -125,7 +150,21 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 break
             case BOOLEAN :
                 if(!property.hasValues()) {
-                    currentNode.setProperty(property.name, new BooleanValue(property.value.stringValue.asBoolean()), BOOLEAN)
+                    try {
+                        currentNode.setProperty(property.name, new BooleanValue(property.value.stringValue.asBoolean()), BOOLEAN)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Multivalued property can not be set to a single value")) {
+                            //If this is the exception, that means that a property with the name already exists
+                            final Property currentProperty = currentNode.getProperty(property.name)
+                            if(currentProperty.multiple) {
+                                //This is an edge case where the incoming property is single valued but the property
+                                //already on JCR is a multi-valued property
+                                final Value[] values = [ new BooleanValue(property.value.stringValue.asBoolean()) ]
+                                currentNode.setProperty(property.name, values, BOOLEAN)
+                            }
+                        }
+                    }
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new BooleanValue(value.stringValue.asBoolean()) }
@@ -134,7 +173,21 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 break
             case DATE :
                 if(!property.hasValues()) {
-                    currentNode.setProperty(property.name, new DateValue(DateUtil.getCalendarFromISOString(property.value.stringValue)), DATE)
+                    try {
+                        currentNode.setProperty(property.name, new DateValue(DateUtil.getCalendarFromISOString(property.value.stringValue)), DATE)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Multivalued property can not be set to a single value")) {
+                            //If this is the exception, that means that a property with the name already exists
+                            final Property currentProperty = currentNode.getProperty(property.name)
+                            if(currentProperty.multiple) {
+                                //This is an edge case where the incoming property is single valued but the property
+                                //already on JCR is a multi-valued property
+                                final Value[] values = [ new DateValue(DateUtil.getCalendarFromISOString(property.value.stringValue)) ]
+                                currentNode.setProperty(property.name, values, DATE)
+                            }
+                        }
+                    }
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new DateValue(DateUtil.getCalendarFromISOString(property.value.stringValue)) }
@@ -145,7 +198,21 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 DecimalFormat decimalFormat = new DecimalFormat()
                 decimalFormat.setParseBigDecimal(true)
                 if(!property.hasValues()) {
-                    currentNode.setProperty(property.name, new DecimalValue(decimalFormat.parse(property.value.stringValue) as BigDecimal), DECIMAL)
+                    try {
+                        currentNode.setProperty(property.name, new DecimalValue(decimalFormat.parse(property.value.stringValue) as BigDecimal), DECIMAL)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Multivalued property can not be set to a single value")) {
+                            //If this is the exception, that means that a property with the name already exists
+                            final Property currentProperty = currentNode.getProperty(property.name)
+                            if(currentProperty.multiple) {
+                                //This is an edge case where the incoming property is single valued but the property
+                                //already on JCR is a multi-valued property
+                                final Value[] values = [ new DecimalValue(decimalFormat.parse(property.value.stringValue) as BigDecimal) ]
+                                currentNode.setProperty(property.name, values, DECIMAL)
+                            }
+                        }
+                    }
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new DecimalValue(decimalFormat.parse(value.stringValue) as BigDecimal) }
@@ -154,7 +221,21 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 break
             case DOUBLE :
                 if(!property.hasValues()) {
-                    currentNode.setProperty(property.name, new DoubleValue(Double.parseDouble(property.value.stringValue)), DOUBLE)
+                    try {
+                        currentNode.setProperty(property.name, new DoubleValue(Double.parseDouble(property.value.stringValue)), DOUBLE)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Multivalued property can not be set to a single value")) {
+                            //If this is the exception, that means that a property with the name already exists
+                            final Property currentProperty = currentNode.getProperty(property.name)
+                            if(currentProperty.multiple) {
+                                //This is an edge case where the incoming property is single valued but the property
+                                //already on JCR is a multi-valued property
+                                final Value[] values = [ new DoubleValue(Double.parseDouble(property.value.stringValue)) ]
+                                currentNode.setProperty(property.name, values, DOUBLE)
+                            }
+                        }
+                    }
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new DoubleValue(Double.parseDouble(value.stringValue)) }
@@ -163,7 +244,22 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 break
             case LONG :
                 if(!property.hasValues()) {
-                    currentNode.setProperty(property.name, new LongValue(Long.parseLong(property.value.stringValue)), LONG)
+                    try {
+                        currentNode.setProperty(property.name, new LongValue(Long.parseLong(property.value.stringValue)), LONG)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Multivalued property can not be set to a single value")) {
+                            //If this is the exception, that means that a property with the name already exists
+                            final Property currentProperty = currentNode.getProperty(property.name)
+                            if(currentProperty.multiple) {
+                                //This is an edge case where the incoming property is single valued but the property
+                                //already on JCR is a multi-valued property
+                                final Value[] values = [ new LongValue(Long.parseLong(property.value.stringValue)) ]
+                                currentNode.setProperty(property.name, values, LONG)
+                            }
+                        }
+                    }
+
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new LongValue(Long.parseLong(value.stringValue)) }
@@ -172,7 +268,21 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 break
             case NAME :
                 if(!property.hasValues()) {
-                    currentNode.setProperty(property.name, NameValue.valueOf(property.value.stringValue), NAME)
+                    try {
+                        currentNode.setProperty(property.name, NameValue.valueOf(property.value.stringValue), NAME)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Multivalued property can not be set to a single value")) {
+                            //If this is the exception, that means that a property with the name already exists
+                            final Property currentProperty = currentNode.getProperty(property.name)
+                            if(currentProperty.multiple) {
+                                //This is an edge case where the incoming property is single valued but the property
+                                //already on JCR is a multi-valued property
+                                final Value[] values = [ NameValue.valueOf(property.value.stringValue) ]
+                                currentNode.setProperty(property.name, values, NAME)
+                            }
+                        }
+                    }
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> NameValue.valueOf(value.stringValue) }
@@ -181,7 +291,21 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 break
             case PATH :
                 if(!property.hasValues()) {
-                    currentNode.setProperty(property.name, PathValue.valueOf(property.value.stringValue), PATH)
+                    try {
+                        currentNode.setProperty(property.name, PathValue.valueOf(property.value.stringValue), PATH)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Multivalued property can not be set to a single value")) {
+                            //If this is the exception, that means that a property with the name already exists
+                            final Property currentProperty = currentNode.getProperty(property.name)
+                            if(currentProperty.multiple) {
+                                //This is an edge case where the incoming property is single valued but the property
+                                //already on JCR is a multi-valued property
+                                final Value[] values = [ PathValue.valueOf(property.value.stringValue) ]
+                                currentNode.setProperty(property.name, values, PATH)
+                            }
+                        }
+                    }
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> PathValue.valueOf(value.stringValue) }
@@ -190,7 +314,21 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 break
             case JcrURI :
                 if(!property.hasValues()) {
-                    currentNode.setProperty(property.name, URIValue.valueOf(property.value.stringValue), JcrURI)
+                    try {
+                        currentNode.setProperty(property.name, URIValue.valueOf(property.value.stringValue), JcrURI)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Multivalued property can not be set to a single value")) {
+                            //If this is the exception, that means that a property with the name already exists
+                            final Property currentProperty = currentNode.getProperty(property.name)
+                            if(currentProperty.multiple) {
+                                //This is an edge case where the incoming property is single valued but the property
+                                //already on JCR is a multi-valued property
+                                final Value[] values = [ URIValue.valueOf(property.value.stringValue) ]
+                                currentNode.setProperty(property.name, values, JcrURI)
+                            }
+                        }
+                    }
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> URIValue.valueOf(value.stringValue) }
