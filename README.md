@@ -74,6 +74,7 @@ Server monitoring is to go to `batch-server.log`.
 
 
 # Using the Grabbit Client UI#
+**Grabbit Client UI is currently broken** 
 
 Drop the component "Grabbit Client" under component group "TWC Grabbit". Enter comma separated path(s) in the textarea and verify the call to "/bin/twc/client/grab" in the Network tab.
 A progress bar would appear on the top of the page indicating the content is being pulled in the form of a loading bar (red line).
