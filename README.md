@@ -149,7 +149,8 @@ This script will return an array of one or more jobIds. You can use these jobIds
 This status check returns a JSON representation of the same information you see in the Client UI
 
 Here, `config.json` is the input file that contains configuration information for Grabbit.
-Its format is as follows :
+
+### Config Format
 
 ```json
 {
