@@ -5,6 +5,10 @@ Source and destination can be any AEM 5.6.1 instances.
  
 # Building #
 
+## Prebuilt Grabbit package based off of latest master
+
+[Grabbit.zip](https://s3.amazonaws.com/uploads.hipchat.com/34311/1348484/UtWP7P4iRlyd1s3/grabbit-1.0.1-SNAPSHOT.zip)
+
 ## Full Clean Build ##
 
 `gradlew clean install` 
