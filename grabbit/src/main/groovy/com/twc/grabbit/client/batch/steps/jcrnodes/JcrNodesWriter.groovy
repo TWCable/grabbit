@@ -139,7 +139,14 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new StringValue(value.stringValue) }
-                    currentNode.setProperty(property.name, values, STRING)
+                    try {
+                        currentNode.setProperty(property.name, values, STRING)
+                    }
+                    catch (ValueFormatException e) {
+                        if(e.message.contains("Single-valued property can not be set to an array of values")) {
+                            currentNode.setProperty(property.name, values.first(), STRING)
+                        }
+                    }
                 }
                 break
             case BINARY :
@@ -168,7 +175,14 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new BooleanValue(value.stringValue.asBoolean()) }
-                    currentNode.setProperty(property.name, values, BOOLEAN)
+                    try {
+                        currentNode.setProperty(property.name, values, BOOLEAN)
+                    }
+                    catch (ValueFormatException e) {
+                        if(e.message.contains("Single-valued property can not be set to an array of values")) {
+                            currentNode.setProperty(property.name, values.first(), BOOLEAN)
+                        }
+                    }
                 }
                 break
             case DATE :
@@ -191,7 +205,14 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new DateValue(DateUtil.getCalendarFromISOString(property.value.stringValue)) }
-                    currentNode.setProperty(property.name, values, DATE)
+                    try {
+                        currentNode.setProperty(property.name, values, DATE)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Single-valued property can not be set to an array of values")) {
+                            currentNode.setProperty(property.name, values.first(), DATE)
+                        }
+                    }
                 }
                 break
             case DECIMAL :
@@ -216,7 +237,14 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new DecimalValue(decimalFormat.parse(value.stringValue) as BigDecimal) }
-                    currentNode.setProperty(property.name, values, DECIMAL)
+                    try {
+                        currentNode.setProperty(property.name, values, DECIMAL)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Single-valued property can not be set to an array of values")) {
+                            currentNode.setProperty(property.name, values.first(), DECIMAL)
+                        }
+                    }
                 }
                 break
             case DOUBLE :
@@ -240,6 +268,14 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new DoubleValue(Double.parseDouble(value.stringValue)) }
                     currentNode.setProperty(property.name, values, DOUBLE)
+                    try {
+                        currentNode.setProperty(property.name, values, DOUBLE)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Single-valued property can not be set to an array of values")) {
+                            currentNode.setProperty(property.name, values.first(), DOUBLE)
+                        }
+                    }
                 }
                 break
             case LONG :
@@ -263,7 +299,14 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> new LongValue(Long.parseLong(value.stringValue)) }
-                    currentNode.setProperty(property.name, values, LONG)
+                    try {
+                        currentNode.setProperty(property.name, values, LONG)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Single-valued property can not be set to an array of values")) {
+                            currentNode.setProperty(property.name, values.first(), LONG)
+                        }
+                    }
                 }
                 break
             case NAME :
@@ -286,7 +329,14 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> NameValue.valueOf(value.stringValue) }
-                    currentNode.setProperty(property.name, values, NAME)
+                    try {
+                        currentNode.setProperty(property.name, values, NAME)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Single-valued property can not be set to an array of values")) {
+                            currentNode.setProperty(property.name, values.first(), NAME)
+                        }
+                    }
                 }
                 break
             case PATH :
@@ -309,7 +359,14 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> PathValue.valueOf(value.stringValue) }
-                    currentNode.setProperty(property.name, values, PATH)
+                    try {
+                        currentNode.setProperty(property.name, values, PATH)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Single-valued property can not be set to an array of values")) {
+                            currentNode.setProperty(property.name, values.first(), PATH)
+                        }
+                    }
                 }
                 break
             case JcrURI :
@@ -332,7 +389,14 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 }
                 else {
                     Value[] values = property.values.valueList.collect{ NodeProtos.Value value -> URIValue.valueOf(value.stringValue) }
-                    currentNode.setProperty(property.name, values, PATH)
+                    try {
+                        currentNode.setProperty(property.name, values, JcrURI)
+                    }
+                    catch(ValueFormatException e) {
+                        if(e.message.contains("Single-valued property can not be set to an array of values")) {
+                            currentNode.setProperty(property.name, values.first(), JcrURI)
+                        }
+                    }
                 }
                 break
                 //TODO: Support WEAKREFERENCE
