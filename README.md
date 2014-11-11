@@ -140,7 +140,7 @@ fi
 
 To use this script : 
 
-`sh grabbit.sh init http://localhost:4502 admin admin config.json`
+`sh grabbit.sh init http://localhost:4502 admin admin /path/to/config.json`
 
 This script will return an array of one or more jobIds. You can use these jobIds to run a 'status' query on the same script
  
