@@ -1,18 +1,16 @@
 package com.twc.grabbit.client.services.impl
 
-import com.twc.grabbit.client.GrabbitConfiguration
-import com.twc.grabbit.client.GrabbitConfiguration.PathConfiguration
+import com.twc.grabbit.GrabbitConfiguration
+import com.twc.grabbit.GrabbitConfiguration.PathConfiguration
 import com.twc.grabbit.client.batch.ClientBatchJob
 import com.twc.grabbit.client.services.ClientService
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.felix.scr.annotations.Activate
 import org.apache.felix.scr.annotations.Component
-import org.apache.felix.scr.annotations.Property as ScrProperty
 import org.apache.felix.scr.annotations.Reference
 import org.apache.felix.scr.annotations.Service
 import org.apache.sling.jcr.api.SlingRepository
-import org.osgi.service.component.ComponentContext
 import org.springframework.context.ConfigurableApplicationContext
 
 @Slf4j

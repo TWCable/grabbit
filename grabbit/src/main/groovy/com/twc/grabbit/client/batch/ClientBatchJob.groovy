@@ -7,7 +7,7 @@ import org.springframework.context.ConfigurableApplicationContext
 
 import javax.annotation.Nonnull
 
-import static com.twc.grabbit.client.GrabbitConfiguration.PathConfiguration
+import static com.twc.grabbit.GrabbitConfiguration.PathConfiguration
 
 /**
  * A simple helper class that given a Application Context and initial configuration conditions, will
@@ -16,6 +16,7 @@ import static com.twc.grabbit.client.GrabbitConfiguration.PathConfiguration
 @Slf4j
 @CompileStatic
 class ClientBatchJob {
+    public static final String JOB_NAME = "clientJob"
 
     public static final String PATH = "path"
     public static final String WORKFLOW_CONFIGS = "workflowConfigIds"
@@ -40,7 +41,6 @@ class ClientBatchJob {
      * @return ID of the current Job's JobExecution instance
      */
     public Long start() {
-        final String JOB_NAME = "clientJob"
         final String jobParametersString = jobParameters.collect { String key, String value ->
             "${key}=${value}"
         }.join(",")

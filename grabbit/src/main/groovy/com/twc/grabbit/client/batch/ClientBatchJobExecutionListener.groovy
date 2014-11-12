@@ -101,7 +101,7 @@ class ClientBatchJobExecutionListener implements JobExecutionListener{
         final String username = jobParameters.getString(ClientBatchJob.USERNAME)
         final String password = jobParameters.getString(ClientBatchJob.PASSWORD)
 
-        final String grabPath = "http://${host}:${port}/bin/twc/server/grab?path=${path}"
+        final String grabPath = "http://${host}:${port}/grabbit/job?path=${path}"
 
         //create the get request
         HttpGet get = new HttpGet(grabPath)

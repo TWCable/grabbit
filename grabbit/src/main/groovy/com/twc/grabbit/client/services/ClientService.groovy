@@ -1,6 +1,6 @@
 package com.twc.grabbit.client.services
 
-import com.twc.grabbit.client.GrabbitConfiguration
+import com.twc.grabbit.GrabbitConfiguration
 
 interface ClientService {
 

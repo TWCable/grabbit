@@ -1,0 +1,9 @@
+<node>
+    <primaryNodeType>sling:OsgiConfig</primaryNodeType>
+    <property>
+        <name>provider.roots</name>
+        <value>/grabbit</value>
+        <type>String</type>
+    </property>
+</node>
+

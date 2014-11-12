@@ -1,5 +1,6 @@
 package com.twc.grabbit.client
 
+import com.twc.grabbit.GrabbitConfiguration
 import spock.lang.Specification
 import spock.lang.Subject
 

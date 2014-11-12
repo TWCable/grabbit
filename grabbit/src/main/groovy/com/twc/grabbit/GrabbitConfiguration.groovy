@@ -1,4 +1,4 @@
-package com.twc.grabbit.client
+package com.twc.grabbit
 
 import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
