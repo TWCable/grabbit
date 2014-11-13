@@ -153,19 +153,19 @@ A job status is has the following format :
 
 ```json
  {
-       "endTime": <Timestamp>,
+       "endTime": Timestamp,
        "exitStatus": {
-           "exitCode": "<Code>",
+           "exitCode": "Code",
            "exitDescription": "",
-           "running": <true/false>
+           "running": true/false
        },
-       "isRunning": <true/false>,
-       "isStopping": <true/false>,
-       "jcrNodesWritten": <#OfNodes>,
-       "jobId": <id>,
-       "path": "<currentPath>",
-       "startTime": "<TimeStamp>",
-       "timeTaken": <TimeInMilliSeconds>
+       "isRunning": true/false,
+       "isStopping": true/false,
+       "jcrNodesWritten": #OfNodes,
+       "jobId": id,
+       "path": "currentPath",
+       "startTime": "TimeStamp",
+       "timeTaken": TimeInMilliSeconds
    }
 ```
 
