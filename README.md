@@ -112,43 +112,10 @@ The above status will be shown for every path that was requested.
 
 # Initiating Grab/Sync Jobs via command line#
 
-Following shell script (grabbit.sh) can be used to initiate grabbit jobs for one or more paths and checking the status of those jobs.
+[This](https://github.webapps.rr.com/ssane/grabbit/blob/master/grabbit.sh) shell script can be used to initiate grabbit jobs for a given Grabbit configuration and to check the status of those jobs.
 
-```shell
-#!/bin/bash
 
-# Simple Script to initialize one or more Sync or Grab jobs for one or more paths
-# Sample usage :
-# Initialize : grabbit.sh init http://localhost:4502 admin admin config.json
-# Status : grabbit.sh status http://localhost:4502 admin admin <id1>,<id2>,..
-
-#### Constants
-
-INIT="init" #init => Initialize Sync for config file
-STATUS="status" #status => Get Status for given JobIds delimited by commas
-INIT_URL="/bin/twc/client/grab"
-STATUS_URL="/bin/twc/client/grab/status"
-
-if [ $1 == $INIT ]; then
-    json=`curl -X POST -H "Content-Type: application/json" -d "@$5" -u $3:$3 $2$INIT_URL`
-    echo $json
-elif [ $1 == $STATUS ]; then
-    json=`curl -u $3:$4 --request GET $2$STATUS_URL"?jobIds="$5`
-    echo $json
-fi
-```
-
-To use this script : 
-
-`sh grabbit.sh init http://localhost:4502 admin admin /path/to/config.json`
-
-This script will return an array of one or more jobIds. You can use these jobIds to run a 'status' query on the same script
- 
-`sh grabbit.sh status http://localhost:4502 admin admin id1,id2,id3`
-
-This status check returns a JSON representation of the same information you see in the Client UI
-
-Here, `config.json` is the input file that contains configuration information for Grabbit.
+A `json` configuration file of following format is used to configure Grabbit.
 
 ### Config Format
 
@@ -176,3 +143,38 @@ Here, `config.json` is the input file that contains configuration information fo
     ]
 }
 ```
+
+Ypu can find pre-built Grabbit Configurations for Residential, Business-class and Checkout [here](https://github.webapps.rr.com/ssane/grabbit/wiki/Pre-Build-Configurations)
+
+
+### Understanding the Status information for a job when using Grabbit.sh: 
+
+A job status is has the following format : 
+
+```json
+ {
+       "endTime": <Timestamp>,
+       "exitStatus": {
+           "exitCode": "<Code>",
+           "exitDescription": "",
+           "running": <true/false>
+       },
+       "isRunning": <true/false>,
+       "isStopping": <true/false>,
+       "jcrNodesWritten": <#OfNodes>,
+       "jobId": <id>,
+       "path": "<currentPath>",
+       "startTime": "<TimeStamp>",
+       "timeTaken": <TimeInMilliSeconds>
+   }
+```
+
+Couple of points worth noting here:
+`"exitCode"` : This can have 3 states - `UNKNOWN`, `COMPLETED`, `FAILED` 
+    - `UNKNOWN` : Job is still running
+    - `COMPLETED` : Job was completed successfully
+    - `FAILED` : Job Failed
+`"jcrNodesWritten"` : This indicates how many nodes are currently written (increments by 1000)
+`"timeTaken"` : This will indicate the total time taken to complete content grab for `currentPath`
+
+If `exitCode` returns as `UNKNOWN`, that means the job is still running and you should check for its status again.
