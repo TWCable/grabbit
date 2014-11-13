@@ -10,6 +10,7 @@ import org.springframework.batch.core.scope.context.ChunkContext
 import org.springframework.batch.core.step.tasklet.Tasklet
 import org.springframework.batch.repeat.RepeatStatus
 
+import javax.jcr.NamespaceException
 import javax.jcr.RepositoryException
 import javax.jcr.Session
 
@@ -48,7 +49,18 @@ class PreprocessTasklet implements Tasklet {
             final NamespaceHelper namespaceHelper = new NamespaceHelper(session)
             PreProcessorProtos.NamespaceRegistry namespaceRegistryProto = preprocessorsProto.namespaceRegistry
             namespaceRegistryProto.entryList.each { PreProcessorProtos.NamespaceEntry namespaceEntry ->
-                namespaceHelper.registerNamespace(namespaceEntry.prefix, namespaceEntry.uri)
+                try {
+                    namespaceHelper.registerNamespace(namespaceEntry.prefix, namespaceEntry.uri)
+                }
+                catch(NamespaceException e) {
+                    if(e.message.contains("mapping already exists")) {
+                        log.warn "Mapping for Nameapace prefix : ${namespaceEntry.prefix} already exists. Received NamespaceEntry mapping : ${namespaceEntry}"
+                        return
+                    }
+                    else {
+                        throw e
+                    }
+                }
             }
             session.save()
         }
