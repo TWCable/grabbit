@@ -17,8 +17,8 @@ class PreprocessProcessor implements ItemProcessor<Map.Entry<String, String>, Na
     NamespaceEntry process(Map.Entry<String, String> entry) throws Exception {
         NamespaceEntry.Builder namespaceEntryBuilder = NamespaceEntry.newBuilder()
         namespaceEntryBuilder
-                .setUri(entry.key)
-                .setPrefix(entry.value)
+                .setPrefix(entry.key)
+                .setUri(entry.value)
                 .build()
     }
 }
