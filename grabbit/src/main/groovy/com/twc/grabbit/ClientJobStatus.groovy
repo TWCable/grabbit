@@ -33,7 +33,13 @@ class ClientJobStatus {
         if(explorer == null) throw new IllegalArgumentException("JobExplorer == null")
         if(jobId == null) throw new IllegalArgumentException("JobId == null")
 
-        final JobExecution jobExecution = explorer.getJobExecution(jobId)
+        final jobInstance = explorer.getJobInstance(jobId)
+        List<JobExecution> executions = explorer.getJobExecutions(jobInstance)
+
+        //Only returning 1st JobExecution for given JobInstanceId
+        //TODO : Return multiple jobExecutions, as there can be many "attempts" at JobExecutions for a given JobInstance Id
+        final jobExecution = executions.first()
+        if(!jobExecution) return null
 
         long timeTaken = -1
         if(!jobExecution.running) {
@@ -58,7 +64,7 @@ class ClientJobStatus {
         if(!instances) return Collections.EMPTY_LIST
 
         final List<JobExecution> executions = instances.collectMany { explorer.getJobExecutions(it) }
-        final List<Long> jobExecutionIds = executions.collect { it.id }
+        final List<Long> jobExecutionIds = executions.collect { it.jobId }
         jobExecutionIds.collect { Long id ->
             get(explorer, id)
         }

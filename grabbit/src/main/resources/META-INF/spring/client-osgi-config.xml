@@ -12,4 +12,7 @@
     <!-- Provides a Spring-OSGi Managed Service reference to WorkflowOffTasklet and WorkflowOnTasklet -->
     <osgi:reference id="workflowManager" interface="com.twc.grabbit.client.batch.workflows.WorkflowManager"/>
 
+    <!-- Provides a Spring-OSGi Managed Service reference to JCR DAO Implementations -->
+    <osgi:reference id="resourceResolverFactory" interface="org.apache.sling.api.resource.ResourceResolverFactory"/>
+
 </beans>
