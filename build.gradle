@@ -60,6 +60,11 @@ subprojects {
                 attributes 'Bundle-Description': project.bundleDescription
             }
         }
+
+        if(project.hasProperty('slingServers')) {
+            project.slingServers.retryWaitMs = 500
+            project.slingServers.maxWaitValidateBundlesMs = 90000
+        }
         // http://forums.gradle.org/gradle/topics/classpath_order_generated_by_eclipse_plugin_causes_problems
         if (project.plugins.hasPlugin('java')) {
             project.eclipse.classpath.file.whenMerged { classpath ->

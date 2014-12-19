@@ -16,6 +16,12 @@ ext.bundleName = 'TWC Grabbit'
 ext.bundleDescription = 'TWC Grabbit'
 ext.symbolicName = "com.twc.grabbit"
 
+cqPackage.bundleInstallRoot = '/apps/grabbit/install'
+cqPackage.nativeStartLevel = 30
+cqPackage.dependencyStartLevel = 20
+
+bundle.installPath = '/apps/grabbit/install/${cqPackage.nativeStartLevel}'
+
 dependencies {
     // Google ReCaptcha
     cq_package "com.twc.osgi:net.tanesha.recaptcha4j:${recaptcha4j_version}"
@@ -42,10 +48,9 @@ jar.manifest {
     attributes 'Bundle-Name': project.bundleName
     attributes 'Bundle-SymbolicName': project.symbolicName
     attributes 'Bundle-Description': project.bundleDescription
-    instruction 'Import-Package', '*'
     instruction 'Import-Package', 'org.apache.felix.scr.annotations; version="[1.7,2.0)"'
-    instruction 'Import-Package', 'groovy.json; version="[2.0,3.0)"'
-    instruction 'Import-Package', 'groovy.json.internal; version="[2.0,3.0)"'
+    instruction 'Import-Package', 'groovy.json; version="[2.3,3.0)"'
+    instruction 'Import-Package', 'groovy.json.internal; version="[2.3,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.core.scope; version="[2.2,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.item.file.transform; version="[2.2,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.item.file; version="[2.2,3.0)"'
@@ -68,6 +73,7 @@ jar.manifest {
     instruction 'Import-Package', 'org.springframework.aop.scope; version="[3.1,4.0)"'
     instruction 'Import-Package', 'org.springframework.scheduling.concurrent; version="[3.1,4.0)"'
     instruction 'Import-Package', "org.aopalliance.aop;version=1.0.0"
+    instruction 'Import-Package', '*'
 
 
     // export everything to OSGi except *.impl packages
