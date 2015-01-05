@@ -10,7 +10,7 @@ import org.apache.sling.api.resource.SyntheticResource
  */
 @CompileStatic
 class JobResource extends SyntheticResource {
-    public static final String JOB_ID = "twc:grabbit.jobId"
+    public static final String JOB_EXECUTION_ID = "twc:grabbit.jobExecutionId"
 
     JobResource(ResourceResolver resourceResolver, ResourceMetadata rm, String resourceType) {
         super(resourceResolver, rm, resourceType)

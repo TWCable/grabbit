@@ -162,7 +162,7 @@ A job status is has the following format :
        "isRunning": "true/false",
        "isStopping": "true/false",
        "jcrNodesWritten": "#OfNodes",
-       "jobId": "id",
+       "jobExecutionId": "JobExecutionId",
        "path": "currentPath",
        "startTime": "TimeStamp",
        "timeTaken": "TimeInMilliSeconds"

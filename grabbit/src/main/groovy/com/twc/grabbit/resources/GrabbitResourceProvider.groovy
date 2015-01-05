@@ -75,7 +75,7 @@ class GrabbitResourceProvider implements ResourceProvider {
         final metadata = new ResourceMetadata(resolutionPath: path)
 
         final jobId = getJobIdFromPath(path)
-        if(jobId) { metadata.put(JobResource.JOB_ID, jobId) }
+        if(jobId) { metadata.put(JobResource.JOB_EXECUTION_ID, jobId) }
 
         new JobResource(resourceResolver, metadata, resourceType)
     }

@@ -42,12 +42,12 @@ class GrabbitServlet extends SlingAllMethodsServlet {
             serverService.getContentForRootPath(path, response.outputStream)
         }
         else {
-            final jobId = request.resource.resourceMetadata[JobResource.JOB_ID] as String ?: ""
+            final jobExecutionId = request.resource.resourceMetadata[JobResource.JOB_EXECUTION_ID] as String ?: ""
             if(request.pathInfo.endsWith("html")) {
                 response.writer.write("TODO : This will be replaced by a UI representation for the Jobs Status")
             }
             else if(request.pathInfo.endsWith("json")) {
-                final String jsonString = getJsonString(jobId)
+                final String jsonString = getJsonString(jobExecutionId)
                 log.debug "Current Status : ${jsonString}"
                 response.contentType = "application/json"
                 response.status = HttpServletResponse.SC_OK
@@ -69,8 +69,9 @@ class GrabbitServlet extends SlingAllMethodsServlet {
         final GrabbitConfiguration configuration = GrabbitConfiguration.create(input)
         Collection<Long> jobExecutionIds = clientService.initiateGrab(configuration)
         log.info "Jobs started : ${jobExecutionIds}"
-        response.status = HttpServletResponse.SC_CREATED
-        response.setHeader( "Location", "/grabbit/job/all.json" )
+        response.status = HttpServletResponse.SC_OK
+        response.contentType = "application/json"
+        response.writer.write(new JsonBuilder(jobExecutionIds).toString())
     }
 
     private String getJsonString(String jobId) {
@@ -87,7 +88,7 @@ class GrabbitServlet extends SlingAllMethodsServlet {
             new JsonBuilder(statuses).toString()
         }
         else {
-            throw new IllegalArgumentException("Invalid jobId : ${jobId}")
+            throw new IllegalArgumentException("Invalid jobInstanceId : ${jobId}")
         }
     }
 }

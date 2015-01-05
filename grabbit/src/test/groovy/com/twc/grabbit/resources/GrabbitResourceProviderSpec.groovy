@@ -19,10 +19,10 @@ class GrabbitResourceProviderSpec extends Specification {
         then:
         resource.path == path
         resource.resourceType == resourceType
-        resource.resourceMetadata[JobResource.JOB_ID] == jobId
+        resource.resourceMetadata[JobResource.JOB_EXECUTION_ID] == jobExecutionId
 
         where:
-        path                            | resourceType                                          | jobId
+        path                            | resourceType                                          | jobExecutionId
         '/grabbit/job'                  | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE     | null
         '/grabbit/job/all.json'         | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE     | "all"
         '/grabbit/job/1.json'           | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE     | "1"

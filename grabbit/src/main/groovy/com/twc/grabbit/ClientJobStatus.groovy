@@ -10,7 +10,7 @@ import javax.annotation.Nonnull
 
 @CompileStatic
 class ClientJobStatus {
-    final Long jobId
+    final Long jobExecutionId
     final Date startTime
     final Date endTime
     final ExitStatus exitStatus
@@ -18,9 +18,9 @@ class ClientJobStatus {
     final Long timeTaken
     final int jcrNodesWritten
 
-    private ClientJobStatus(Long jobId, Date startTime, Date endTime,
+    private ClientJobStatus(Long jobExecutionId, Date startTime, Date endTime,
                             ExitStatus exitStatus, String path, Long timeTaken, int jcrNodesWritten) {
-        this.jobId = jobId
+        this.jobExecutionId = jobExecutionId
         this.startTime = startTime
         this.endTime = endTime
         this.exitStatus = exitStatus
@@ -29,24 +29,18 @@ class ClientJobStatus {
         this.jcrNodesWritten = jcrNodesWritten
     }
 
-    public static ClientJobStatus get(@Nonnull JobExplorer explorer, @Nonnull Long jobId) {
+    public static ClientJobStatus get(@Nonnull JobExplorer explorer, @Nonnull Long jobExecutionId) {
         if(explorer == null) throw new IllegalArgumentException("JobExplorer == null")
-        if(jobId == null) throw new IllegalArgumentException("JobId == null")
+        if(jobExecutionId == null) throw new IllegalArgumentException("JobExecutionId == null")
 
-        final jobInstance = explorer.getJobInstance(jobId)
-        List<JobExecution> executions = explorer.getJobExecutions(jobInstance)
-
-        //Only returning 1st JobExecution for given JobInstanceId
-        //TODO : Return multiple jobExecutions, as there can be many "attempts" at JobExecutions for a given JobInstance Id
-        final jobExecution = executions.first()
-        if(!jobExecution) return null
+        final jobExecution = explorer.getJobExecution(jobExecutionId)
 
         long timeTaken = -1
         if(!jobExecution.running) {
             timeTaken = jobExecution.endTime.time - jobExecution.startTime.time
         }
         new ClientJobStatus(
-                jobExecution.jobId,
+                jobExecution.id,
                 jobExecution.startTime,
                 jobExecution.endTime,
                 jobExecution.exitStatus,
@@ -64,7 +58,7 @@ class ClientJobStatus {
         if(!instances) return Collections.EMPTY_LIST
 
         final List<JobExecution> executions = instances.collectMany { explorer.getJobExecutions(it) }
-        final List<Long> jobExecutionIds = executions.collect { it.jobId }
+        final List<Long> jobExecutionIds = executions.collect { it.id }
         jobExecutionIds.collect { Long id ->
             get(explorer, id)
         }
