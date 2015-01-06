@@ -144,7 +144,7 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
                 mapStepExecution(properties, jobExecution)
             } as List<StepExecution>
 
-            log.info "StepExecutions for the JobExecution : ${jobExecution} ==> $stepExecutions"
+            log.debug "StepExecutions for the JobExecution : ${jobExecution} ==> $stepExecutions"
 
             //THIS IS VERY WEIRD!
             jobExecution.addStepExecutions(stepExecutions)
