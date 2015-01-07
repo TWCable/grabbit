@@ -3,6 +3,7 @@ package com.twc.grabbit.client.batch.steps.preprocessor
 import com.twc.grabbit.client.batch.ClientBatchJobContext
 import com.twc.grabbit.proto.PreProcessorProtos
 import groovy.transform.CompileStatic
+import groovy.transform.WithWriteLock
 import groovy.util.logging.Slf4j
 import org.apache.jackrabbit.commons.NamespaceHelper
 import org.springframework.batch.core.StepContribution
@@ -23,13 +24,29 @@ import javax.jcr.Session
 @SuppressWarnings('GrMethodMayBeStatic')
 class PreprocessTasklet implements Tasklet {
 
+    /**
+     * This tasklet can be potentially executed by any number of threads, with possible
+     * contention on the shared JCR NamespaceRegistry.
+     * Adding a WriteLock on this method ensures only one thread can use this method at
+     * a time, thus protecting the NamespaceRegistry.
+     */
+    @WithWriteLock
     @Override
     RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+        log.info "Start writing namespaces."
         PreProcessorProtos.Preprocessors preprocessors = PreProcessorProtos.Preprocessors.parseDelimitedFrom(theInputStream())
+
+        if(!preprocessors) {
+            log.warn "No namespaces received from server"
+            log.info "Finished writing namespaces."
+            return RepeatStatus.FINISHED
+        }
+
         log.debug "Received Preprocessor : ${preprocessors}"
 
         writeToJcr(preprocessors, theSession())
         theSession().save()
+        log.info "Finished writing namespaces."
         return RepeatStatus.FINISHED
     }
 
