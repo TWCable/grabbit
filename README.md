@@ -125,7 +125,7 @@ A `json` configuration file of following format is used to configure Grabbit.
 }
 ```
 
-Ypu can find pre-built Grabbit Configurations for Residential, Business-class and Checkout [here](https://github.webapps.rr.com/ssane/grabbit/wiki/Pre-Build-Configurations)
+Ypu can find pre-built Grabbit Configurations for Residential, Business-class and Checkout [here](https://github.webapps.rr.com/ssane/grabbit/wiki/Pre-Built-Configurations)
 
 
 ### Understanding the Status information for a job when using Grabbit.sh: 
