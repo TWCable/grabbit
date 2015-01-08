@@ -15,7 +15,7 @@ Source and destination can be any AEM 5.6.1 instances.
 
 #### For Windows ####
 
-Install the binary from https://code.google.com/p/protobuf/downloads/detail?name=protoc-2.4.1-win32.zip&can=2&q= and then set the `/path/to/protoc.exe` on your PATH variable.
+Install the binary from https://code.google.com/p/protobuf/downloads/detail?name=protoc-2.4.1-win32.zip&can=2&q= and then set the `/path/to/protoc/parent` on your PATH variable.
 
 #### For Macs ####
 
