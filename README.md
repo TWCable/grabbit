@@ -5,10 +5,6 @@ Source and destination can be any AEM 5.6.1 instances.
  
 # Building #
 
-## Prebuilt Grabbit package based off of latest master
-
-[Grabbit.zip](https://s3.amazonaws.com/uploads.hipchat.com/34311/1348484/UtWP7P4iRlyd1s3/grabbit-1.0.1-SNAPSHOT.zip)
-
 ## Full Clean Build ##
 
 `gradlew clean install` 
@@ -43,24 +39,9 @@ Server exposes its functionality as a GET servlet at `/bin/twc/grab/server` whic
 
 A path of the type `/a/b/.` indicates a non-recursive sync of all the sub-nodes for `b`
 
-Client can ask for any `valid` content from server by hitting this servlet. The way this is done right now from Client is via OSGi Configs.
-
-For eg: If Author is acting "Client", it can be configured to trigger a Sync by going to 
-`/apps/grabbit/config/com.twc.grabbit.client.services.impl.DefaultClientService` in CRXDE Lite and configure the OSGi configs :
-
-`grab.server.hostmane` : The Hostname of the Server
-
-`grab.server.port` : The Port of the Server
-
-`grab.server.username` : Username to connect to the Server
-
-`grab.server.password` : Password to connect to the Server
-
-Once these properties are set, `Save` them. Saving will kick of the Sync.
-
 # Validating the Content Pull #
 
-You can to `batch-client.log` on the Client and look for the message some thing like : 
+You can go to `batch-client.log` on the Client and look for the message some thing like : 
 
 ```
 
