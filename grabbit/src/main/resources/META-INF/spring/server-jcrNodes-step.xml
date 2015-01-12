@@ -14,7 +14,9 @@
 
     <bean id="serverJcrNodesReader" class="com.twc.grabbit.server.batch.steps.jcrnodes.JcrNodesReader"/>
 
-    <bean id="serverJcrNodesProcessor" class="com.twc.grabbit.server.batch.steps.jcrnodes.JcrNodesProcessor"/>
+    <bean id="serverJcrNodesProcessor" class="com.twc.grabbit.server.batch.steps.jcrnodes.JcrNodesProcessor" scope="step">
+        <property name="contentAfterDate" value="#{jobParameters['contentAfterDate']}"/>
+    </bean>
 
     <bean id="serverProtobufNodesWriter" class="com.twc.grabbit.server.batch.steps.jcrnodes.JcrNodesWriter" />
 </beans>

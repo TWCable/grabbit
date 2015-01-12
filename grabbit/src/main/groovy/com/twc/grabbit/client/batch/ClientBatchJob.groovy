@@ -1,7 +1,10 @@
 package com.twc.grabbit.client.batch
 
+import com.twc.grabbit.DateUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import org.springframework.batch.core.BatchStatus
+import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.launch.JobOperator
 import org.springframework.context.ConfigurableApplicationContext
 
@@ -24,6 +27,7 @@ class ClientBatchJob {
     public static final String PORT = "port"
     public static final String USERNAME = "username"
     public static final String PASSWORD = "password"
+    public static final String CONTENT_AFTER_DATE = "contentAfterDate"
 
     private final Map<String,String> jobParameters
     private final JobOperator jobOperator
@@ -81,19 +85,49 @@ class ClientBatchJob {
             this.parentBuilder = parentBuilder
         }
 
-        ConfigurationBuilder andCredentials(String username, String password) {
+        DeltaContentBuilder andCredentials(String username, String password) {
             this.username = username
             this.password = password
+            return new DeltaContentBuilder(this)
+        }
+    }
+
+    @CompileStatic
+    static class DeltaContentBuilder {
+        final CredentialsBuilder parentBuilder
+        boolean doDeltaContent
+
+        DeltaContentBuilder(CredentialsBuilder parentBuilder) {
+            this.parentBuilder = parentBuilder
+        }
+
+        JobExecutionsBuilder andDoDeltaContent(boolean doDeltaContent) {
+            this.doDeltaContent = doDeltaContent
+            return new JobExecutionsBuilder(this)
+        }
+    }
+
+    @CompileStatic
+    static class JobExecutionsBuilder {
+        final DeltaContentBuilder parentBuilder
+        List<JobExecution> jobExecutions
+
+        JobExecutionsBuilder(DeltaContentBuilder parentBuilder) {
+            this.parentBuilder = parentBuilder
+        }
+
+        ConfigurationBuilder andClientJobExecutions(List<JobExecution> jobExecutions) {
+            this.jobExecutions = jobExecutions
             return new ConfigurationBuilder(this)
         }
     }
 
     @CompileStatic
     static class ConfigurationBuilder {
-        final CredentialsBuilder parentBuilder
+        final JobExecutionsBuilder parentBuilder
         PathConfiguration pathConfiguration
 
-        ConfigurationBuilder(CredentialsBuilder parentBuilder) {
+        ConfigurationBuilder(JobExecutionsBuilder parentBuilder) {
             this.parentBuilder = parentBuilder
         }
 
@@ -108,29 +142,50 @@ class ClientBatchJob {
         final ConfigurationBuilder configsBuilder
         final PathConfiguration pathConfiguration
         final CredentialsBuilder credentialsBuilder
+        final DeltaContentBuilder deltaContentBuilder
+        final JobExecutionsBuilder jobExecutionsBuilder
         final ServerBuilder serverBuilder
 
         Builder(ConfigurationBuilder parentBuilder) {
             this.configsBuilder = parentBuilder
             this.pathConfiguration = configsBuilder.pathConfiguration
-            this.credentialsBuilder = configsBuilder.parentBuilder
+            this.jobExecutionsBuilder = configsBuilder.parentBuilder
+            this.deltaContentBuilder = jobExecutionsBuilder.parentBuilder
+            this.credentialsBuilder = deltaContentBuilder.parentBuilder
             this.serverBuilder = credentialsBuilder.parentBuilder
         }
 
         ClientBatchJob build() {
+            final jobParameters = [
+                    "timestamp"           : System.currentTimeMillis() as String,
+                    "${PATH}"             : pathConfiguration.path,
+                    "${HOST}"             : serverBuilder.host,
+                    "${PORT}"             : serverBuilder.port,
+                    "${USERNAME}"         : credentialsBuilder.username,
+                    "${PASSWORD}"         : credentialsBuilder.password,
+                    "${WORKFLOW_CONFIGS}" : pathConfiguration.workflowConfigIds.join("|")
+            ] as Map<String, String>
+
+            if (deltaContentBuilder.doDeltaContent) {
+                final lastSuccessFulJobExecution = jobExecutionsBuilder.jobExecutions?.find {
+                    it.jobParameters.getString(PATH) == pathConfiguration.path && (it.status == BatchStatus.COMPLETED)
+                }
+                if(lastSuccessFulJobExecution) {
+                    final contentAfterDate = DateUtil.getISOStringFromDate(lastSuccessFulJobExecution.endTime)
+                    log.info "Last Successful run for ${pathConfiguration.path} was on $contentAfterDate"
+                    return new ClientBatchJob(
+                            jobParameters + (["${CONTENT_AFTER_DATE}": contentAfterDate ] as Map<String, String>),
+                            serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
+                    )
+                }
+                else {
+                    log.warn "There was no successful job run for $pathConfiguration.path. Defaulting to normal content grab"
+                }
+            }
             return new ClientBatchJob(
-                [
-                        "timestamp": System.currentTimeMillis() as String,
-                        "${PATH}" : pathConfiguration.path,
-                        "${HOST}" : serverBuilder.host,
-                        "${PORT}" : serverBuilder.port,
-                        "${USERNAME}" : credentialsBuilder.username,
-                        "${PASSWORD}" : credentialsBuilder.password,
-                        "${WORKFLOW_CONFIGS}" : pathConfiguration.workflowConfigIds.join("|")
-                ] as Map<String, String>,
-                serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
+                    jobParameters,
+                    serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
             )
         }
     }
-
 }

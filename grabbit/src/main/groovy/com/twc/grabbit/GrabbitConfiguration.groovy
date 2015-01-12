@@ -14,17 +14,19 @@ class GrabbitConfiguration {
     String serverPassword
     String serverHost
     String serverPort
+    boolean deltaContent
     Collection<PathConfiguration> pathConfigurations
 
     private GrabbitConfiguration(@Nonnull String user, @Nonnull String pass, @Nonnull String host,
-                                 @Nonnull String port, @Nonnull Collection<PathConfiguration> pathConfigs) {
-        if(!user || !pass || !host || !port || !pathConfigs) {
+                                 @Nonnull String port, @Nonnull boolean deltaContent, @Nonnull Collection<PathConfiguration> pathConfigs) {
+        if(!user || !pass || !host || !port || !pathConfigs || (deltaContent == null)) {
             throw new IllegalArgumentException("One of more configurations are null or empty. Please verify your configs")
         }
         this.serverUsername = user
         this.serverPassword = pass
         this.serverHost = host
         this.serverPort = port
+        this.deltaContent = deltaContent
         this.pathConfigurations = pathConfigs
     }
 
@@ -44,6 +46,7 @@ class GrabbitConfiguration {
             configMap["serverPassword"] as String ?: "",
             configMap["serverHost"] as String ?: "",
             configMap["serverPort"] as String ?: "",
+            configMap["deltaContent"] as boolean ?: false,
             pathConfigurations
         )
 

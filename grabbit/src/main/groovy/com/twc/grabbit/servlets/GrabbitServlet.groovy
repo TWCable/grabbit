@@ -1,6 +1,7 @@
 package com.twc.grabbit.servlets
 
 import com.twc.grabbit.ClientJobStatus
+import com.twc.grabbit.DateUtil
 import com.twc.grabbit.GrabbitConfiguration
 import com.twc.grabbit.client.services.ClientService
 import com.twc.grabbit.resources.JobResource
@@ -35,11 +36,17 @@ class GrabbitServlet extends SlingAllMethodsServlet {
 
     @Override
     void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) {
-        final String path = request.getParameter("path")
+        final path = request.getParameter("path")
 
         if(path) { //Server Get Request
+            final decodedPath = URLDecoder.decode(path, "utf-8")
             response.contentType = "application/octet-stream"
-            serverService.getContentForRootPath(path, response.outputStream)
+
+            final afterDateString = URLDecoder.decode(request.getParameter("after") ?: "", "utf-8")
+
+            if(afterDateString) { log.info "Path : $decodedPath, AfterDate String : $afterDateString. Will send only delta content" }
+
+            serverService.getContentForRootPath(decodedPath, afterDateString ?: null, response.outputStream)
         }
         else {
             final jobExecutionId = request.resource.resourceMetadata[JobResource.JOB_EXECUTION_ID] as String ?: ""

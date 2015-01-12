@@ -11,6 +11,9 @@ import org.apache.felix.scr.annotations.Component
 import org.apache.felix.scr.annotations.Reference
 import org.apache.felix.scr.annotations.Service
 import org.apache.sling.jcr.api.SlingRepository
+import org.springframework.batch.core.JobExecution
+import org.springframework.batch.core.JobInstance
+import org.springframework.batch.core.explore.JobExplorer
 import org.springframework.context.ConfigurableApplicationContext
 
 @Slf4j
@@ -38,37 +41,38 @@ class DefaultClientService implements ClientService {
     Collection<Long> initiateGrab(GrabbitConfiguration configuration) {
 
         Collection<Long> jobExecutionIds = []
+
+        //Only fetch ClientJobExecutions if deltaContent is true in the GrabbitConfiguration
+        List<JobExecution> clientJobExecutions = configuration.deltaContent ? fetchAllClientJobExecutions() : Collections.EMPTY_LIST
+
+        //Do DeltaContent IFF there are previous Client JobExecutions AND DeltaContent flag is true in the GrabbitConfiguration
+        final doDeltaContent = clientJobExecutions && configuration.deltaContent
+
         for(PathConfiguration pathConfig : configuration.pathConfigurations) {
-            final Long currentJobExecutionId = initiate(configuration.serverHost, configuration.serverPort, configuration.serverUsername,
-                                                        configuration.serverPassword, pathConfig)
-            if(currentJobExecutionId == -1) throw new IllegalStateException("Failed to initiate job for path: ${pathConfig}")
-            jobExecutionIds << currentJobExecutionId
+            try {
+                final clientBatchJob = new ClientBatchJob.ServerBuilder(configurableApplicationContext)
+                        .andServer(configuration.serverHost, configuration.serverPort)
+                        .andCredentials(configuration.serverUsername, configuration.serverPassword)
+                        .andDoDeltaContent(doDeltaContent)
+                        .andClientJobExecutions(clientJobExecutions)
+                        .andConfiguration(pathConfig)
+                        .build()
+                final Long currentJobExecutionId = clientBatchJob.start()
+                jobExecutionIds << currentJobExecutionId
+            }
+            catch(Exception e) {
+                log.error "Error while requesting a content sync for current Path: ${[pathConfig.path]}", e
+                throw new IllegalStateException("Failed to initiate job for path: ${pathConfig.path}")
+            }
         }
         return jobExecutionIds
 
     }
 
-    private Long initiate(String host, String port, String username, String password, PathConfiguration pathConfiguration) {
-        try {
-            ClientBatchJob batchJob = configuredClientBatchJob(host, port, username, password, pathConfiguration)
-            Long id = batchJob.start()
-            return id
-        }
-        catch(Exception e) {
-            log.error "Error while requesting a content sync for current Path: ${[pathConfiguration]}", e
-            return -1
-        }
-
+    private List<JobExecution> fetchAllClientJobExecutions() {
+        final explorer = configurableApplicationContext.getBean("clientJobExplorer", JobExplorer)
+        final instances = explorer.getJobInstances("clientJob", 0, Integer.MAX_VALUE - 1) ?: [] as List<JobInstance>
+        final executions = instances.collect { explorer.getJobExecutions(it) }.flatten() as List<JobExecution>
+        executions
     }
-
-    private ClientBatchJob configuredClientBatchJob(String host, String port, String username, String password,
-                                                    PathConfiguration pathConfiguration) {
-        ClientBatchJob batchJob = new ClientBatchJob.ServerBuilder(configurableApplicationContext)
-                                    .andServer(host, port)
-                                    .andCredentials(username, password)
-                                    .andConfiguration(pathConfiguration)
-                                    .build()
-        batchJob
-    }
-
 }

@@ -15,6 +15,7 @@ class GrabbitConfigurationSpec extends Specification {
             "serverPassword" : "admin",
             "serverHost" : "localhost",
             "serverPort" : "4503",
+            "deltaContent" : true,
             "pathConfigurations" :  [
                 {
                     "path" : "/content/residential-admin/checkout-mocks",
@@ -45,6 +46,7 @@ class GrabbitConfigurationSpec extends Specification {
 
         then:
         output instanceof GrabbitConfiguration
+        output.deltaContent == true
 
     }
 

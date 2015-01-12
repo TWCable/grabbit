@@ -9,5 +9,5 @@ interface ServerService {
      * @param path
      * @param servletOutputStream
      */
-    void getContentForRootPath(String path, ServletOutputStream servletOutputStream)
+    void getContentForRootPath(String path, String afterDateString, ServletOutputStream servletOutputStream)
 }

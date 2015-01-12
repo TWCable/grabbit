@@ -100,8 +100,11 @@ class ClientBatchJobExecutionListener implements JobExecutionListener{
         final String port = jobParameters.getString(ClientBatchJob.PORT)
         final String username = jobParameters.getString(ClientBatchJob.USERNAME)
         final String password = jobParameters.getString(ClientBatchJob.PASSWORD)
+        final String contentAfterDate = jobParameters.getString(ClientBatchJob.CONTENT_AFTER_DATE) ?: ""
 
-        final String grabPath = "http://${host}:${port}/grabbit/job?path=${path}"
+        final String encodedContentAfterDate = URLEncoder.encode(contentAfterDate, 'utf-8')
+        final String encodedPath = URLEncoder.encode(path, 'utf-8')
+        final grabPath = "http://${host}:${port}/grabbit/job?path=${encodedPath}&after=${encodedContentAfterDate}"
 
         //create the get request
         HttpGet get = new HttpGet(grabPath)

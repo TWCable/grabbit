@@ -26,7 +26,7 @@
         </property>
     </bean>
 
-    <!-- JCR Representation of a Client Job Explorer used for the Status API -->
+    <!-- In Memory Representation of a Client Job Explorer used for the Status API -->
     <bean id="clientJobExplorer" class="com.twc.grabbit.spring.batch.repository.JcrJobExplorerFactoryBean">
         <property name="repositoryFactory" ref="&amp;clientJobRepository"/>
     </bean>
@@ -36,7 +36,7 @@
         <property name="jobRegistry" ref="clientJobRegistry"/>
     </bean>
 
-    <!-- In Memory Representation of JobRepository that will have a persistent metadata information about all client Jobs -->
+    <!-- JCR Representation of JobRepository that will have persistent metadata information about all client Jobs -->
     <bean id="clientJobRepository"
           class="com.twc.grabbit.spring.batch.repository.JcrJobRepositoryFactoryBean"
           p:transactionManager-ref="clientTransactionManager">

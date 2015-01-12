@@ -1,6 +1,7 @@
 package com.twc.grabbit.server.batch
 
 import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParameters
 import org.springframework.batch.core.JobParametersBuilder
@@ -19,6 +20,7 @@ import javax.servlet.ServletOutputStream
 class ServerBatchJob {
 
     public static final String PATH = "path"
+    public static final String CONTENT_AFTER_DATE = "contentAfterDate"
 
     private final Job job
     private final JobParameters jobParameters
@@ -73,9 +75,23 @@ class ServerBatchJob {
             this.configurationBuilder = configurationBuilder
         }
 
-        Builder andPath(String path) {
+        ContentAfterDateBuilder andPath(String path) {
             if(path == null) throw new IllegalArgumentException("path == null")
             this.path = path
+            return new ContentAfterDateBuilder(this)
+        }
+    }
+
+    static class ContentAfterDateBuilder {
+        final PathBuilder pathBuilder
+        String contentAfterDate
+
+        ContentAfterDateBuilder(PathBuilder pathBuilder) {
+            this.pathBuilder = pathBuilder
+        }
+
+        Builder andContentAfterDate(String dateString) {
+            this.contentAfterDate = dateString
             return new Builder(this)
         }
     }
@@ -83,11 +99,11 @@ class ServerBatchJob {
     @CompileStatic
     static class Builder {
         final ConfigurationBuilder configurationBuilder
-        final PathBuilder pathBuilder
+        final ContentAfterDateBuilder afterDateBuilder
 
-        protected Builder(PathBuilder pathBuilder) {
-            this.pathBuilder = pathBuilder
-            this.configurationBuilder = pathBuilder.configurationBuilder
+        protected Builder(ContentAfterDateBuilder afterDateBuilder) {
+            this.afterDateBuilder = afterDateBuilder
+            this.configurationBuilder = afterDateBuilder.pathBuilder.configurationBuilder
         }
 
         ServerBatchJob build() {
@@ -103,9 +119,10 @@ class ServerBatchJob {
             return new ServerBatchJob(
                     (Job) configurationBuilder.configAppContext.getBean("serverJob", Job),
                     new JobParametersBuilder()
-                    .addLong("timestamp", System.currentTimeMillis())
-                    .addString(PATH, pathBuilder.path)
-                    .toJobParameters(),
+                            .addLong("timestamp", System.currentTimeMillis())
+                            .addString(PATH, afterDateBuilder.pathBuilder.path)
+                            .addString(CONTENT_AFTER_DATE, afterDateBuilder.contentAfterDate)
+                            .toJobParameters(),
                     (JobLauncher) configurationBuilder.configAppContext.getBean("serverJobLauncher" ,JobLauncher)
             )
         }

@@ -25,8 +25,15 @@ import static org.apache.jackrabbit.JcrConstants.*
 @CompileStatic
 class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
 
+    private String contentAfterDate
+
+    void setContentAfterDate(String contentAfterDate) {
+        this.contentAfterDate = contentAfterDate
+    }
+
     /**
      * Converts a JCR Node to Protocol Buffer Message {@link NodeProtos.Node} object.
+     * Returns a null if current Node's processing needs to be ignored like for "rep:policy" nodes
      */
     @Override
     Node process(JcrNode jcrNode) throws Exception {
@@ -35,6 +42,20 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
         if(!jcrNode || jcrNode.path.contains("rep:policy")){
             log.info "Ignoring current node ${jcrNode}"
             return null
+        }
+
+        if(contentAfterDate) {
+            final Date afterDate = DateUtil.getDateFromISOString(contentAfterDate)
+            log.debug "ContentAfterDate received : ${afterDate}. Will ignore content created or modified before the afterDate"
+            final date = getDate(jcrNode)
+            if(!date) {
+                //we want delta content but node doesn't have any date property to compare with. So we ignore it
+                return null
+            }
+            if(date.before(afterDate)) {
+                log.debug "Not sending any data older than ${afterDate}"
+                return null
+            }
         }
 
         final List<JcrProperty> properties = jcrNode.properties.toList()
@@ -53,6 +74,26 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
         nodeBuilder.setProperties(propertiesBuilder.build())
 
         nodeBuilder.build()
+    }
+
+    /**
+     * Returns the "jcr:created", "jcr:lastModified" or "cq:lastModified" date property
+     * for current Jcr Node
+     * Returns null of none of the 3 are found
+     * @return
+     */
+    private static Date getDate(JcrNode jcrNode) {
+        final String CQ_LAST_MODIFIED = "cq:lastModified"
+        if(jcrNode.hasProperty(JCR_CREATED)) {
+            return jcrNode.getProperty(JCR_CREATED).date.time
+        }
+        else if(jcrNode.hasProperty(JCR_LASTMODIFIED)) {
+            return jcrNode.getProperty(JCR_LASTMODIFIED).date.time
+        }
+        else if(jcrNode.hasProperty(CQ_LAST_MODIFIED)) {
+            return jcrNode.getProperty(CQ_LAST_MODIFIED).date.time
+        }
+        return null
     }
 
     /**
