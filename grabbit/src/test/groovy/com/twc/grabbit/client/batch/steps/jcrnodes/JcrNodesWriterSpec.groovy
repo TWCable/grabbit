@@ -12,6 +12,7 @@ import javax.jcr.Session
 import static com.twc.jackalope.JCRBuilder.repository
 import static javax.jcr.PropertyType.LONG
 import static javax.jcr.PropertyType.STRING
+import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
 
 @Subject(JcrNodesWriter)
 class JcrNodesWriterSpec extends Specification {
@@ -93,6 +94,7 @@ class JcrNodesWriterSpec extends Specification {
         then:
         JcrNode jcrNode = session.getNode("/default")
         jcrNode != null
+        jcrNode.getProperty(JCR_LASTMODIFIED) != null
         jcrNode.hasProperties()
         jcrNode.getProperty("multiValuedLong").values.length == 2
     }

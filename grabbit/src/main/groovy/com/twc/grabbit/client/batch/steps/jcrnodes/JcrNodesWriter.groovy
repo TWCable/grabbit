@@ -8,10 +8,12 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.jackrabbit.commons.JcrUtils
 import org.apache.jackrabbit.value.BinaryValue
+import org.apache.jackrabbit.value.DateValue
 import org.springframework.batch.core.ItemWriteListener
 import org.springframework.batch.item.ItemWriter
 
 import javax.jcr.Node as JcrNode
+import javax.jcr.RepositoryException
 import javax.jcr.Session
 import javax.jcr.nodetype.NodeType
 
@@ -71,6 +73,7 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
             // To get around that, just add an empty binary jcr:data here with a "temp" value
             // This will always be overridden by the actual jcr:data value as that will be the next thing received
             theNode.setProperty(JCR_DATA, new BinaryValue("temp".bytes))
+            addLastModifiedProperty(theNode)
         }
         else {
             JcrNode currentNode = JcrUtils.getOrCreateByPath(nodeProto.name, primaryType, session)
@@ -85,6 +88,7 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                     }
                 }
             }
+            addLastModifiedProperty(currentNode)
         }
     }
 
@@ -99,7 +103,7 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
                 node.addMixin(value.stringValue)
             }
             else {
-                log.info "Encountered invalid mixin type while unmarshalling for Proto values : ${property.values}"
+                log.warn "Encountered invalid mixin type while unmarshalling for Proto value : ${value}"
             }
         }
     }
@@ -114,6 +118,24 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
         NodeDecorator nodeDecorator = NodeDecorator.from(currentNode)
         nodeDecorator.setProperty(propertyDecorator)
     }
+
+    /**
+     * Checks if the given LastModified property can be added to the current node
+     * If so, adds it to the given "currentNode"
+     */
+    private static void addLastModifiedProperty(JcrNode currentNode) {
+        final lastModified = new DateValue(Calendar.instance)
+        try {
+            //Need to check if jcr:lastModified can be added to the current node via its NodeType definition
+            //as it cannot be added to all the nodes
+            if(currentNode.primaryNodeType.canSetProperty(JCR_LASTMODIFIED, lastModified)) {
+                currentNode.setProperty(JCR_LASTMODIFIED, lastModified)
+            }
+        } catch(RepositoryException ex) {
+            log.error "Exception while setting jcr:lastModified on ${currentNode.path}.", ex
+        }
+    }
+
 
     private Session theSession() {
         ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()
