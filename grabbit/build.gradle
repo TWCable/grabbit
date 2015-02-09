@@ -23,8 +23,6 @@ cqPackage.dependencyStartLevel = 20
 bundle.installPath = '/apps/grabbit/install/${cqPackage.nativeStartLevel}'
 
 dependencies {
-    // Google ReCaptcha
-    cq_package "com.twc.osgi:net.tanesha.recaptcha4j:${recaptcha4j_version}"
     // This project's runtime for inclusion in the CQ package
     cq_package project(path: ":${name}", configuration: 'runtime')
     cq_package project(path: ":${name}", configuration: 'default')
@@ -128,6 +126,8 @@ configurations.cq_package {
     exclude group: 'com.day.commons', module: 'day-commons-gfx'
     exclude group: 'com.day.commons', module: 'day-commons-any'
     exclude group: 'com.google.code.findbugs', module: 'jsr305'
+
+    exclude group: 'com.day.cq.workflow', module: 'cq-workflow-console'
 }
 
 bundle.installPath = '/apps/grabbit/install/${nativeStartLevel}'
