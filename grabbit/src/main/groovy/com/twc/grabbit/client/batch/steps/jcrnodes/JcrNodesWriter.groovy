@@ -11,6 +11,7 @@ import org.apache.jackrabbit.value.BinaryValue
 import org.apache.jackrabbit.value.DateValue
 import org.springframework.batch.core.ItemWriteListener
 import org.springframework.batch.item.ItemWriter
+import org.springframework.util.StopWatch
 
 import javax.jcr.Node as JcrNode
 import javax.jcr.RepositoryException
@@ -39,6 +40,9 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
     void afterWrite(List nodeProtos) {
         log.info "Saving ${nodeProtos.size()} nodes"
         theSession().save()
+        withStopWatch("Refreshing session: ${theSession()}") {
+            theSession().refresh(false)
+        }
     }
 
     @Override
@@ -52,6 +56,18 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
         for(NodeProtos.Node nodeProto : nodeProtos) {
             writeToJcr(nodeProto, session)
         }
+    }
+
+    private static <T> T withStopWatch(String stopWatchId, Closure<T> cl) {
+        StopWatch stopWatch = new StopWatch(stopWatchId)
+        stopWatch.start()
+
+        T retVal = cl.call()
+
+        stopWatch.stop()
+        log.info stopWatch.shortSummary()
+
+        return retVal
     }
 
     private static void writeToJcr(NodeProtos.Node nodeProto, Session session) {
