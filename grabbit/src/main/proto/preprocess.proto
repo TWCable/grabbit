@@ -1,0 +1,20 @@
+package com.twcable.grabbit.proto;
+
+option java_package = "com.twcable.grabbit.proto";
+option java_outer_classname = "PreProcessorProtos";
+
+/*
+  Protocol Buffers message format to serialize and deserialize JCR Namespaces
+*/
+message Preprocessors {
+    required NamespaceRegistry namespaceRegistry = 1;
+}
+
+message NamespaceRegistry {
+    repeated NamespaceEntry entry = 1;
+}
+
+message NamespaceEntry {
+    required string prefix = 1;
+    required string uri = 2;
+}

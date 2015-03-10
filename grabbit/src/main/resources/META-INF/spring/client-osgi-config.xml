@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2015 Time Warner Cable, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:osgi="http://www.springframework.org/schema/osgi"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/osgi
+       http://www.springframework.org/schema/osgi/spring-osgi-2.0-m1.xsd">
+
+    <!-- Provides a Spring-OSGi Managed Service reference to ClientBatchJobExecutionListener -->
+    <osgi:reference id="slingRepository" interface="org.apache.sling.jcr.api.SlingRepository"/>
+
+    <!-- Provides a Spring-OSGi Managed Service reference to WorkflowOffTasklet and WorkflowOnTasklet -->
+    <osgi:reference id="workflowManager" interface="com.twcable.grabbit.client.batch.workflows.WorkflowManager"/>
+
+    <!-- Provides a Spring-OSGi Managed Service reference to JCR DAO Implementations -->
+    <osgi:reference id="resourceResolverFactory" interface="org.apache.sling.api.resource.ResourceResolverFactory"/>
+
+</beans>

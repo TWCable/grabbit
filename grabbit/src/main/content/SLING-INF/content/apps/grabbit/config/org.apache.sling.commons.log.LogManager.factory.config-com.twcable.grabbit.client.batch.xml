@@ -1,0 +1,26 @@
+<node>
+    <primaryNodeType>sling:OsgiConfig</primaryNodeType>
+    <property>
+        <name>org.apache.sling.commons.log.file</name>
+        <value>logs/batch-client.log</value>
+        <type>String</type>
+    </property>
+
+    <property>
+        <name>org.apache.sling.commons.log.level</name>
+        <value>info</value>
+        <type>String</type>
+    </property>
+
+    <property>
+        <name>org.apache.sling.commons.log.names</name>
+        <value>com.twcable.grabbit.client.batch</value>
+        <type>String</type>
+    </property>
+
+    <property>
+        <name>org.apache.sling.commons.log.pattern</name>
+        <value>{0,date,dd.MM.yyyy HH:mm:ss.SSS} [{2}] {3} *{4}* {5}</value>
+        <type>String</type>
+    </property>
+</node>

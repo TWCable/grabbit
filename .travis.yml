@@ -1,0 +1,12 @@
+language: java
+
+jdk:
+  - oraclejdk7
+  - oraclejdk8
+  - openjdk7
+
+# Allow running on a container instead of a traditional VM
+sudo: false
+
+# show the logging of tests, and there's no need to run the daemon on a single-use container
+script: ./gradlew check -iS --no-daemon

@@ -1,0 +1,100 @@
+buildscript {
+    repositories {
+        jcenter()
+
+        //Provides cq-gradle-plugins and jackalope
+        maven {
+            url "http://dl.bintray.com/twcable/aem"
+        }
+        mavenLocal()
+    }
+
+    dependencies {
+        classpath "com.twcable.gradle:cq-gradle-plugins:${gradle_plugins_version}"
+
+        classpath "commons-io:commons-io:2.4"
+    }
+}
+
+apply plugin: 'groovy'
+apply plugin: 'osgi'
+
+dependencies {
+    testCompile "org.spockframework:spock-core:${spock_version}"
+    testCompile "org.spockframework:spock-spring:${spock_version}"
+    testCompile "org.springframework.batch:spring-batch-test:${spring_batch_version}"
+    testCompile "org.springframework:spring-test:${spring_version}"
+
+
+    testCompile "com.twcable.jackalope:jackalope:${jackalope_version}"
+
+    testRuntime "cglib:cglib-nodep:${cglib_nodep_version}"
+}
+// ********************************************************************
+//
+// Testing
+//
+// ********************************************************************
+task testReport(type: TestReport, dependsOn: test) {
+    destinationDir = file("$buildDir/reports/tests/")
+    reportOn file("$buildDir/test-results/binary/test/")
+}
+
+check.dependsOn testReport
+
+//
+// Add integration testing support
+//
+sourceSets {
+    integrationTest {
+        compileClasspath = sourceSets.main.output + sourceSets.test.output + configurations.testRuntime
+        runtimeClasspath = output + sourceSets.main.output + sourceSets.test.output + configurations.testRuntime
+        groovy.srcDir file('src/integrationTest/groovy')
+        java.srcDir file('src/integrationTest/java')
+    }
+
+    functionalTest {
+        compileClasspath = sourceSets.main.output + sourceSets.test.output + configurations.testRuntime
+        runtimeClasspath = output + sourceSets.main.output + sourceSets.test.output + configurations.testRuntime
+        groovy.srcDir file('src/functionalTest/groovy')
+        java.srcDir file('src/functionalTest/java')
+    }
+}
+
+task integrationTest(type: Test) {
+    testClassesDir = sourceSets.integrationTest.output.classesDir
+    classpath = sourceSets.integrationTest.runtimeClasspath
+}
+
+task integrationTestReport(type: TestReport, dependsOn: integrationTest) {
+    destinationDir = file("$buildDir/reports/integrationTests/")
+    reportOn file("$buildDir/test-results/binary/integrationTest/")
+}
+
+task functionalTest(type: Test) {
+    testClassesDir = sourceSets.functionalTest.output.classesDir
+    maxParallelForks = 2
+    System.properties.each { String key, String value ->
+        if (key.startsWith('test.')) {
+            systemProperty((key - 'test.'), value)
+        }
+    }
+    classpath = sourceSets.functionalTest.runtimeClasspath
+}
+
+task functionalTestReport(type: TestReport, dependsOn: functionalTest) {
+    destinationDir = file("$buildDir/reports/functionalTests/")
+    reportOn file("$buildDir/test-results/binary/functionalTest/")
+}
+
+
+[test, integrationTest]*.systemProperty 'java.awt.headless', true
+[compileGroovy, compileTestGroovy, compileIntegrationTestGroovy]*.options*.forkOptions*.memoryMaximumSize = '2048m'
+
+idea.module.testSourceDirs += sourceSets.integrationTest.groovy.srcDirs
+idea.module.testSourceDirs += sourceSets.integrationTest.java.srcDirs
+idea.module.testSourceDirs += sourceSets.functionalTest.groovy.srcDirs
+idea.module.testSourceDirs += sourceSets.functionalTest.java.srcDirs
+
+// workaround for http://issues.gradle.org/browse/GRADLE-1682
+configurations.testRuntime.exclude group: 'org.apache.felix', module: 'org.osgi.foundation'

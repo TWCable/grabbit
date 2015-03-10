@@ -1,0 +1,420 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.google.guava:guava:${guava_version}"
+    }
+}
+apply plugin: 'groovy'
+apply plugin: 'scr'
+
+import groovy.transform.ToString
+import groovy.util.logging.Slf4j
+import groovy.xml.Namespace
+import groovy.xml.QName
+import java.util.regex.Matcher
+import com.google.common.base.Strings
+import static Empty.EMPTY
+
+task verifyComponentConfig(type: VerifyComponentConfig, dependsOn: [processScrAnnotations])
+
+// **************************************************************************
+//
+// HELPER CLASSES
+//
+// **************************************************************************
+
+class VerifyComponentConfig extends DefaultTask {
+
+    VerifyComponentConfig() {
+        doLast {
+            def verifyFlag = false
+            if (!missingConfigs.isEmpty()) {
+                final compNames = missingConfigs.collect { Component comp -> comp.name }.sort()
+                project.logger.lifecycle("\nServices that do not yet have config nodes: ${compNames}\n")
+                verifyFlag = true
+            }
+
+            if (!missingDefaultConfigNodes.isEmpty()) {
+                final compNames = missingDefaultConfigNodes.collect { Component comp -> comp.name }.sort()
+                project.logger.lifecycle("\nMissing default configuration but has runmode specific configs: ${compNames}\n")
+                verifyFlag = true
+            }
+
+            if (!configDifferences.isEmpty()) {
+                StringBuilder builder = new StringBuilder("\nHas different configuration properties between nodes:\n")
+                configDifferences.sort().each { Component component ->
+                    builder.append("  ${component.name}:\n")
+                    component.configDifferences.each { ConfigDifference confDiff ->
+                        appendDiff(builder, confDiff.leftSide, confDiff.rightSide)
+                        appendDiff(builder, confDiff.rightSide, confDiff.leftSide)
+                    }
+                }
+                project.logger.lifecycle(builder.toString())
+                verifyFlag = true
+            }
+            if(verifyFlag) throw new IllegalStateException("Please fix config nodes issues to proceed with the build")
+        }
+    }
+
+    static void appendDiff(StringBuilder builder, ConfigFile leftSide, ConfigFile rightSide) {
+        final leftDiff = leftSide.componentProperties.configProperties.propertyNames -
+            rightSide.componentProperties.configProperties.propertyNames
+        if (!leftDiff.isEmpty()) {
+            builder.append "    ${runmodesStr(leftSide.runmodes)} has properties not in ${runmodesStr(rightSide.runmodes)}\n"
+            leftDiff.each {
+                builder.append "      - ${it}\n"
+            }
+        }
+    }
+
+    static String runmodesStr(Set<String> rm) {
+        rm.isEmpty() ? "DEFAULT" : rm.join('.')
+    }
+
+    @Lazy Components components = {
+        def serviceComponentsFile = new File((File)project.sourceSets.main.output.classesDir, 'OSGI-INF/serviceComponents.xml')
+        assert serviceComponentsFile.exists()
+
+        def ns = new Namespace("http://www.osgi.org/xmlns/scr/v1.1.0", 'scr')
+        final xml = new XmlParser().parse(serviceComponentsFile)
+        final compColl = xml[ns.component].collect { Node node ->
+            String compName = node.'@name'
+            Map<String, Object> props = [:]
+            node['property'].each { Node propNode ->
+                String name = propNode.attribute('name') as String
+                def value = propNode.attribute('value') ?: EMPTY
+                props[name] = value
+            }
+            new Component(compName, props, project.projectDir)
+        }
+        new Components(compColl)
+    }()
+
+    @Lazy Components missingConfigs = {
+        new Components(components.componentsNeedingConfig.findAll { it.isMissingConfigFile })
+    }()
+
+    @Lazy Components missingDefaultConfigNodes = {
+        new Components(components.componentsNeedingConfig.findAll { it.isMissingDefaultConfigFile })
+    }()
+
+    @Lazy Components configDifferences = {
+        new Components(components.componentsNeedingConfig.findAll { !it.configDifferences.isEmpty() })
+    }()
+}
+
+@ToString
+class Components {
+    private final Set<Component> comps
+    final Set<Component> componentsNeedingConfig
+    final Set<Component> cleanComponents
+    final Set<Component> uncleanComponents
+
+    Components(Collection<Component> comps) {
+        if (comps == null) throw new IllegalArgumentException('comps == null')
+        this.comps = comps as Set<Component>
+
+        componentsNeedingConfig = comps.findAll { it.needsConfigFile }
+        cleanComponents = componentsNeedingConfig.findAll { it.configProperties.isClean }
+        uncleanComponents = componentsNeedingConfig.findAll { !it.configProperties.isClean }
+    }
+
+    boolean isEmpty() {
+        comps.isEmpty()
+    }
+
+    Collection collect(Closure closure) {
+        comps.collect(closure)
+    }
+
+    List<Component> sort() {
+        comps.sort()
+    }
+}
+
+@Slf4j
+@ToString
+class Component implements Comparable {
+    final String name
+    final ComponentProperties componentProperties
+    final File projectDir
+
+    Component(String name, Map<String, Object> allProperties, File projectDir) {
+        if (name == null) throw new IllegalArgumentException('name == null')
+        if (allProperties == null) throw new IllegalArgumentException('allProperties == null')
+        this.name = name
+        this.componentProperties = new ComponentProperties(allProperties)
+        this.projectDir = projectDir
+    }
+
+    ConfigComponentProperties getConfigProperties() {
+        componentProperties.configProperties
+    }
+
+    boolean equals(o) {
+        if (this.is(o)) return true
+        if (getClass() != o.class) return false
+
+        Component component = (Component)o
+
+        if (name != component.name) return false
+
+        return true
+    }
+
+    int hashCode() {
+        return name.hashCode()
+    }
+
+    @Lazy Collection<ConfigFile> configFiles = {
+        def configBaseFolder = "/src/main/content/SLING-INF/content/apps/grabbit/"
+        File baseDir = new File(projectDir, configBaseFolder)
+        if(!baseDir.exists()) {
+            throw new Exception("Config nodes folder ${projectDir}${configBaseFolder} missing");
+        }
+
+        final configFiles = []
+        baseDir.eachDir { File dir ->
+            if (dir.name ==~ /config\.?.*/) {
+                File file = new File(dir, "${name}.xml")
+                if (file.exists()) {
+                    log.info "$file exists"
+                    configFiles.add(new ConfigFile(file))
+                }
+                else {
+                    log.debug "There is no $file"
+                }
+            }
+        }
+        configFiles
+    }()
+
+    @Lazy boolean isMissingConfigFile = {
+        if (!needsConfigFile) {
+            return false
+        }
+        else {
+            if (!configFiles.isEmpty()) {
+                log.info "Has config file ${name}: ${configFiles}"
+                return false
+            }
+            else {
+                log.info "Missing config file ${name}: ${configFiles}"
+                return true
+            }
+        }
+    }()
+
+    @Lazy boolean isMissingDefaultConfigFile = {
+        if (!needsConfigFile) {
+            return false
+        }
+        else {
+            // there's at least one config file, but none that are default
+            !configFiles.isEmpty() && !configFiles.any { it.runmodes.isEmpty() }
+        }
+    }()
+
+    @Lazy boolean needsConfigFile = {
+        if (configProperties.isEmpty()) {
+            log.info "Has no config properties: ${name}"
+            return false
+        }
+        else {
+            log.debug "Has config properties: ${name}"
+            return true
+        }
+    }()
+
+    @Lazy Set<ConfigDifference> configDifferences = {
+        if (!needsConfigFile || configFiles.size() < 2) {
+            return Collections.emptySet()
+        }
+        else {
+            Set<ConfigDifference> thePermutations = []
+            configFiles.eachPermutation {
+                if (it[0].compareTo(it[1]) < 0) thePermutations << new ConfigDifference(it[0], it[1])
+            }
+
+            thePermutations.findAll {
+                it.leftSide.componentProperties.configProperties.propertyNames !=
+                    it.rightSide.componentProperties.configProperties.propertyNames
+            }
+        }
+    }()
+
+    @Override
+    int compareTo(other) {
+        this.name <=> other.name
+    }
+}
+
+class ConfigDifference {
+    final ConfigFile leftSide
+    final ConfigFile rightSide
+
+    ConfigDifference(ConfigFile leftSide, ConfigFile rightSide) {
+        this.leftSide = leftSide
+        this.rightSide = rightSide
+    }
+
+    boolean equals(o) {
+        if (this.is(o)) return true
+        if (getClass() != o.class) return false
+
+        ConfigDifference that = (ConfigDifference)o
+
+        if (leftSide != that.leftSide) return false
+        if (rightSide != that.rightSide) return false
+
+        return true
+    }
+
+    int hashCode() {
+        int result
+        result = leftSide.hashCode()
+        result = 31 * result + rightSide.hashCode()
+        return result
+    }
+
+    String toString() { "ConfigDifference(left: ${leftSide}, right: ${rightSide})" }
+}
+
+
+@Slf4j
+class ConfigFile implements Comparable {
+    final File file
+    final Set<String> runmodes
+
+    ConfigFile(File file) {
+        this.file = file
+        this.runmodes = determineRunmodes()
+    }
+
+
+    @Lazy ComponentProperties componentProperties = {
+        final xml = new XmlParser().parse(file)
+        if(xml != null && xml.name() == "node") {
+            return readSlingConfigXml(xml)
+        } else {
+            throw new Exception("Parent <node></node> tag is not available for config file ${file}")
+        }
+    }()
+
+    private ComponentProperties readSlingConfigXml(Node parentNode) {
+        if(parentNode.primaryNodeType.size() == 0)
+            throw new Exception("Missing <primaryNodeType></primaryNodeType> config node")
+        else if (parentNode.property.size() == 0)
+            throw new Exception("Missing <property></property> config node")
+
+        Map<String, String> configMap = new HashMap<String, String>()
+        parentNode.property.each { nodes ->
+            if(nodes.name.size() == 0)
+                throw new Exception("Missing <name></name> config node")
+            else if (nodes.value.size() == 0 && nodes.values.size() == 0)
+                throw new Exception("Missing <value></value> or <values></values> config node")
+            else if (nodes.values.size() != 0  && nodes.values.value.size() == 0)
+                throw new Exception("Missing <values><value></value></values> config node")
+
+            String name = nodes.name.text()
+
+            def value
+            if(nodes.value.size() > 0)
+                value = nodes.value.text()
+            else if(nodes.values.size() > 0)
+                value = "[${nodes.values.value.collect{it.text()}.join(',')}]"
+
+            String type = nodes.type.text()
+
+            configMap.put(name, Strings.isNullOrEmpty(type) ? value : "{${type}}${value}")
+        }
+        new ComponentProperties(configMap)
+    }
+
+    private Set<String> determineRunmodes() {
+        String dirName = file.parentFile.name
+        if (!dirName.startsWith('config')) throw new IllegalStateException("${dirName} is not a config dir")
+
+        Matcher matcher = dirName =~ /^config\.(.*)$/
+        if (matcher.matches()) {
+            String runmodesStr = matcher[0][1]
+            return ((String)runmodesStr).split('\\.').toList() as Set
+        }
+        else {
+            return Collections.emptySet()
+        }
+    }
+
+    String toString() { "ConfigFile(name: ${file.name}, runmodes: ${runmodes})" }
+
+    @Override
+    int compareTo(Object t) {
+        this.file <=> ((ConfigFile)t).file
+    }
+
+    boolean equals(o) {
+        if (this.is(o)) return true
+        if (getClass() != o.class) return false
+
+        ConfigFile that = (ConfigFile)o
+
+        if (file != that.file) return false
+
+        return true
+    }
+
+    int hashCode() {
+        return file.hashCode()
+    }
+}
+
+
+class Empty {
+    private Empty() {}
+
+    static final Empty EMPTY = new Empty()
+
+    String toString() { 'EMPTY' }
+}
+
+@ToString
+class ComponentProperties {
+    protected Map<String, Object> _allProperties
+
+    ComponentProperties(Map<String, Object> props) {
+        _allProperties = props
+    }
+
+    ConfigComponentProperties getConfigProperties() {
+        new ConfigComponentProperties(_allProperties.findAll { key, value ->
+            !(key.startsWith('sling.') || key.startsWith('service.') || key.startsWith('process.'))
+        })
+    }
+
+    boolean isEmpty() {
+        _allProperties.isEmpty()
+    }
+}
+
+@ToString
+class ConfigComponentProperties extends ComponentProperties {
+
+    ConfigComponentProperties(Map<String, Object> props) {
+        super(props)
+    }
+
+    /**
+     * "Clean" is defined as no properties that are not EMPTY
+     */
+    boolean getIsClean() {
+        _allProperties.every { key, value -> value == EMPTY }
+    }
+
+    Set<String> getPropertyNames() {
+        _allProperties.keySet()
+    }
+}
+
+jar.dependsOn += verifyComponentConfig

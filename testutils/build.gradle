@@ -1,0 +1,40 @@
+apply plugin: 'java'
+apply plugin: 'osgi'
+apply plugin: 'groovy'
+
+group = 'com.twcable.grabbit'
+description = 'Test Utilities'
+
+dependencies {
+
+    compile project(":commons-utils")
+    // Library for Groovy
+    compile "org.codehaus.groovy:groovy-all:${groovy_version}"
+    compile "org.spockframework:spock-core:${spock_version}"
+
+    compile "com.adobe.granite:com.adobe.granite.replication.core:${granite_version}"
+
+    compile "javax.servlet:servlet-api:${servlet_api_version}"
+
+  compile "org.apache.sling:org.apache.sling.commons.testing:${sling_commons_testing_version}", {
+    exclude group: 'org.apache.tika', module: 'tika-parsers'
+    exclude group: 'org.apache.pdfbox', module: 'pdfbox'
+    exclude group: 'org.slf4j', module: 'slf4j-simple'
+    exclude group: 'junit', module: 'junit'
+    exclude group: 'org.jmock', module: 'jmock-junit4'
+    exclude group: 'rhino', module: 'js'
+  }
+  compile "com.day.cq.wcm:cq-wcm-api:${cq_version}"
+  compile "com.day.cq:cq-commons:${cq_version}", {
+    exclude group: 'org.apache.commons', module: 'commons-email'
+  }
+  compile "com.day.cq:cq-tagging:${cq_version}"
+  compile "org.slf4j:slf4j-api:${slf4j_version}"
+  compile "org.mockito:mockito-all:${mockito_version}"
+  compile "org.apache.commons:commons-lang3:${commons_lang_version}"
+  compile "javax.servlet:servlet-api:${servlet_api_version}"
+  compile "org.apache.felix:org.osgi.core:${felix_osgi_version}"
+  compile "org.apache.felix:org.osgi.compendium:${felix_osgi_version}"
+
+  compile "com.google.guava:guava:${guava_version}"
+}
