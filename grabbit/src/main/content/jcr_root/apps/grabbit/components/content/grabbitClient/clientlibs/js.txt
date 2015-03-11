@@ -1,3 +1,0 @@
-jquery.loadingbar.js
-grabbitClient.js
-

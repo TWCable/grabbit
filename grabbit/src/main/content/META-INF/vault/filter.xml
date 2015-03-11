@@ -4,5 +4,4 @@
 -->
 <workspaceFilter vesion="1.0">
     <filter root="/apps/grabbit" />
-    <filter root="/etc/clientlibs/grabbit" />
 </workspaceFilter>
