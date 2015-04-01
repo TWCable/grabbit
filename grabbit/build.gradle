@@ -46,7 +46,6 @@ jar.manifest {
     attributes 'Bundle-Name': project.bundleName
     attributes 'Bundle-SymbolicName': project.symbolicName
     attributes 'Bundle-Description': project.bundleDescription
-    instruction 'Import-Package', 'org.apache.felix.scr.annotations; version="[1.7,2.0)"'
     instruction 'Import-Package', 'groovy.json; version="[2.3,3.0)"'
     instruction 'Import-Package', 'groovy.json.internal; version="[2.3,3.0)"'
     instruction 'Import-Package', 'org.springframework.batch.core.scope; version="[2.2,3.0)"'
