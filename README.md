@@ -16,7 +16,7 @@ Moreover, by doing a continuous stream, we avoid the latency issues. Depending o
  
 # Runtime Dependencies
 
-* AEM/CQ v5.6.1
+* AEM/CQ v6.1
 * To run Grabbit in your AEM/CQ instance, **you need to install a Fragment Bundle once per instance. It can be found [here](https://bintray.com/artifact/download/twcable/aem/dependencies/Sun-Misc-Fragment-Bundle-1.0.0.zip)**
 
 # Building #
@@ -46,6 +46,16 @@ brew link --force --overwrite protobuf241
 ```
 
 _For both Windows and Mac : To verify that installation was successful, `protoc --version` should display `2.4.1`_
+
+### Adding AEM dependent libraries ###
+
+#### Get workflow-console jar from AEM instance
+
+1. Go to http://localhost:4502/system/console/bundles
+2. Search for workflow-console and expand bundle when found.
+3. Notice `Bundle Location` and copy the path after jcrinstall: (/libs/cq/platform/install/cq-workflow-console-5.8.2.jar)
+4. From the top project directory, simply use the Sling download component to grab the data. For example:
+`curl -u admin:admin -o cq-workflow-console-5.8.2.jar "http://localhost:4502/crx/de/download.jsp?path=/libs/cq/platform/install/cq-workflow-console-5.8.2.jar/jcr:content/jcr:data"`
 
 # Running Grabbit #
 

@@ -1,3 +1,5 @@
+ext.spring_version = "3.2.9.RELEASE_1"
+
 //noinspection GroovyAssignabilityCheck
 dependencies {
     // Library for Groovy
@@ -6,23 +8,25 @@ dependencies {
     // Used as part of the build to create the OSGI-INF/serviceComponents.xml file
     compile "org.apache.felix:org.apache.felix.scr.annotations:${scr_annotations_version}"
 
-    compile "com.day.cq.workflow:cq-workflow-console:${cq_version_workflow_console}"
-
     //Google libraries
     compile "com.google.guava:guava:${guava_version}"
 
     //For annotations like @Nonnull, etc.
     compile "com.google.code.findbugs:jsr305:${jsr305_version}"
 
+    // Adobe AEM API jar files
+    compile ":cq-workflow-console:${cq_workflow_console_version}" // install into the top-level dir of project
+
     // Apache Sling libraries
     compile "org.apache.sling:org.apache.sling.api:${sling_api_version}"
-    compile "org.apache.sling:org.apache.sling.jcr.api:${sling_commons_version}"
+    // compile "org.apache.sling:org.apache.sling.jcr.api:${sling_commons_version}"
+    compile "org.apache.sling:org.apache.sling.jcr.resource:${sling_jcr_resource_version}"
 
     // Apache Felix libraries
     compile "org.apache.felix:org.osgi.core:${felix_osgi_version}"
     compile "org.apache.felix:org.osgi.compendium:${felix_osgi_version}"
 
-    compile "joda-time:joda-time:${joda_time_version}"
+    compile "joda-time:joda-time:1.6.2"
 
     // Need the "javax.jms" library for Spring JMS
     compile "org.glassfish:javax.jms:${jms_version}"
@@ -30,8 +34,10 @@ dependencies {
     // Working with the JCR
     compile "javax.jcr:jcr:${jcr_version}"
     compile "org.apache.jackrabbit:jackrabbit-jcr-commons:${jackrabbit_version}"
+    compile "org.apache.sling:org.apache.sling.jcr.api:${sling_commons_version}"
 
     // Logging
+    def slf4j_version = "1.7.6"
     compile "org.slf4j:slf4j-api:${slf4j_version}"
     compile "org.slf4j:jcl-over-slf4j:${slf4j_version}"
     runtime "ch.qos.logback:logback-classic:${logback_version}"
@@ -42,17 +48,7 @@ dependencies {
     // Servlet/JSP libraries
     compile "javax.servlet:servlet-api:${servlet_api_version}"
 
-    // Spring libraries
-    compile "org.springframework.osgi:spring-osgi-core:${spring_osgi_version}"
-    compile "org.springframework:org.springframework.context:${spring_version}"
-    compile "org.springframework:spring-oxm:${spring_version}"
-    compile "org.springframework:org.springframework.jms:${spring_version}"
-    compile "org.springframework:org.springframework.jdbc:${spring_version}"
-    compile "org.springframework.osgi:spring-osgi-extender:${spring_osgi_version}"
-
-    //This version of Spring Batch brings in transitive dependencies of Spring 3.2.9
-    //Though, the Manifest for spring-batch-core and spring-batch-infrastructure
-    //Has a range of [3.1.2, 4.0.0). Thus, excluding these transitive dependencies
+    // This version of Spring Batch brings in non-OSGi transitive dependencies, so they need to be overrriden
     compile "org.springframework.batch:spring-batch-core:${spring_batch_version}", {
         exclude group: "org.springframework", module: "spring-core"
         exclude group: "org.springframework", module: "spring-beans"
@@ -61,6 +57,23 @@ dependencies {
         exclude group: "org.springframework", module: "spring-context"
         exclude group: "org.springframework", module: "spring-tx"
         exclude group: "com.thoughtworks.xstream", module: "xstream"
+    }
+
+    // Spring libraries
+    compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.spring-aop:${spring_version}"
+    compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.spring-beans:${spring_version}"
+    compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.spring-core:${spring_version}"
+    compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.spring-context:${spring_version}"
+    compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.spring-tx:${spring_version}"
+    compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.spring-expression:${spring_version}"
+    compile "org.aopalliance:com.springsource.org.aopalliance:1.0.0"
+    compile "org.springframework.osgi:spring-osgi-extender:${spring_osgi_version}", {
+        exclude group: "org.springframework", module: "org.springframework.core"
+        exclude group: "org.springframework", module: "org.springframework.context"
+        exclude group: "org.springframework", module: "org.springframework.beans"
+        exclude group: "org.springframework", module: "org.springframework.asm"
+        exclude group: "org.springframework", module: "org.springframework.expression"
+        exclude group: "org.springframework", module: "org.springframework.aop"
     }
 
     compile "org.apache.commons:commons-lang3:${commons_lang_version}"
@@ -83,7 +96,6 @@ dependencies {
     }
 
     compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.protobuf-java:${servicemix_protobuf_java_version}"
-
     //For cleaner mocking
     testCompile "org.objenesis:objenesis:${objenesis_version}"
 
