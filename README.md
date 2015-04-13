@@ -31,7 +31,7 @@ Moreover, by doing a continuous stream, we avoid the latency issues. Depending o
 
 #### For Windows ####
 
-Install the binary from https://code.google.com/p/protobuf/downloads/detail?name=protoc-2.4.1-win32.zip&can=2&q= and then set the `/path/to/protoc/parent` on your PATH variable.
+Install the binary from https://github.com/google/protobuf/releases/download/v2.4.1/protoc-2.4.1-win32.zip and then set the `/path/to/protoc/parent` on your PATH variable.
 
 #### For Macs ####
 
