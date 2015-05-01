@@ -17,6 +17,7 @@
 package com.twcable.grabbit.server.batch.steps.jcrnodes
 
 import com.twcable.grabbit.server.batch.ServerBatchJobContext
+import com.twcable.grabbit.server.services.JcrContentExclusionIterator
 import groovy.transform.CompileStatic
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.NonTransientResourceException
@@ -37,7 +38,6 @@ class JcrNodesReader implements ItemReader<JcrNode> {
     JcrNode read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
         Iterator<JcrNode> nodeIterator = theNodeIterator()
         if (nodeIterator == null) throw new IllegalStateException("nodeIterator must be set.")
-
         if (nodeIterator.hasNext()) {
             nodeIterator.next()
         }
@@ -45,7 +45,6 @@ class JcrNodesReader implements ItemReader<JcrNode> {
             null
         }
     }
-
 
     private Iterator<JcrNode> theNodeIterator() {
         ServerBatchJobContext serverBatchJobContext = ServerBatchJobContext.THREAD_LOCAL.get()

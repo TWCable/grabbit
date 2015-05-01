@@ -31,6 +31,7 @@ import org.apache.sling.jcr.api.SlingRepository
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.JobExecutionListener
 import org.springframework.batch.core.JobParameters
+import org.apache.http.client.utils.URIBuilder
 
 import javax.jcr.Session
 
@@ -113,6 +114,8 @@ class ClientBatchJobExecutionListener implements JobExecutionListener {
      */
     private HttpResponse doRequest(JobParameters jobParameters) {
         final String path = jobParameters.getString(ClientBatchJob.PATH)
+        final String excludePathParam = jobParameters.getString(ClientBatchJob.EXCLUDE_PATHS)
+        final excludePaths = (excludePathParam != null && !excludePathParam.isEmpty() ? excludePathParam.split(/\*/) : Collections.EMPTY_LIST) as Collection<String>
         final String host = jobParameters.getString(ClientBatchJob.HOST)
         final String port = jobParameters.getString(ClientBatchJob.PORT)
         final String username = jobParameters.getString(ClientBatchJob.USERNAME)
@@ -121,10 +124,16 @@ class ClientBatchJobExecutionListener implements JobExecutionListener {
 
         final String encodedContentAfterDate = URLEncoder.encode(contentAfterDate, 'utf-8')
         final String encodedPath = URLEncoder.encode(path, 'utf-8')
-        final grabPath = "http://${host}:${port}/grabbit/job?path=${encodedPath}&after=${encodedContentAfterDate}"
+
+        URIBuilder uriBuilder = new URIBuilder(scheme: "http", host: host, port: port as Integer, path: "/grabbit/job")
+        uriBuilder.addParameter("path", encodedPath)
+        uriBuilder.addParameter("after", encodedContentAfterDate)
+        for(String excludePath : excludePaths) {
+            uriBuilder.addParameter("excludePath", URLEncoder.encode(excludePath, 'UTF-8'))
+        }
 
         //create the get request
-        HttpGet get = new HttpGet(grabPath)
+        HttpGet get = new HttpGet(uriBuilder.build())
         HttpResponse response = getHttpClient(username, password).execute(get)
         response
     }

@@ -36,6 +36,7 @@ class ServerBatchJob {
 
     public static final String PATH = "path"
     public static final String CONTENT_AFTER_DATE = "contentAfterDate"
+    public static final String EXCLUDE_PATHS = "excludePaths"
 
     private final Job job
     private final JobParameters jobParameters
@@ -89,16 +90,17 @@ class ServerBatchJob {
     static class PathBuilder {
         final ConfigurationBuilder configurationBuilder
         String path
+        Collection<String> excludePaths
 
 
         PathBuilder(ConfigurationBuilder configurationBuilder) {
             this.configurationBuilder = configurationBuilder
         }
 
-
-        ContentAfterDateBuilder andPath(String path) {
-            if (path == null) throw new IllegalArgumentException("path == null")
+        ContentAfterDateBuilder andPath(String path, Collection<String> excludePaths) {
+            if(path == null) throw new IllegalArgumentException("path == null")
             this.path = path
+            this.excludePaths = (excludePaths == null || excludePaths.isEmpty()) ? (Collection<String>)Collections.EMPTY_LIST : excludePaths
             return new ContentAfterDateBuilder(this)
         }
     }
@@ -142,13 +144,14 @@ class ServerBatchJob {
             ServerBatchJobContext.THREAD_LOCAL.set(serverBatchJobContext)
 
             return new ServerBatchJob(
-                (Job)configurationBuilder.configAppContext.getBean("serverJob", Job),
+                (Job) configurationBuilder.configAppContext.getBean("serverJob", Job),
                 new JobParametersBuilder()
                     .addLong("timestamp", System.currentTimeMillis())
                     .addString(PATH, afterDateBuilder.pathBuilder.path)
+                    .addString(EXCLUDE_PATHS, afterDateBuilder.pathBuilder.excludePaths.join("*"))
                     .addString(CONTENT_AFTER_DATE, afterDateBuilder.contentAfterDate)
                     .toJobParameters(),
-                (JobLauncher)configurationBuilder.configAppContext.getBean("serverJobLauncher", JobLauncher)
+                (JobLauncher) configurationBuilder.configAppContext.getBean("serverJobLauncher" ,JobLauncher)
             )
         }
 

@@ -50,7 +50,7 @@ class ClientBatchJobSpec extends Specification {
             .andCredentials("user", "pass")
             .andDoDeltaContent(doDeltaContent)
             .andClientJobExecutions(jobExecutions)
-            .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, []))
+            .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, [], []))
             .build()
 
         then:

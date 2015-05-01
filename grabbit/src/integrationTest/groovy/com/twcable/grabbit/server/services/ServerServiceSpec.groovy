@@ -72,11 +72,24 @@ class ServerServiceSpec extends Specification {
 
         when:
         //This will also actually execute the Batch Job internally
-        syncServerService.getContentForRootPath("/default.groovy", null, mockServletOutputStream)
+        syncServerService.getContentForRootPath("/default.groovy", (Collection<String>)Collections.EMPTY_LIST, "", mockServletOutputStream)
 
         then:
         mockServletOutputStream != null
         mockServletOutputStream.toString().contains("default.groovy")
+    }
+
+    def "Service excludes data in excludePaths and writes rest of the data to provided outputStream"() {
+        given:
+        MockServletOutputStream mockServletOutputStream = new MockServletOutputStream()
+
+        when:
+        //This will also actually execute the Batch Job internally
+        syncServerService.getContentForRootPath("/default.groovy", ["/default.groovy/jcr:content"] as Collection<String>, "", mockServletOutputStream)
+
+        then:
+        mockServletOutputStream != null
+        !mockServletOutputStream.toString().contains("jcr:content")
     }
 
 }

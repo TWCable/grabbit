@@ -24,6 +24,144 @@ import spock.lang.Unroll
 @Subject(GrabbitConfiguration)
 class GrabbitConfigurationSpec extends Specification {
 
+    def "Should return exclude paths"() {
+        given:
+        def input = """
+        {
+            "serverUsername" : "admin",
+            "serverPassword" : "admin",
+            "serverHost" : "localhost",
+            "serverPort" : "4503",
+            "deltaContent" : false,
+            "pathConfigurations" :
+            [
+                {
+                    "path" : "/content/a/b",
+                    "excludePaths" : ["d", "e/ab", "q/fg"],
+                    "workflowConfigIds" : []
+                }
+            ]
+		}
+        """
+        def expectedOutput = ["/content/a/b/d", "/content/a/b/e/ab", "/content/a/b/q/fg"]
+
+        when:
+        def actualOutput = GrabbitConfiguration.create(input)
+
+        then:
+        actualOutput instanceof GrabbitConfiguration
+        actualOutput.pathConfigurations.first().excludePaths == expectedOutput
+    }
+
+    @Unroll
+    def "throws exception for non-relative exclude path: #excludePath"() {
+        when:
+        def input = """
+        {
+            "serverUsername" : "admin",
+            "serverPassword" : "admin",
+            "serverHost" : "localhost",
+            "serverPort" : "4503",
+            "deltaContent" : false,
+            "pathConfigurations" :  [
+            {
+                "path" : "/content/a/b",
+                "excludePaths" : ["${excludePath}"],
+                "workflowConfigIds" : []
+            }
+          ]
+        }
+        """
+        GrabbitConfiguration.create(input)
+
+        then:
+        GrabbitConfiguration.ConfigurationException exception = thrown()
+        exception.errors == [excludePaths: "relative paths provided cannot begin or end with /, ./ or \\"]
+
+        where:
+        excludePath << ["/a", "\\\\b" , "./c"]
+    }
+
+    @Unroll
+    def "generates correct exclusions regardless of trailing slash for path: #excludePath"() {
+        given:
+        def input = """
+        {
+            "serverUsername" : "admin",
+            "serverPassword" : "admin",
+            "serverHost" : "localhost",
+            "serverPort" : "4503",
+            "deltaContent" : false,
+            "pathConfigurations" :  [
+            {
+                "path" : "${path}",
+                "excludePaths" : ["d", "e/ab", "q/fg"],
+                "workflowConfigIds" : []
+            }
+          ]
+        }
+        """
+        def expectedOutput = ["/content/a/b/d", "/content/a/b/e/ab", "/content/a/b/q/fg"]
+
+        when:
+        def actualOutput = GrabbitConfiguration.create(input)
+
+        then:
+        actualOutput instanceof GrabbitConfiguration
+        actualOutput.pathConfigurations.first().excludePaths == expectedOutput
+
+        where:
+        path << ["/content/a/b", "/content/a/b/"]
+    }
+
+    def "Should fail to process exclude paths"() {
+        given:
+        def input  = """
+        {
+            "serverUsername" : "admin",
+            "serverPassword" : "admin",
+            "serverHost" : "localhost",
+            "serverPort" : "4503",
+            "deltaContent" : false,
+            "pathConfigurations" :  [
+                {
+                    "path" : "/content/a/b",
+                    "excludePaths" :["b"],
+                    "workflowConfigIds" : []
+                },
+                {
+                    "path" : "/content/a/c",
+                    "excludePaths" :["b"],
+                    "workflowConfigIds" :
+                    [
+                        "/etc/workflow/launcher/config/update_asset_mod",
+                        "/etc/workflow/launcher/config/update_asset_create",
+                        "/etc/workflow/launcher/config/dam_xmp_nested_writeback",
+                        "/etc/workflow/launcher/config/dam_xmp_writeback"
+                    ]
+                },
+                {
+                    "path" : "/content/dam/d/images",
+                    "excludePaths" :["f",null],
+                    "workflowConfigIds" :
+                    [
+                        "something"
+                    ]
+                }
+            ]
+        }
+        """
+        def errors =  [excludePaths: "contains null/empty"]
+
+        when:
+        GrabbitConfiguration.create(input)
+
+        then:
+        final GrabbitConfiguration.ConfigurationException exception = thrown()
+        exception.errors == errors
+
+    }
+
     @Unroll
     def "Should create configuration from json input"() {
         when:
@@ -175,8 +313,6 @@ class GrabbitConfigurationSpec extends Specification {
         }
         """ | [serverPort: "is missing",
                path      : "is missing"]
-
-
     }
 
 }

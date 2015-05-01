@@ -53,18 +53,18 @@ class GrabbitServlet extends SlingAllMethodsServlet {
     @Override
     void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) {
         final path = request.getParameter("path")
+        final excludePaths = request.getParameterValues("excludePath")
 
         if (path) { //Server Get Request
             final decodedPath = URLDecoder.decode(path, "utf-8")
+            final decodedExcludePaths = excludePaths.collect { String ep -> URLDecoder.decode(ep, 'UTF-8') }
             response.contentType = "application/octet-stream"
 
             final afterDateString = URLDecoder.decode(request.getParameter("after") ?: "", "utf-8")
 
-            if (afterDateString) {
-                log.info "Path : $decodedPath, AfterDate String : $afterDateString. Will send only delta content"
-            }
+            if(afterDateString) { log.info "Path : $decodedPath, Exclude Paths: $decodedExcludePaths, AfterDate String : $afterDateString. Will send only delta content" }
 
-            serverService.getContentForRootPath(decodedPath, afterDateString ?: null, response.outputStream)
+            serverService.getContentForRootPath(decodedPath, decodedExcludePaths ?: null, afterDateString ?: null, response.outputStream)
         }
         else {
             final jobExecutionId = request.resource.resourceMetadata[JobResource.JOB_EXECUTION_ID] as String ?: ""

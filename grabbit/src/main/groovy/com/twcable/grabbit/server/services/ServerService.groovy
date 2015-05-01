@@ -25,5 +25,5 @@ interface ServerService {
      * @param path
      * @param servletOutputStream
      */
-    void getContentForRootPath(String path, String afterDateString, ServletOutputStream servletOutputStream)
+    void getContentForRootPath(String path, Collection<String> excludePaths, String afterDateString, ServletOutputStream servletOutputStream)
 }

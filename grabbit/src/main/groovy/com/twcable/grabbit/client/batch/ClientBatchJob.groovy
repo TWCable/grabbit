@@ -38,6 +38,7 @@ class ClientBatchJob {
     public static final String JOB_NAME = "clientJob"
 
     public static final String PATH = "path"
+    public static final String EXCLUDE_PATHS = "excludePaths"
     public static final String WORKFLOW_CONFIGS = "workflowConfigIds"
     public static final String HOST = "host"
     public static final String PORT = "port"
@@ -186,13 +187,14 @@ class ClientBatchJob {
 
         ClientBatchJob build() {
             final jobParameters = [
-                "timestamp"          : System.currentTimeMillis() as String,
-                "${PATH}"            : pathConfiguration.path,
-                "${HOST}"            : serverBuilder.host,
-                "${PORT}"            : serverBuilder.port,
-                "${USERNAME}"        : credentialsBuilder.username,
-                "${PASSWORD}"        : credentialsBuilder.password,
-                "${WORKFLOW_CONFIGS}": pathConfiguration.workflowConfigIds.join("|")
+                "timestamp"           : System.currentTimeMillis() as String,
+                "${PATH}"             : pathConfiguration.path,
+                "${HOST}"             : serverBuilder.host,
+                "${PORT}"             : serverBuilder.port,
+                "${USERNAME}"         : credentialsBuilder.username,
+                "${PASSWORD}"         : credentialsBuilder.password,
+                "${EXCLUDE_PATHS}"    : pathConfiguration.excludePaths.join("*"),
+                "${WORKFLOW_CONFIGS}" : pathConfiguration.workflowConfigIds.join("|")
             ] as Map<String, String>
 
             if (deltaContentBuilder.doDeltaContent) {

@@ -72,10 +72,22 @@ A `json` configuration file of following format is used to configure Grabbit.
     "serverPort" : "4502",
     "pathConfigurations" :  [
         {
-            "path" : "/content/someContent"
+            "path" : "/content/someContent",
+        },
+        {
+            "path" : "/content/someContent",
+            "excludePaths" :
+            [
+                "someOtherContent/someExcludeContent"
+            ]
         },
         {
             "path" : "/content/dam/someDamContent",
+            "excludePaths":
+                [
+                    "someContent/someExcludeContent",
+                    "someContent/someOtherExcludeContent"
+                ],
             "workflowConfigIds" :
                 [
                     "/etc/workflow/launcher/config/update_asset_mod",
@@ -88,6 +100,57 @@ A `json` configuration file of following format is used to configure Grabbit.
 }
 ```
 
+#### Required fields
+
+* __serverHost__: The server that the client should get its content from.
+* __serverPort__: The port to connect to on the server that the client should use.
+* __serverUsername__: The username the client should use to authenticate against the server.
+* __serverPassword__: The password the client should use to authenticate against the server.
+* __pathConfigurations__: The list of paths and their options to pull from the server.
+    * __path__: The path to recursively grab content from.
+
+#### Optional fields
+
+Under "path configurations"
+
+* __excludePaths__: This allows excluding specific subpaths from what will be retrieved from the parent path. See more detail below.
+* __workflowConfigIds__: Before the client retrieves content for the path from the server, it will make sure that the specified workflows are disabled. They will be re-enabled when all content specifying that workflow has finished copying. (Grabbit handles the situation of multiple paths specifying "overlapping" workflows.) This is particularly useful for areas like the DAM where a number of relatively expensive workflows will just "redo" what is already being copied.
+
+#### Exclude Paths
+
+Exclude Paths allow the user to exclude a certain set of subpaths for a given path while grabbing content. They can only be __relative__ to the "path".
+
+For example, let's say you have
+
+```{ "path" : "/content/someContent" }```
+
+and you would like to exclude ```/content/someContent/someOtherContent/pdfs```
+
+Valid:
+
+```
+{
+    "path" : "/content/someContent",
+    "excludePaths" :
+    [
+        "someOtherContent/pdfs"
+    ]
+}
+```
+
+Invalid:
+
+```
+{
+    "path" : "/content/someContent",
+    "excludePaths" :
+    [
+        "/content/someContent/someOtherContent/pdfs",
+        "/someOtherContent/pdfs",
+        "./someOtherContent/pdfs"
+    ]
+}
+```
 
 # Monitoring / Validating the Content Sync #
 

@@ -18,6 +18,7 @@ package com.twcable.grabbit.server.services.impl
 
 import com.twcable.grabbit.jcr.JcrUtil
 import com.twcable.grabbit.server.batch.ServerBatchJob
+import com.twcable.grabbit.server.services.JcrContentExclusionIterator
 import com.twcable.grabbit.server.services.JcrContentRecursiveIterator
 import com.twcable.grabbit.server.services.ServerService
 import groovy.transform.CompileStatic
@@ -51,9 +52,12 @@ class DefaultServerService implements ServerService {
 
 
     void getContentForRootPath(
-        @Nonnull String path, @Nullable String afterDateString, @Nonnull ServletOutputStream servletOutputStream) {
+            @Nonnull String path,
+            @Nullable Collection<String> excludePaths,
+            @Nullable String afterDateString, @Nonnull ServletOutputStream servletOutputStream) {
 
         if (path == null) throw new IllegalStateException("path == null")
+        if (excludePaths == null) excludePaths = (Collection<String>) Collections.EMPTY_LIST
         if (servletOutputStream == null) throw new IllegalStateException("servletOutputStream == null")
 
         JcrUtil.withSession(slingRepository, "admin") { Session session ->
@@ -71,9 +75,12 @@ class DefaultServerService implements ServerService {
                 nodeIterator = TreeTraverser.nodeIterator(rootNode)
             }
 
+            //Iterator wrapper for excludePaths exclusions
+            nodeIterator = new JcrContentExclusionIterator(nodeIterator, excludePaths)
+
             ServerBatchJob batchJob = new ServerBatchJob.ConfigurationBuilder(configurableApplicationContext)
                 .andConfiguration(new NamespaceHelper(session).namespaces.iterator(), nodeIterator, servletOutputStream)
-                .andPath(path)
+                .andPath(path, excludePaths)
                 .andContentAfterDate(afterDateString)
                 .build()
             batchJob.run()

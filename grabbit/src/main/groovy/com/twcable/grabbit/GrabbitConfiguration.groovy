@@ -22,6 +22,8 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 
 import javax.annotation.Nonnull
+import javax.annotation.Nullable
+import java.util.regex.Pattern
 
 @CompileStatic
 @Slf4j
@@ -63,8 +65,9 @@ class GrabbitConfiguration {
 
         final Collection<PathConfiguration> pathConfigurations = configMap["pathConfigurations"]?.collect { Map config ->
             def path = nonEmpty(config, 'path', errorBuilder)
+            def excludePaths = nonEmptyCollection(config["excludePaths"] as Collection<String>, errorBuilder)
             def workflowConfigIds = config["workflowConfigIds"] as Collection<String> ?: [] as Collection<String>
-            new PathConfiguration(path, workflowConfigIds)
+            new PathConfiguration(path, excludePaths, workflowConfigIds)
         } ?: [] as Collection<PathConfiguration>
 
         if (pathConfigurations.isEmpty()) errorBuilder.add('pathConfigurations', 'is empty')
@@ -79,6 +82,24 @@ class GrabbitConfiguration {
             deltaContent,
             pathConfigurations
         )
+    }
+
+    private static final Pattern prePattern = Pattern.compile(/^(\/|\.\/|\\).*$/)
+    private static final Pattern postPattern = Pattern.compile(/^.*(\/|\.\/|\\)$/)
+
+    private
+    static Collection<String> nonEmptyCollection(Collection<String> excludePaths, ConfigurationException.Builder errorBuilder) {
+        if (excludePaths == null || excludePaths.isEmpty())
+            return Collections.EMPTY_LIST
+        if (excludePaths.any({ it == null || it.isEmpty() })) {
+            errorBuilder.add('excludePaths', 'contains null/empty')
+            return excludePaths
+        } else if (excludePaths.any { it.matches(prePattern) || it.matches(postPattern) } ) {
+            errorBuilder.add('excludePaths', 'relative paths provided cannot begin or end with /, ./ or \\')
+            return excludePaths
+        } else {
+            return excludePaths
+        }
     }
 
 
@@ -151,11 +172,23 @@ class GrabbitConfiguration {
     @CompileStatic
     static class PathConfiguration {
         String path
+        Collection<String> excludePaths
         Collection<String> workflowConfigIds
 
+        void setPath(@Nullable String path) {
+            this.path = ( path!=null && path.endsWith("/") ) ? path[0..-2] : path
+        }
 
-        protected PathConfiguration(@Nonnull String path, @Nonnull Collection<String> workflowConfigIds) {
-            this.path = path
+        Collection<String> getAbsolutePaths(@Nonnull Collection<String> excludePaths) {
+            if(this.path!=null)
+                return excludePaths.collect { "${this.path}/${it}" }
+            else
+                return excludePaths
+        }
+
+        protected PathConfiguration(@Nonnull String path, @Nonnull Collection<String> excludePaths, @Nonnull Collection<String> workflowConfigIds) {
+            setPath(path)
+            this.excludePaths = getAbsolutePaths(excludePaths)
             this.workflowConfigIds = workflowConfigIds
         }
     }
