@@ -74,7 +74,7 @@ class ServerServiceSpec extends Specification {
 
         when:
         //This will also actually execute the Batch Job internally
-        syncServerService.getContentForRootPath("/default.groovy", mockServletOutputStream)
+        syncServerService.getContentForRootPath("/default.groovy", null, mockServletOutputStream)
 
         then:
         mockServletOutputStream != null
