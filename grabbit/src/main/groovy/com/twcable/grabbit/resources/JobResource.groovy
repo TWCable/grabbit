@@ -28,6 +28,7 @@ import org.apache.sling.api.resource.SyntheticResource
 class JobResource extends SyntheticResource {
     public static final String JOB_EXECUTION_ID = "twcable:grabbit.jobExecutionId"
 
+
     JobResource(ResourceResolver resourceResolver, ResourceMetadata rm, String resourceType) {
         super(resourceResolver, rm, resourceType)
     }

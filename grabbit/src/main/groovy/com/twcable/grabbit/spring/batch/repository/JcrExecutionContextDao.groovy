@@ -19,7 +19,11 @@ package com.twcable.grabbit.spring.batch.repository
 import com.twcable.grabbit.jcr.JcrUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import org.apache.sling.api.resource.*
+import org.apache.sling.api.resource.ModifiableValueMap
+import org.apache.sling.api.resource.Resource
+import org.apache.sling.api.resource.ResourceResolver
+import org.apache.sling.api.resource.ResourceResolverFactory
+import org.apache.sling.api.resource.ValueMap
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.repository.ExecutionContextSerializer
@@ -49,7 +53,9 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
     private ResourceResolverFactory resourceResolverFactory
     private ExecutionContextSerializer contextSerializer
 
-    JcrExecutionContextDao(@Nonnull final ResourceResolverFactory rrf, @Nonnull final ExecutionContextSerializer serializer) {
+
+    JcrExecutionContextDao(
+        @Nonnull final ResourceResolverFactory rrf, @Nonnull final ExecutionContextSerializer serializer) {
         this.resourceResolverFactory = rrf
         this.contextSerializer = serializer
     }
@@ -62,7 +68,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
      */
     @Override
     ExecutionContext getExecutionContext(@Nonnull final JobExecution jobExecution) {
-        if(!jobExecution) throw new IllegalArgumentException("jobExecution == null")
+        if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
         get(JOB_EXECUTION_CONTEXT_ROOT, jobExecution.id)
     }
 
@@ -74,7 +80,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
      */
     @Override
     ExecutionContext getExecutionContext(@Nonnull final StepExecution stepExecution) {
-        if(!stepExecution) throw new IllegalArgumentException("stepExecution == null")
+        if (!stepExecution) throw new IllegalArgumentException("stepExecution == null")
         get(STEP_EXECUTION_CONTEXT_ROOT, stepExecution.id)
     }
 
@@ -86,7 +92,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
      */
     @Override
     void saveExecutionContext(@Nonnull final JobExecution jobExecution) {
-        if(!jobExecution) throw new IllegalArgumentException("jobExecution == null")
+        if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
         //TODO: Persisted JobExecution Context SHOULD NOT exist
         saveOrUpdate(JOB_EXECUTION_CONTEXT_ROOT, jobExecution.id, jobExecution.executionContext)
     }
@@ -99,7 +105,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
      */
     @Override
     void saveExecutionContext(@Nonnull final StepExecution stepExecution) {
-        if(!stepExecution) throw new IllegalArgumentException("stepExecution == null")
+        if (!stepExecution) throw new IllegalArgumentException("stepExecution == null")
         //TODO: Persisted StepExecution Context SHOULD NOT exist
         saveOrUpdate(STEP_EXECUTION_CONTEXT_ROOT, stepExecution.id, stepExecution.executionContext)
     }
@@ -113,7 +119,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
      */
     @Override
     void saveExecutionContexts(@Nonnull final Collection<StepExecution> stepExecutions) {
-        if(!stepExecutions) throw new IllegalArgumentException("stepExecutions == null or empty")
+        if (!stepExecutions) throw new IllegalArgumentException("stepExecutions == null or empty")
         //TODO : Persisted StepExecutions SHOULD NOT exist yet
 
         stepExecutions.each { StepExecution stepExecution ->
@@ -130,7 +136,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
      */
     @Override
     void updateExecutionContext(@Nonnull final JobExecution jobExecution) {
-        if(!jobExecution) throw new IllegalArgumentException("jobExecution == null")
+        if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
         //TODO : JobExecutionContext SHOULD exist already
         saveOrUpdate(JOB_EXECUTION_CONTEXT_ROOT, jobExecution.id, jobExecution.executionContext)
     }
@@ -143,7 +149,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
      */
     @Override
     void updateExecutionContext(@Nonnull final StepExecution stepExecution) {
-        if(!stepExecution) throw new IllegalArgumentException("stepExecution == null")
+        if (!stepExecution) throw new IllegalArgumentException("stepExecution == null")
         //TODO : StepExecutionContext SHOULD exist already
         saveOrUpdate(STEP_EXECUTION_CONTEXT_ROOT, stepExecution.id, stepExecution.executionContext)
     }
@@ -155,11 +161,11 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
     @Override
     protected void ensureRootResource() {
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
-            if(!getOrCreateResource(resolver, JOB_EXECUTION_CONTEXT_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
+            if (!getOrCreateResource(resolver, JOB_EXECUTION_CONTEXT_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
                 throw new IllegalStateException("Cannot get or create RootResource for : ${JOB_EXECUTION_CONTEXT_ROOT}")
             }
-            if(!getOrCreateResource(resolver, STEP_EXECUTION_CONTEXT_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
+            if (!getOrCreateResource(resolver, STEP_EXECUTION_CONTEXT_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
                 throw new IllegalStateException("Cannot get or create RootResource for : ${STEP_EXECUTION_CONTEXT_ROOT}")
             }
@@ -181,9 +187,9 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
      */
     private void saveOrUpdate(@Nonnull final String rootResourceName, @Nonnull final Long executionId,
                               @Nonnull final ExecutionContext executionContext) {
-        if(!rootResourceName) throw new IllegalArgumentException("rootResourceName == null")
-        if(!executionId) throw new IllegalArgumentException("executionId == null")
-        if(!executionContext) throw new IllegalArgumentException("executionContext == null")
+        if (!rootResourceName) throw new IllegalArgumentException("rootResourceName == null")
+        if (!executionId) throw new IllegalArgumentException("executionId == null")
+        if (!executionContext) throw new IllegalArgumentException("executionContext == null")
 
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, rootResourceName, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
@@ -196,7 +202,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
             //Retrieve all properties from the ExecutionContext in a map
             final properties = contextAsResourceProperties(executionId, executionContext)
 
-            if(!existingResource) {
+            if (!existingResource) {
                 //Resource doesn't exist. Creating it
                 log.debug "Resource for $executionId doesn't exist. Creating it..."
                 final createdResource = resolver.create(rootResource, "${generateNextId()}", properties)
@@ -230,14 +236,14 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
             contextSerializer.serialize(contextAsMap, out)
             contextAsString = new String(out.toByteArray(), "ISO-8859-1")
         }
-        catch(IOException ioe) {
+        catch (IOException ioe) {
             throw new IllegalArgumentException("Could not serialize Execution Context: $context", ioe)
         }
 
         final properties = ([
-                (ResourceResolver.PROPERTY_RESOURCE_TYPE) : NT_UNSTRUCTURED,
-                (EXECUTION_ID) : executionId,
-                (EXECUTION_CONTEXT) : contextAsString
+            (ResourceResolver.PROPERTY_RESOURCE_TYPE): NT_UNSTRUCTURED,
+            (EXECUTION_ID)                           : executionId,
+            (EXECUTION_CONTEXT)                      : contextAsString
         ] as Map<String, Object>)
         log.debug "Properties for ExecutionContext : ${context} : ${properties}"
         properties
@@ -250,8 +256,8 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
      * @see #getExecutionContext(StepExecution)
      */
     private ExecutionContext get(@Nonnull final String rootResourceName, @Nonnull final Long executionId) {
-        if(!rootResourceName) throw new IllegalArgumentException("rootResourceName == null")
-        if(!executionId) throw new IllegalArgumentException("executionId == null")
+        if (!rootResourceName) throw new IllegalArgumentException("rootResourceName == null")
+        if (!executionId) throw new IllegalArgumentException("executionId == null")
 
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, rootResourceName, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
@@ -261,7 +267,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
                 final properties = resource.adaptTo(ValueMap)
                 (properties[EXECUTION_ID] as Long) == executionId
             }
-            if(!contextResource) {
+            if (!contextResource) {
                 log.error "Could not find executionContext : $executionId"
                 return null as ExecutionContext
             }
@@ -291,7 +297,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
             ByteArrayInputStream input = new ByteArrayInputStream(contextAsString.getBytes("ISO-8859-1"))
             contextAsMap = contextSerializer.deserialize(input) as Map<String, Object>
         }
-        catch(IOException ioe) {
+        catch (IOException ioe) {
             throw new IllegalArgumentException("Could not deserialize Execution Context: $contextAsString", ioe)
         }
 

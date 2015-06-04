@@ -41,26 +41,27 @@ import javax.servlet.ServletOutputStream
 @Component(label = "Grabbit Server Service", description = "Grabbit Server Service", immediate = true, metatype = true, enabled = true)
 @Service(ServerService)
 @SuppressWarnings('GroovyUnusedDeclaration')
-class DefaultServerService implements ServerService{
+class DefaultServerService implements ServerService {
 
-    @Reference(bind='setSlingRepository')
+    @Reference(bind = 'setSlingRepository')
     SlingRepository slingRepository
 
-    @Reference(bind='setConfigurableApplicationContext')
+    @Reference(bind = 'setConfigurableApplicationContext')
     ConfigurableApplicationContext configurableApplicationContext
 
 
-    void getContentForRootPath(@Nonnull String path, @Nullable String afterDateString, @Nonnull ServletOutputStream servletOutputStream) {
+    void getContentForRootPath(
+        @Nonnull String path, @Nullable String afterDateString, @Nonnull ServletOutputStream servletOutputStream) {
 
-        if(path == null) throw new IllegalStateException("path == null")
-        if(servletOutputStream == null) throw new IllegalStateException("servletOutputStream == null")
+        if (path == null) throw new IllegalStateException("path == null")
+        if (servletOutputStream == null) throw new IllegalStateException("servletOutputStream == null")
 
         JcrUtil.withSession(slingRepository, "admin") { Session session ->
             Iterator<JcrNode> nodeIterator
 
             //If the path is of type "/a/b/.", that means we should not do a recursive search of b's children
             //We should stop after getting all the children of b
-            if(path.split("/").last() == "." ) {
+            if (path.split("/").last() == ".") {
                 final String actualPath = path.substring(0, path.length() - 2)
                 final JcrNode rootNode = session.getNode(actualPath)
                 nodeIterator = new JcrContentRecursiveIterator(rootNode)
@@ -71,10 +72,10 @@ class DefaultServerService implements ServerService{
             }
 
             ServerBatchJob batchJob = new ServerBatchJob.ConfigurationBuilder(configurableApplicationContext)
-                    .andConfiguration(new NamespaceHelper(session).namespaces.iterator(), nodeIterator, servletOutputStream)
-                    .andPath(path)
-                    .andContentAfterDate(afterDateString)
-                    .build()
+                .andConfiguration(new NamespaceHelper(session).namespaces.iterator(), nodeIterator, servletOutputStream)
+                .andPath(path)
+                .andContentAfterDate(afterDateString)
+                .build()
             batchJob.run()
         }
     }

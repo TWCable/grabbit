@@ -39,6 +39,7 @@ class NodeDecoratorSpec extends Specification {
         thrown(IllegalArgumentException)
     }
 
+
     def "setProperty() with a single value set to a node expecting single values works as expected"() {
         setup:
         Node node = Mock(Node)
@@ -53,6 +54,7 @@ class NodeDecoratorSpec extends Specification {
         then:
         1 * node.setProperty("name", new StringValue("value"), PropertyType.STRING)
     }
+
 
     def "setProperty() with a single value set to a node expecting multiple values works as expected"() {
         setup:
@@ -80,6 +82,7 @@ class NodeDecoratorSpec extends Specification {
 
     }
 
+
     def "setProperty() with a multiple value set to a node expecting multiple values works as expected"() {
         setup:
         Node node = Mock(Node)
@@ -94,6 +97,7 @@ class NodeDecoratorSpec extends Specification {
         then:
         1 * node.setProperty("name", [new StringValue("value1"), new StringValue("value2")], PropertyType.STRING)
     }
+
 
     def "setProperty() with a multiple value set to a node expecting a single value works as expected"() {
         setup:

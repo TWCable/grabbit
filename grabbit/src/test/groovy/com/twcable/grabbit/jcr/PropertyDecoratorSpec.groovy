@@ -17,7 +17,15 @@
 package com.twcable.grabbit.jcr
 
 import com.twcable.grabbit.proto.NodeProtos
-import org.apache.jackrabbit.value.*
+import org.apache.jackrabbit.value.BinaryValue
+import org.apache.jackrabbit.value.BooleanValue
+import org.apache.jackrabbit.value.DateValue
+import org.apache.jackrabbit.value.DecimalValue
+import org.apache.jackrabbit.value.DoubleValue
+import org.apache.jackrabbit.value.LongValue
+import org.apache.jackrabbit.value.NameValue
+import org.apache.jackrabbit.value.StringValue
+import org.apache.jackrabbit.value.URIValue
 import spock.lang.Specification
 
 import javax.jcr.PropertyType
@@ -37,6 +45,7 @@ class PropertyDecoratorSpec extends Specification {
         thrown(IllegalArgumentException)
     }
 
+
     def "getPropertyValue() works as expected"() {
         when:
         NodeProtos.Property property = getSingleValueProperty(type, value)
@@ -49,17 +58,18 @@ class PropertyDecoratorSpec extends Specification {
         returnValue?.class == clazz
 
         where:
-        type                   | clazz          | value
-        PropertyType.STRING    | StringValue    | "value"
-        PropertyType.NAME      | NameValue      | "value"
-        PropertyType.URI       | URIValue       | "value"
-        PropertyType.BINARY    | BinaryValue    | "value"
-        PropertyType.BOOLEAN   | BooleanValue   | "true"
-        PropertyType.DATE      | DateValue      | "2012-01-10"
-        PropertyType.DECIMAL   | DecimalValue   | "2.1"
-        PropertyType.DOUBLE    | DoubleValue    | "2.1"
-        PropertyType.LONG      | LongValue      | "2"
+        type                 | clazz        | value
+        PropertyType.STRING  | StringValue  | "value"
+        PropertyType.NAME    | NameValue    | "value"
+        PropertyType.URI     | URIValue     | "value"
+        PropertyType.BINARY  | BinaryValue  | "value"
+        PropertyType.BOOLEAN | BooleanValue | "true"
+        PropertyType.DATE    | DateValue    | "2012-01-10"
+        PropertyType.DECIMAL | DecimalValue | "2.1"
+        PropertyType.DOUBLE  | DoubleValue  | "2.1"
+        PropertyType.LONG    | LongValue    | "2"
     }
+
 
     def "getPropertyValues() works as expected"() {
         when:
@@ -75,16 +85,16 @@ class PropertyDecoratorSpec extends Specification {
         }
 
         where:
-        type                   | clazz          | value
-        PropertyType.STRING    | StringValue    | "value"
-        PropertyType.NAME      | NameValue      | "value"
-        PropertyType.URI       | URIValue       | "value"
-        PropertyType.BINARY    | BinaryValue    | "value"
-        PropertyType.BOOLEAN   | BooleanValue   | "true"
-        PropertyType.DATE      | DateValue      | "2012-01-10"
-        PropertyType.DECIMAL   | DecimalValue   | "2.1"
-        PropertyType.DOUBLE    | DoubleValue    | "2.1"
-        PropertyType.LONG      | LongValue      | "2"
+        type                 | clazz        | value
+        PropertyType.STRING  | StringValue  | "value"
+        PropertyType.NAME    | NameValue    | "value"
+        PropertyType.URI     | URIValue     | "value"
+        PropertyType.BINARY  | BinaryValue  | "value"
+        PropertyType.BOOLEAN | BooleanValue | "true"
+        PropertyType.DATE    | DateValue    | "2012-01-10"
+        PropertyType.DECIMAL | DecimalValue | "2.1"
+        PropertyType.DOUBLE  | DoubleValue  | "2.1"
+        PropertyType.LONG    | LongValue    | "2"
     }
 
 }

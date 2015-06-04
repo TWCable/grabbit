@@ -18,8 +18,8 @@ package com.twcable.grabbit.client.services.impl
 
 import com.twcable.grabbit.GrabbitConfiguration
 import com.twcable.grabbit.GrabbitConfiguration.PathConfiguration
-import com.twcable.grabbit.client.services.ClientService
 import com.twcable.grabbit.client.batch.ClientBatchJob
+import com.twcable.grabbit.client.services.ClientService
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.felix.scr.annotations.Activate
@@ -36,15 +36,15 @@ import org.springframework.context.ConfigurableApplicationContext
 @CompileStatic
 @Component(label = "Grabbit Client Service", description = "Grabbit Client Service", immediate = true, metatype = true, enabled = true)
 @Service(ClientService)
-@SuppressWarnings(['GroovyUnusedDeclaration','GrMethodMayBeStatic'])
+@SuppressWarnings(['GroovyUnusedDeclaration', 'GrMethodMayBeStatic'])
 class DefaultClientService implements ClientService {
 
     public static final int BATCH_SIZE = 1000
 
-    @Reference(bind='setSlingRepository')
+    @Reference(bind = 'setSlingRepository')
     SlingRepository slingRepository
 
-    @Reference(bind='setConfigurableApplicationContext')
+    @Reference(bind = 'setConfigurableApplicationContext')
     ConfigurableApplicationContext configurableApplicationContext
 
 
@@ -52,6 +52,7 @@ class DefaultClientService implements ClientService {
     void activate() {
         log.info "Activate\n\n"
     }
+
 
     @Override
     Collection<Long> initiateGrab(GrabbitConfiguration configuration) {
@@ -64,19 +65,19 @@ class DefaultClientService implements ClientService {
         //Do DeltaContent IFF there are previous Client JobExecutions AND DeltaContent flag is true in the GrabbitConfiguration
         final doDeltaContent = clientJobExecutions && configuration.deltaContent
 
-        for(PathConfiguration pathConfig : configuration.pathConfigurations) {
+        for (PathConfiguration pathConfig : configuration.pathConfigurations) {
             try {
                 final clientBatchJob = new ClientBatchJob.ServerBuilder(configurableApplicationContext)
-                        .andServer(configuration.serverHost, configuration.serverPort)
-                        .andCredentials(configuration.serverUsername, configuration.serverPassword)
-                        .andDoDeltaContent(doDeltaContent)
-                        .andClientJobExecutions(clientJobExecutions)
-                        .andConfiguration(pathConfig)
-                        .build()
+                    .andServer(configuration.serverHost, configuration.serverPort)
+                    .andCredentials(configuration.serverUsername, configuration.serverPassword)
+                    .andDoDeltaContent(doDeltaContent)
+                    .andClientJobExecutions(clientJobExecutions)
+                    .andConfiguration(pathConfig)
+                    .build()
                 final Long currentJobExecutionId = clientBatchJob.start()
                 jobExecutionIds << currentJobExecutionId
             }
-            catch(Exception e) {
+            catch (Exception e) {
                 log.error "Error while requesting a content sync for current Path: ${[pathConfig.path]}", e
                 throw new IllegalStateException("Failed to initiate job for path: ${pathConfig.path}")
             }
@@ -84,6 +85,7 @@ class DefaultClientService implements ClientService {
         return jobExecutionIds
 
     }
+
 
     private List<JobExecution> fetchAllClientJobExecutions() {
         final explorer = configurableApplicationContext.getBean("clientJobExplorer", JobExplorer)

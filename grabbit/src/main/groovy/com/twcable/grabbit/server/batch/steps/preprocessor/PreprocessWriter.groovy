@@ -40,33 +40,37 @@ class PreprocessWriter implements ItemWriter<NamespaceEntry>, ItemWriteListener 
     @Override
     void write(List<? extends NamespaceEntry> namespaceEntries) throws Exception {
         ServletOutputStream servletOutputStream = theServletOutputStream()
-        if(servletOutputStream == null) throw new IllegalStateException("servletOutputStream must be set.")
+        if (servletOutputStream == null) throw new IllegalStateException("servletOutputStream must be set.")
 
         NamespaceRegistry.Builder namespaceRegistryBuilder = NamespaceRegistry.newBuilder()
         namespaceRegistryBuilder.addAllEntry(namespaceEntries)
 
         Preprocessors preprocessors = Preprocessors.newBuilder()
-                .setNamespaceRegistry(namespaceRegistryBuilder.build())
-                .build()
+            .setNamespaceRegistry(namespaceRegistryBuilder.build())
+            .build()
 
         log.debug "Writing Preprocessor Proto message : ${preprocessors}"
         preprocessors.writeDelimitedTo(servletOutputStream)
     }
+
 
     @Override
     void beforeWrite(List items) {
         //no-op
     }
 
+
     @Override
     void afterWrite(List items) {
         theServletOutputStream().flush()
     }
 
+
     @Override
     void onWriteError(Exception exception, List items) {
         log.error "Exception occurred while writing the current chunk", exception
     }
+
 
     private ServletOutputStream theServletOutputStream() {
         ServerBatchJobContext serverBatchJobContext = ServerBatchJobContext.THREAD_LOCAL.get()

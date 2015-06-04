@@ -78,9 +78,11 @@ class PreprocessTaskletSpec extends Specification {
 
     }
 
+
     def checkExecutionStatus(def futures) {
         futures.every { it.get(20, TimeUnit.SECONDS) == RepeatStatus.FINISHED }
     }
+
 
     def getLogFieldForTasklet() {
         def logField = PreprocessTasklet.getDeclaredField("log")

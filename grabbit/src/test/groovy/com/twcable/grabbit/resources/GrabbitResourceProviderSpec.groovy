@@ -38,10 +38,10 @@ class GrabbitResourceProviderSpec extends Specification {
         resource.resourceMetadata[JobResource.JOB_EXECUTION_ID] == jobExecutionId
 
         where:
-        path                            | resourceType                                          | jobExecutionId
-        '/grabbit/job'                  | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE     | null
-        '/grabbit/job/all.json'         | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE     | "all"
-        '/grabbit/job/1.json'           | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE     | "1"
-        '/grabbit/job/1.html'           | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE     | "1"
+        path                    | resourceType                                      | jobExecutionId
+        '/grabbit/job'          | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE | null
+        '/grabbit/job/all.json' | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE | "all"
+        '/grabbit/job/1.json'   | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE | "1"
+        '/grabbit/job/1.html'   | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE | "1"
     }
 }

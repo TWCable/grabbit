@@ -34,6 +34,7 @@ class ClientJobStatus {
     final Long timeTaken
     final int jcrNodesWritten
 
+
     private ClientJobStatus(Long jobExecutionId, Date startTime, Date endTime,
                             ExitStatus exitStatus, String path, Long timeTaken, int jcrNodesWritten) {
         this.jobExecutionId = jobExecutionId
@@ -45,33 +46,35 @@ class ClientJobStatus {
         this.jcrNodesWritten = jcrNodesWritten
     }
 
+
     public static ClientJobStatus get(@Nonnull JobExplorer explorer, @Nonnull Long jobExecutionId) {
-        if(explorer == null) throw new IllegalArgumentException("JobExplorer == null")
-        if(jobExecutionId == null) throw new IllegalArgumentException("JobExecutionId == null")
+        if (explorer == null) throw new IllegalArgumentException("JobExplorer == null")
+        if (jobExecutionId == null) throw new IllegalArgumentException("JobExecutionId == null")
 
         final jobExecution = explorer.getJobExecution(jobExecutionId)
 
         long timeTaken = -1
-        if(!jobExecution.running) {
+        if (!jobExecution.running) {
             timeTaken = jobExecution.endTime.time - jobExecution.startTime.time
         }
         new ClientJobStatus(
-                jobExecution.id,
-                jobExecution.startTime,
-                jobExecution.endTime,
-                jobExecution.exitStatus,
-                jobExecution.jobParameters.getString(ClientBatchJob.PATH),
-                timeTaken,
-                jobExecution.stepExecutions?.find { it.stepName == "clientJcrNodes" }?.writeCount ?: -1
+            jobExecution.id,
+            jobExecution.startTime,
+            jobExecution.endTime,
+            jobExecution.exitStatus,
+            jobExecution.jobParameters.getString(ClientBatchJob.PATH),
+            timeTaken,
+            jobExecution.stepExecutions?.find { it.stepName == "clientJcrNodes" }?.writeCount ?: -1
         )
     }
 
+
     public static List<ClientJobStatus> getAll(@Nonnull JobExplorer explorer) {
-        if(explorer == null) throw new IllegalArgumentException("JobExplorer == null")
-        
+        if (explorer == null) throw new IllegalArgumentException("JobExplorer == null")
+
         //Returns all the job instances that are currently running
         def instances = explorer.getJobInstances(ClientBatchJob.JOB_NAME, 0, Integer.MAX_VALUE)
-        if(!instances) return Collections.EMPTY_LIST
+        if (!instances) return Collections.EMPTY_LIST
 
         final List<JobExecution> executions = instances.collectMany { explorer.getJobExecutions(it) }
         final List<Long> jobExecutionIds = executions.collect { it.id }

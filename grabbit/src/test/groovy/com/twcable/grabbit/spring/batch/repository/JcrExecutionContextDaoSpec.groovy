@@ -25,9 +25,11 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
 
-import static JcrExecutionContextDao.*
+import static com.twcable.grabbit.spring.batch.repository.JcrExecutionContextDao.EXECUTION_CONTEXT
+import static com.twcable.grabbit.spring.batch.repository.JcrExecutionContextDao.EXECUTION_ID
 import static com.twcable.jackalope.JCRBuilder.node
-import static com.twcable.jackalope.JCRBuilder.*
+import static com.twcable.jackalope.JCRBuilder.property
+import static com.twcable.jackalope.JCRBuilder.repository
 
 @Subject(JcrExecutionContextDao)
 class JcrExecutionContextDaoSpec extends Specification {
@@ -38,33 +40,35 @@ class JcrExecutionContextDaoSpec extends Specification {
     @Shared
     ExecutionContextSerializer stubSerializer
 
+
     def setupSpec() {
         final builder =
-                node("var",
-                    node("grabbit",
-                        node("job",
-                            node("repository",
-                                node("executionContexts",
-                                    node("job",
-                                        node("1",
-                                            property(EXECUTION_ID, 1),
-                                            property(EXECUTION_CONTEXT, "SomeThing")
-                                        )
-                                    ),
-                                    node("step",
-                                        node("1",
-                                            property(EXECUTION_ID, 1),
-                                            property(EXECUTION_CONTEXT, "SomeThing")
-                                        )
+            node("var",
+                node("grabbit",
+                    node("job",
+                        node("repository",
+                            node("executionContexts",
+                                node("job",
+                                    node("1",
+                                        property(EXECUTION_ID, 1),
+                                        property(EXECUTION_CONTEXT, "SomeThing")
+                                    )
+                                ),
+                                node("step",
+                                    node("1",
+                                        property(EXECUTION_ID, 1),
+                                        property(EXECUTION_CONTEXT, "SomeThing")
                                     )
                                 )
                             )
                         )
                     )
                 )
+            )
         mockFactory = new SimpleResourceResolverFactory(repository(builder).build())
         stubSerializer = new StubExecutionContextSerializer()
     }
+
 
     def "EnsureRootResource for JcrExecutionContextDao"() {
         when:
@@ -76,6 +80,7 @@ class JcrExecutionContextDaoSpec extends Specification {
 
     }
 
+
     def "GetExecutionContext for a JobExecution"() {
         when:
         final executionContextDao = new JcrExecutionContextDao(mockFactory, stubSerializer)
@@ -85,6 +90,7 @@ class JcrExecutionContextDaoSpec extends Specification {
         result != null
         result.containsKey("deserialized")
     }
+
 
     def "GetExecutionContext for a StepExecution"() {
         when:
@@ -96,12 +102,14 @@ class JcrExecutionContextDaoSpec extends Specification {
         result.containsKey("deserialized")
     }
 
+
     class StubExecutionContextSerializer implements ExecutionContextSerializer {
 
         @Override
         Object deserialize(InputStream inputStream) throws IOException {
-            [ deserialized : new String("Deserialized") ]
+            [deserialized: new String("Deserialized")]
         }
+
 
         @Override
         void serialize(Object object, OutputStream outputStream) throws IOException {

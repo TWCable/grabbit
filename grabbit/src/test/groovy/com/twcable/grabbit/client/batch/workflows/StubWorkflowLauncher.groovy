@@ -35,27 +35,32 @@ class StubWorkflowLauncher implements WorkflowLauncher {
 
     private List<ConfigEntry> configEntries
 
+
     public StubWorkflowLauncher(int noOfEntries) {
         editConfigCallCount = 0
         configEntries = (1..noOfEntries).collect { i ->
-            new ConfigEntry(0, "", "" , "", "", "id${i}", "", true, [], [])
+            new ConfigEntry(0, "", "", "", "", "id${i}", "", true, [], [])
         }
     }
+
 
     @Override
     void addConfigEntry(ConfigEntry configEntry) throws RepositoryException {
         log.info "Adding configEntry : ${configEntry}"
     }
 
+
     @Override
     void removeConfigEntry(String s) throws RepositoryException {
         log.info "Removing configEntry with ID : ${s}"
     }
 
+
     @Override
     List<ConfigEntry> getConfigEntries() {
         configEntries
     }
+
 
     @Override
     void editConfigEntry(String s, ConfigEntry configEntry) throws RepositoryException {

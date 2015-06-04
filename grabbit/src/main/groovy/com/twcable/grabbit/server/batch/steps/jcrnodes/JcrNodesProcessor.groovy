@@ -31,8 +31,21 @@ import javax.jcr.Property as JcrProperty
 import javax.jcr.PropertyType
 import javax.jcr.Value
 
-import static javax.jcr.PropertyType.*
-import static org.apache.jackrabbit.JcrConstants.*
+import static javax.jcr.PropertyType.BINARY
+import static javax.jcr.PropertyType.BOOLEAN
+import static javax.jcr.PropertyType.DATE
+import static javax.jcr.PropertyType.DECIMAL
+import static javax.jcr.PropertyType.DOUBLE
+import static javax.jcr.PropertyType.LONG
+import static javax.jcr.PropertyType.NAME
+import static javax.jcr.PropertyType.PATH
+import static javax.jcr.PropertyType.REFERENCE
+import static javax.jcr.PropertyType.STRING
+import static javax.jcr.PropertyType.WEAKREFERENCE
+import static org.apache.jackrabbit.JcrConstants.JCR_CREATED
+import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
+import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
+import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 
 /**
  * A Custom ItemProcessor that effectively acts as a Marshaller for a Jcr Node.
@@ -42,6 +55,7 @@ import static org.apache.jackrabbit.JcrConstants.*
 class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
 
     private String contentAfterDate
+
 
     void setContentAfterDate(String contentAfterDate) {
         this.contentAfterDate = contentAfterDate
@@ -55,20 +69,20 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
     Node process(JcrNode jcrNode) throws Exception {
 
         //TODO: Access Control Lists nodes are not supported right now.
-        if(!jcrNode || jcrNode.path.contains("rep:policy")){
+        if (!jcrNode || jcrNode.path.contains("rep:policy")) {
             log.info "Ignoring current node ${jcrNode}"
             return null
         }
 
-        if(contentAfterDate) {
+        if (contentAfterDate) {
             final Date afterDate = DateUtil.getDateFromISOString(contentAfterDate)
             log.debug "ContentAfterDate received : ${afterDate}. Will ignore content created or modified before the afterDate"
             final date = getDate(jcrNode)
-            if(!date) {
+            if (!date) {
                 //we want delta content but node doesn't have any date property to compare with. So we ignore it
                 return null
             }
-            if(date.before(afterDate)) {
+            if (date.before(afterDate)) {
                 log.debug "Not sending any data older than ${afterDate}"
                 return null
             }
@@ -82,7 +96,7 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
         properties.each { JcrProperty jcrProperty ->
             //Before adding a property to the Current Node Proto message, check if the property
             //is Valid and if it should be actually sent to the client
-            if(isPropertyTransferable(jcrProperty)) {
+            if (isPropertyTransferable(jcrProperty)) {
                 Property property = toProperty(jcrProperty)
                 propertiesBuilder.addProperty(property)
             }
@@ -100,13 +114,13 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
      */
     private static Date getDate(JcrNode jcrNode) {
         final String CQ_LAST_MODIFIED = "cq:lastModified"
-        if(jcrNode.hasProperty(JCR_CREATED)) {
+        if (jcrNode.hasProperty(JCR_CREATED)) {
             return jcrNode.getProperty(JCR_CREATED).date.time
         }
-        else if(jcrNode.hasProperty(JCR_LASTMODIFIED)) {
+        else if (jcrNode.hasProperty(JCR_LASTMODIFIED)) {
             return jcrNode.getProperty(JCR_LASTMODIFIED).date.time
         }
-        else if(jcrNode.hasProperty(CQ_LAST_MODIFIED)) {
+        else if (jcrNode.hasProperty(CQ_LAST_MODIFIED)) {
             return jcrNode.getProperty(CQ_LAST_MODIFIED).date.time
         }
         return null
@@ -121,11 +135,11 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
         //If property is "jcr:lastModified", we don't want to send this property to the client. If we send it, and
         //the client writes it to JCR, then we can have lastModified date for a node that is older than the creation
         //date itself
-        if(jcrProperty.name == JCR_LASTMODIFIED) {
+        if (jcrProperty.name == JCR_LASTMODIFIED) {
             return false
         }
 
-        if([JCR_PRIMARYTYPE, JCR_MIXINTYPES].contains(jcrProperty.name)) {
+        if ([JCR_PRIMARYTYPE, JCR_MIXINTYPES].contains(jcrProperty.name)) {
             return true
         }
 
@@ -144,9 +158,9 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
 
         final int type = jcrProperty.type
 
-        switch(type) {
-            case STRING :
-                if(!jcrProperty.multiple) {
+        switch (type) {
+            case STRING:
+                if (!jcrProperty.multiple) {
                     Value value = jcrProperty.value
                     propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.string))
                 }
@@ -156,19 +170,19 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
                         NodeProtos.Value.newBuilder().setStringValue(value.string).build()
                     }
                     propertyBuilder.setValues(
-                            NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
+                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
                     )
                 }
                 break
-            case BINARY :
+            case BINARY:
                 //no multiple values
-                if(!jcrProperty.multiple) {
+                if (!jcrProperty.multiple) {
                     Value value = jcrProperty.value
                     propertyBuilder.setValue(NodeProtos.Value.newBuilder().setBytesValue(ByteString.copyFrom(value.binary.stream.bytes)))
                 }
                 break
-            case BOOLEAN :
-                if(!jcrProperty.multiple) {
+            case BOOLEAN:
+                if (!jcrProperty.multiple) {
                     Value value = jcrProperty.value
                     propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.boolean.toString()))
                 }
@@ -178,12 +192,12 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
                         NodeProtos.Value.newBuilder().setStringValue(value.boolean.toString()).build()
                     }
                     propertyBuilder.setValues(
-                            NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
+                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
                     )
                 }
                 break
-            case DATE :
-                if(!jcrProperty.multiple) {
+            case DATE:
+                if (!jcrProperty.multiple) {
                     Value value = jcrProperty.value
                     propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(DateUtil.getISOStringFromCalendar(value.date)))
                 }
@@ -193,12 +207,12 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
                         NodeProtos.Value.newBuilder().setStringValue(DateUtil.getISOStringFromCalendar(value.date)).build()
                     }
                     propertyBuilder.setValues(
-                            NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
+                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
                     )
                 }
                 break
-            case DECIMAL :
-                if(!jcrProperty.multiple) {
+            case DECIMAL:
+                if (!jcrProperty.multiple) {
                     Value value = jcrProperty.value
                     propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.decimal.toString()))
                 }
@@ -208,12 +222,12 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
                         NodeProtos.Value.newBuilder().setStringValue(value.decimal.toString()).build()
                     }
                     propertyBuilder.setValues(
-                            NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
+                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
                     )
                 }
                 break
-            case DOUBLE :
-                if(!jcrProperty.multiple) {
+            case DOUBLE:
+                if (!jcrProperty.multiple) {
                     Value value = jcrProperty.value
                     propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.double.toString()))
                 }
@@ -223,12 +237,12 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
                         NodeProtos.Value.newBuilder().setStringValue(value.double.toString()).build()
                     }
                     propertyBuilder.setValues(
-                            NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
+                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
                     )
                 }
                 break
-            case LONG :
-                if(!jcrProperty.multiple) {
+            case LONG:
+                if (!jcrProperty.multiple) {
                     Value value = jcrProperty.value
                     propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.long.toString()))
                 }
@@ -238,12 +252,12 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
                         NodeProtos.Value.newBuilder().setStringValue(value.long.toString()).build()
                     }
                     propertyBuilder.setValues(
-                            NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
+                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
                     )
                 }
                 break
-            case NAME :
-                if(!jcrProperty.multiple) {
+            case NAME:
+                if (!jcrProperty.multiple) {
                     Value value = jcrProperty.value
                     propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.string))
                 }
@@ -253,12 +267,12 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
                         NodeProtos.Value.newBuilder().setStringValue(value.string).build()
                     }
                     propertyBuilder.setValues(
-                            NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
+                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
                     )
                 }
                 break
-            case PATH :
-                if(!jcrProperty.multiple) {
+            case PATH:
+                if (!jcrProperty.multiple) {
                     Value value = jcrProperty.value
                     propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.string))
                 }
@@ -268,12 +282,12 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
                         NodeProtos.Value.newBuilder().setStringValue(value.string).build()
                     }
                     propertyBuilder.setValues(
-                            NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
+                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
                     )
                 }
                 break
-            case PropertyType.URI :
-                if(!jcrProperty.multiple) {
+            case PropertyType.URI:
+                if (!jcrProperty.multiple) {
                     Value value = jcrProperty.value
                     propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.string))
                 }
@@ -283,15 +297,15 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
                         NodeProtos.Value.newBuilder().setStringValue(value.string).build()
                     }
                     propertyBuilder.setValues(
-                            NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
+                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
                     )
                 }
                 break
-            //TODO: Is it correct to ignore this? (as Reference value would mean different for Server and for Client
-            case REFERENCE :
+        //TODO: Is it correct to ignore this? (as Reference value would mean different for Server and for Client
+            case REFERENCE:
                 break
-            //TODO: Is it correct to ignore this? (seems similar to REFERENCE to me)
-            case WEAKREFERENCE :
+        //TODO: Is it correct to ignore this? (seems similar to REFERENCE to me)
+            case WEAKREFERENCE:
                 break
         }
 

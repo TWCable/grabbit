@@ -101,19 +101,20 @@ class GrabbitConfigurationSpec extends Specification {
         ]
     }
 
+
     @Unroll
     def "Should fail to create configuration from json input"() {
         when:
         GrabbitConfiguration.create(input)
 
         then:
-        final GrabbitConfiguration.ConfigurationException  exception = thrown()
+        final GrabbitConfiguration.ConfigurationException exception = thrown()
         exception.errors == errors
 
 
         where:
 
-        input                                                                   | errors
+        input          | errors
         """
         {
             "serverPassword" : "admin",
@@ -144,7 +145,7 @@ class GrabbitConfigurationSpec extends Specification {
                 }
             ]
         }
-        """                                                                         | [ serverUsername : "is missing" ]
+        """ | [serverUsername: "is missing"]
         """
         {
             "serverUsername" : "admin",
@@ -172,8 +173,8 @@ class GrabbitConfigurationSpec extends Specification {
                 }
             ]
         }
-        """                                                                         | [ serverPort : "is missing",
-                                                                                        path : "is missing" ]
+        """ | [serverPort: "is missing",
+               path      : "is missing"]
 
 
     }

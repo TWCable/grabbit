@@ -41,12 +41,13 @@ import javax.jcr.Session
 @Slf4j
 @CompileStatic
 @SuppressWarnings("GrMethodMayBeStatic")
-class ClientBatchJobExecutionListener implements JobExecutionListener{
+class ClientBatchJobExecutionListener implements JobExecutionListener {
 
     /**
      * {@link SlingRepository} is managed by Spring-OSGi
      */
     private SlingRepository slingRepository
+
 
     void setSlingRepository(SlingRepository slingRepository) {
         this.slingRepository = slingRepository
@@ -98,8 +99,8 @@ class ClientBatchJobExecutionListener implements JobExecutionListener{
 
         CredentialsProvider credentialsProvider = new BasicCredentialsProvider()
         credentialsProvider.setCredentials(
-                new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT),
-                new UsernamePasswordCredentials(username, password)
+            new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT),
+            new UsernamePasswordCredentials(username, password)
         )
         client.setCredentialsProvider(credentialsProvider)
         client
@@ -144,7 +145,7 @@ class ClientBatchJobExecutionListener implements JobExecutionListener{
         cleanup()
         final long timeTaken = jobExecution.endTime.time - jobExecution.startTime.time
         log.info "Grab from ${jobExecution.jobParameters.getString(ClientBatchJob.HOST)} " +
-                "for Current Path ${jobExecution.jobParameters.getString(ClientBatchJob.PATH)} took : ${timeTaken} milliseconds\n\n"
+            "for Current Path ${jobExecution.jobParameters.getString(ClientBatchJob.PATH)} took : ${timeTaken} milliseconds\n\n"
     }
 
     /**
@@ -152,8 +153,18 @@ class ClientBatchJobExecutionListener implements JobExecutionListener{
      */
     private void cleanup() {
         ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()
-        try { clientBatchJobContext.inputStream.close() } catch (Exception ignore) { /* just doing cleanup */ }
-        try { clientBatchJobContext.session.logout() } catch (Exception ignore) { /* just doing cleanup */ }
+        try {
+            clientBatchJobContext.inputStream.close()
+        }
+        catch (Exception ignore) {
+            // just doing cleanup
+        }
+        try {
+            clientBatchJobContext.session.logout()
+        }
+        catch (Exception ignore) {
+            //just doing cleanup
+        }
         ClientBatchJobContext.THREAD_LOCAL.remove()
     }
 

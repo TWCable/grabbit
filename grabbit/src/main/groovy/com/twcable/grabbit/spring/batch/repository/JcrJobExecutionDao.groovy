@@ -21,8 +21,17 @@ import com.twcable.grabbit.jcr.JcrUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.commons.lang3.StringUtils
-import org.apache.sling.api.resource.*
-import org.springframework.batch.core.*
+import org.apache.sling.api.resource.ModifiableValueMap
+import org.apache.sling.api.resource.Resource
+import org.apache.sling.api.resource.ResourceResolver
+import org.apache.sling.api.resource.ResourceResolverFactory
+import org.apache.sling.api.resource.ValueMap
+import org.springframework.batch.core.BatchStatus
+import org.springframework.batch.core.ExitStatus
+import org.springframework.batch.core.JobExecution
+import org.springframework.batch.core.JobInstance
+import org.springframework.batch.core.JobParameter
+import org.springframework.batch.core.JobParameters
 import org.springframework.batch.core.repository.dao.JobExecutionDao
 
 import javax.annotation.Nonnull
@@ -56,6 +65,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
 
     private ResourceResolverFactory resourceResolverFactory
 
+
     JcrJobExecutionDao(ResourceResolverFactory rrf) {
         this.resourceResolverFactory = rrf
     }
@@ -67,8 +77,8 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
      */
     @Override
     void saveJobExecution(@Nonnull final JobExecution jobExecution) {
-        if(!jobExecution) throw new IllegalArgumentException("jobExecution == null")
-        if(!jobExecution.jobInstance.id) throw new IllegalArgumentException("jobInstance for jobExecution must have an Id")
+        if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
+        if (!jobExecution.jobInstance.id) throw new IllegalArgumentException("jobInstance for jobExecution must have an Id")
 
         //Create a new resource for the jobExecution (with the id)
         jobExecution.incrementVersion()
@@ -77,7 +87,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
             jobExecution.id = id
             Resource rootResource = getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
             final properties = getJobExecutionProperties(jobExecution) << ([
-                    (VERSION): jobExecution.version
+                (VERSION): jobExecution.version
             ] as Map<String, Object>)
             log.debug "Properties : ${properties}"
             final createdJobExecution = resolver.create(rootResource, "${id}", properties)
@@ -96,17 +106,17 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
     private static Map<String, Object> getJobExecutionProperties(JobExecution execution) {
         execution.with {
             [
-                    (EXECUTION_ID) : id,
-                    (INSTANCE_ID) : jobId,
-                    //Map implementation sets StartTime/EndTime to null .. but looks like I can't store nulls in JCR
-                    (START_TIME) : startTime ? DateUtil.getISOStringFromDate(startTime) : "NULL",
-                    (END_TIME) : endTime ? DateUtil.getISOStringFromDate(endTime) : "NULL",
-                    (STATUS) : execution.status.toString(),
-                    (EXIT_CODE) : execution.exitStatus.exitCode,
-                    (EXIT_MESSAGE) : execution.exitStatus.exitDescription,
-                    (CREATE_TIME) : execution.createTime ? DateUtil.getISOStringFromDate(execution.createTime) : "NULL",
-                    (LAST_UPDATED) : execution.lastUpdated ? DateUtil.getISOStringFromDate(execution.lastUpdated) : "NULL",
-                    (JOB_NAME) : execution.jobInstance.jobName
+                (EXECUTION_ID): id,
+                (INSTANCE_ID) : jobId,
+                //Map implementation sets StartTime/EndTime to null .. but looks like I can't store nulls in JCR
+                (START_TIME)  : startTime ? DateUtil.getISOStringFromDate(startTime) : "NULL",
+                (END_TIME)    : endTime ? DateUtil.getISOStringFromDate(endTime) : "NULL",
+                (STATUS)      : execution.status.toString(),
+                (EXIT_CODE)   : execution.exitStatus.exitCode,
+                (EXIT_MESSAGE): execution.exitStatus.exitDescription,
+                (CREATE_TIME) : execution.createTime ? DateUtil.getISOStringFromDate(execution.createTime) : "NULL",
+                (LAST_UPDATED): execution.lastUpdated ? DateUtil.getISOStringFromDate(execution.lastUpdated) : "NULL",
+                (JOB_NAME)    : execution.jobInstance.jobName
 
             ] as Map<String, Object>
         }
@@ -119,8 +129,8 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
      */
     @Override
     void updateJobExecution(@Nonnull final JobExecution jobExecution) {
-        if(!jobExecution) throw new IllegalArgumentException("jobExecution == null")
-        if(!jobExecution.id) throw new IllegalArgumentException("jobExecution must have an id")
+        if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
+        if (!jobExecution.id) throw new IllegalArgumentException("jobExecution must have an id")
 
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
@@ -134,7 +144,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
             jobExecution.incrementVersion()
 
             final properties = getJobExecutionProperties(jobExecution) << ([
-                    (VERSION) : jobExecution.version
+                (VERSION): jobExecution.version
             ] as Map<String, Object>)
 
             map.putAll(properties)
@@ -151,16 +161,16 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
      */
     @Override
     List<JobExecution> findJobExecutions(@Nonnull final JobInstance jobInstance) {
-        if(!jobInstance) throw new IllegalArgumentException("jobInstance == null")
+        if (!jobInstance) throw new IllegalArgumentException("jobInstance == null")
 
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final Resource jobExecutionRootResource = getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
             List<Resource> resources = jobExecutionRootResource?.children?.asList()
-            if(!resources) return Collections.EMPTY_LIST
+            if (!resources) return Collections.EMPTY_LIST
 
             List<Resource> neededResources = resources.findAll { Resource resource ->
                 final properties = resource.adaptTo(ValueMap)
-                (properties[INSTANCE_ID] as Long)== jobInstance.id
+                (properties[INSTANCE_ID] as Long) == jobInstance.id
             } as List<Resource>
 
             final jobExecutions = neededResources.collect { Resource resource ->
@@ -193,8 +203,8 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
 
         final paramsMap = params?.collectEntries { String entry ->
             final pair = entry.split("=")
-            if(pair.size() == 1) [ pair[0], new JobParameter("No Value") ]
-            else [ pair[0], getJobParameter(pair[1]) ]
+            if (pair.size() == 1) [pair[0], new JobParameter("No Value")]
+            else [pair[0], getJobParameter(pair[1])]
         }
 
         paramsMap ? new JobParameters(paramsMap) : new JobParameters()
@@ -207,7 +217,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
      * @see #getJobParameters(ResourceResolver, Long)
      */
     private static JobParameter getJobParameter(String value) {
-        if(StringUtils.isNumeric(value)) {
+        if (StringUtils.isNumeric(value)) {
             return new JobParameter(Long.valueOf(value))
         }
         else {
@@ -215,7 +225,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
                 final doubleValue = Double.parseDouble(value)
                 return new JobParameter(doubleValue)
             }
-            catch(NumberFormatException ignored) { //not a double
+            catch (NumberFormatException ignored) { //not a double
 
                 //Falling back to String
                 return new JobParameter(value)
@@ -232,10 +242,10 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
      */
     @Override
     JobExecution getLastJobExecution(@Nonnull final JobInstance jobInstance) {
-        if(!jobInstance) throw new IllegalArgumentException("jobInstance == null")
+        if (!jobInstance) throw new IllegalArgumentException("jobInstance == null")
 
         final jobExecutions = findJobExecutions(jobInstance)
-        if(!jobExecutions) return null
+        if (!jobExecutions) return null
 
         //JobExecutions should already return sorted by most recent first
         jobExecutions.first()
@@ -249,7 +259,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
      */
     @Override
     Set<JobExecution> findRunningJobExecutions(@Nonnull final String jobName) {
-        if(!jobName) throw new IllegalArgumentException("jobName == null")
+        if (!jobName) throw new IllegalArgumentException("jobName == null")
 
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final jobExecutionRoot = getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
@@ -260,7 +270,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
                 final properties = resource.adaptTo(ValueMap)
                 properties[JOB_NAME] == jobName
             }
-            if(!jobExecutionResources) return Collections.EMPTY_SET
+            if (!jobExecutionResources) return Collections.EMPTY_SET
 
             //Map to JobExecution POJO
             final jobExecutions = jobExecutionResources.collect { Resource resource ->
@@ -283,7 +293,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
      */
     @Override
     JobExecution getJobExecution(@Nonnull final Long executionId) {
-        if(!executionId) throw new IllegalArgumentException("executionId == null")
+        if (!executionId) throw new IllegalArgumentException("executionId == null")
 
         //find jobExecution root, then find jobExecution with node name : "jobExecution${executionId}"
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
@@ -292,7 +302,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
                 final properties = resource.adaptTo(ValueMap)
                 (properties[EXECUTION_ID] as Long) == executionId
             }
-            if(!jobExecutionResource) return null as JobExecution
+            if (!jobExecutionResource) return null as JobExecution
 
             final properties = jobExecutionResource.adaptTo(ValueMap)
             final jobExecution = mapJobExecution(resolver, properties)
@@ -308,12 +318,13 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
      * @see #findJobExecutions(JobInstance)
      * @see #findRunningJobExecutions(String)
      */
-    private static JobExecution mapJobExecution(ResourceResolver resolver, ValueMap properties, JobInstance jobInstance = null) {
+    private
+    static JobExecution mapJobExecution(ResourceResolver resolver, ValueMap properties, JobInstance jobInstance = null) {
 
         final id = properties[EXECUTION_ID] as Long
 
         JobExecution jobExecution
-        if(!jobInstance) {
+        if (!jobInstance) {
             final JobInstance instance = new JobInstance(properties[INSTANCE_ID] as Long, properties[JOB_NAME] as String)
             final jobParameters = getJobParameters(resolver, properties[INSTANCE_ID] as Long)
             jobExecution = new JobExecution(instance, id, jobParameters)
@@ -334,6 +345,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
         jobExecution
     }
 
+
     private static Date getDate(String value) {
         value == "NULL" ? null : DateUtil.getDateFromISOString(value)
     }
@@ -347,7 +359,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
      */
     @Override
     void synchronizeStatus(@Nonnull final JobExecution jobExecution) {
-        if(!jobExecution) throw new IllegalArgumentException("jobExecution == null")
+        if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
 
         final savedJobExecution = getJobExecution(jobExecution.id)
         if (savedJobExecution.version != jobExecution.version) {
@@ -364,11 +376,11 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
     @Override
     protected void ensureRootResource() {
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
-            if(!getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
+            if (!getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
                 throw new IllegalStateException("Cannot get or create RootResource for : ${JOB_EXECUTION_ROOT}")
             }
-            if(!getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
+            if (!getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
                 throw new IllegalStateException("Cannot get or create RootResource for : ${JOB_INSTANCE_ROOT}")
             }

@@ -27,8 +27,13 @@ import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
 
-import static JcrStepExecutionDao.*
-import static com.twcable.jackalope.JCRBuilder.*
+import static com.twcable.grabbit.spring.batch.repository.JcrStepExecutionDao.ID
+import static com.twcable.grabbit.spring.batch.repository.JcrStepExecutionDao.JOB_EXECUTION_ID
+import static com.twcable.grabbit.spring.batch.repository.JcrStepExecutionDao.NAME
+import static com.twcable.grabbit.spring.batch.repository.JcrStepExecutionDao.STATUS
+import static com.twcable.jackalope.JCRBuilder.node
+import static com.twcable.jackalope.JCRBuilder.property
+import static com.twcable.jackalope.JCRBuilder.repository
 
 @Subject(JcrStepExecutionDao)
 class JcrStepExecutionDaoSpec extends Specification {
@@ -36,33 +41,35 @@ class JcrStepExecutionDaoSpec extends Specification {
     @Shared
     ResourceResolverFactory mockFactory
 
+
     def setupSpec() {
         final builder =
-                node("var",
-                    node("grabbit",
-                        node("job",
-                            node("repository",
-                                node("jobExecutions"),
-                                node("stepExecutions",
-                                    node("1",
-                                        property(ID, 1),
-                                        property(NAME, "someStep"),
-                                        property(JOB_EXECUTION_ID, 1),
-                                        property(STATUS, "COMPLETED"),
-                                    ),
-                                    node("5",
-                                        property(ID, 5),
-                                        property(NAME, "someOtherStep"),
-                                        property(JOB_EXECUTION_ID, 3),
-                                        property(STATUS, "STARTED"),
-                                    )
+            node("var",
+                node("grabbit",
+                    node("job",
+                        node("repository",
+                            node("jobExecutions"),
+                            node("stepExecutions",
+                                node("1",
+                                    property(ID, 1),
+                                    property(NAME, "someStep"),
+                                    property(JOB_EXECUTION_ID, 1),
+                                    property(STATUS, "COMPLETED"),
+                                ),
+                                node("5",
+                                    property(ID, 5),
+                                    property(NAME, "someOtherStep"),
+                                    property(JOB_EXECUTION_ID, 3),
+                                    property(STATUS, "STARTED"),
                                 )
                             )
                         )
                     )
                 )
+            )
         mockFactory = new SimpleResourceResolverFactory(repository(builder).build())
     }
+
 
     def "EnsureRootResource for JcrStepExecutionDao"() {
         when:
@@ -72,6 +79,7 @@ class JcrStepExecutionDaoSpec extends Specification {
         then:
         notThrown(IllegalStateException)
     }
+
 
     @Unroll
     def "GetStepExecution for a given JobExecution and a StepExecution id #stepExecutionId"() {
@@ -85,9 +93,9 @@ class JcrStepExecutionDaoSpec extends Specification {
         result.status == stepStatus
 
         where:
-        stepExecutionId  | jobExecutionId | stepStatus
-        1                | 1              | BatchStatus.COMPLETED
-        5                | 3              | BatchStatus.STARTED
+        stepExecutionId | jobExecutionId | stepStatus
+        1               | 1              | BatchStatus.COMPLETED
+        5               | 3              | BatchStatus.STARTED
 
     }
 }

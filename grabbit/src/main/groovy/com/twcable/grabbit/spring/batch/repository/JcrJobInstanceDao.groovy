@@ -23,7 +23,11 @@ import org.apache.sling.api.resource.Resource
 import org.apache.sling.api.resource.ResourceResolver
 import org.apache.sling.api.resource.ResourceResolverFactory
 import org.apache.sling.api.resource.ValueMap
-import org.springframework.batch.core.*
+import org.springframework.batch.core.DefaultJobKeyGenerator
+import org.springframework.batch.core.JobExecution
+import org.springframework.batch.core.JobInstance
+import org.springframework.batch.core.JobKeyGenerator
+import org.springframework.batch.core.JobParameters
 import org.springframework.batch.core.repository.dao.JobInstanceDao
 
 import javax.annotation.Nonnull
@@ -49,6 +53,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
 
     private ResourceResolverFactory resourceResolverFactory
 
+
     JcrJobInstanceDao(ResourceResolverFactory rrf) {
         this.resourceResolverFactory = rrf
     }
@@ -60,12 +65,12 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
      */
     @Override
     JobInstance createJobInstance(@Nonnull final String jobName, @Nonnull final JobParameters jobParameters) {
-        if(!jobName) throw new IllegalArgumentException("jobName == null")
-        if(!jobParameters) throw new IllegalArgumentException("jobParameters == null")
-        if(getJobInstance(jobName, jobParameters)) throw new IllegalStateException("A JobInstance for jobName: ${jobName} must not already exist")
+        if (!jobName) throw new IllegalArgumentException("jobName == null")
+        if (!jobParameters) throw new IllegalArgumentException("jobParameters == null")
+        if (getJobInstance(jobName, jobParameters)) throw new IllegalStateException("A JobInstance for jobName: ${jobName} must not already exist")
 
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
-            
+
             //TODO : This will need to be a "incrementing ID" after all and NOT use a UUID (for other APIs like
             //getJobInstances which require result to be sorted backwards by "id". If we use UUID, then the possibility of
             //Negative UUIDs will screw up the ordering)
@@ -79,11 +84,11 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
             final paramsStrings = jobParameters.parameters.collect { key, value -> "${key}=${value.toString()}" } as String[]
 
             final properties = [
-                    (KEY) : jobKeyGenerator.generateKey(jobParameters),
-                    (NAME) : jobName,
-                    (INSTANCE_ID) : instanceId,
-                    (VERSION) : jobInstance.version,
-                    (PARAMETERS) : paramsStrings
+                (KEY)        : jobKeyGenerator.generateKey(jobParameters),
+                (NAME)       : jobName,
+                (INSTANCE_ID): instanceId,
+                (VERSION)    : jobInstance.version,
+                (PARAMETERS) : paramsStrings
             ] as Map<String, Object>
 
             final rootResource = getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
@@ -105,8 +110,8 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
      */
     @Override
     JobInstance getJobInstance(@Nonnull final String jobName, @Nonnull final JobParameters jobParameters) {
-        if(!jobName) throw new IllegalArgumentException("jobName == null")
-        if(!jobParameters) throw new IllegalArgumentException("jobParameters == null")
+        if (!jobName) throw new IllegalArgumentException("jobName == null")
+        if (!jobParameters) throw new IllegalArgumentException("jobParameters == null")
 
         final jobKey = new DefaultJobKeyGenerator().generateKey(jobParameters)
         //Find a resource under "/jobInstances" for the jobKey above
@@ -117,8 +122,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
                 (properties[KEY] as String) == jobKey
             }
 
-            if(!jobInstanceResource) return null as JobInstance
-
+            if (!jobInstanceResource) return null as JobInstance
 
             //map that resource's id and jobName to a JobInstance instance
             final jobId = jobInstanceResource.adaptTo(ValueMap).get(INSTANCE_ID) as Long
@@ -135,7 +139,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
      */
     @Override
     JobInstance getJobInstance(@Nonnull final Long instanceId) {
-        if(!instanceId) throw new IllegalArgumentException("instanceId == null")
+        if (!instanceId) throw new IllegalArgumentException("instanceId == null")
         //Get the "instanceId" node from JOB_INSTANCE_ROOT
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
@@ -144,7 +148,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
                 (properties[INSTANCE_ID] as Long) == instanceId
             }
 
-            if(!jobInstanceResource) return null as JobInstance
+            if (!jobInstanceResource) return null as JobInstance
 
             final jobName = jobInstanceResource.adaptTo(ValueMap).get(NAME) as String //Get the jobName Property from that
             final jobInstance = new JobInstance(instanceId, jobName)
@@ -159,7 +163,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
      */
     @Override
     JobInstance getJobInstance(@Nonnull final JobExecution jobExecution) {
-        if(!jobExecution) throw new IllegalArgumentException("jobExecution == null")
+        if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
         jobExecution?.jobInstance
     }
 
@@ -171,11 +175,12 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
      * @see org.springframework.batch.core.repository.dao.JdbcJobInstanceDao#getJobInstances(String, int, int)
      */
     @Override
-    List<JobInstance> getJobInstances(@Nonnull final String jobName, @Nonnull final int start, @Nonnull final int count) {
-        if(!jobName) throw new IllegalArgumentException("jobName == null")
-        if(start == null) throw new IllegalArgumentException("start == null")
-        if(count == null) throw new IllegalArgumentException("count == null")
-        if((start + count) < start) throw new IllegalArgumentException("start (${start}) + count (${count}) causes an int overflow")
+    List<JobInstance> getJobInstances(
+        @Nonnull final String jobName, @Nonnull final int start, @Nonnull final int count) {
+        if (!jobName) throw new IllegalArgumentException("jobName == null")
+        if (start == null) throw new IllegalArgumentException("start == null")
+        if (count == null) throw new IllegalArgumentException("count == null")
+        if ((start + count) < start) throw new IllegalArgumentException("start (${start}) + count (${count}) causes an int overflow")
 
         //Get All jobInstances in JOB_INSTANCE_ROOT with jobName property = $jobName
         //Map jobInstances nodes to JobInstance object
@@ -191,9 +196,9 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
                 jobInstance
             }
 
-            if(!jobInstances) return Collections.EMPTY_LIST
+            if (!jobInstances) return Collections.EMPTY_LIST
 
-            if(jobInstances.size() == 1) {
+            if (jobInstances.size() == 1) {
                 //If only one jobInstance exists, no need to sort. Just return the list
                 return jobInstances
             }
@@ -205,7 +210,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
             final sortedInstances = jobInstances.sort(false) { a, b ->
                 ((JobInstance)b).id <=> ((JobInstance)a).id
             } as List<JobInstance>
-            final subList = sortedInstances[startIndex..endIndex-1]
+            final subList = sortedInstances[startIndex..endIndex - 1]
             return subList
         }
     }
@@ -219,7 +224,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
     List<String> getJobNames() {
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final jobInstanceResources = getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)?.children?.asList()
-            if(!jobInstanceResources) return Collections.EMPTY_LIST
+            if (!jobInstanceResources) return Collections.EMPTY_LIST
 
             final List<String> jobNames = jobInstanceResources.collect { Resource r ->
                 final valueMap = r.adaptTo(ValueMap)
@@ -236,7 +241,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
     @Override
     protected void ensureRootResource() {
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
-            if(!getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
+            if (!getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
                 throw new IllegalStateException("Cannot get or create RootResource for : ${JOB_INSTANCE_ROOT}")
             }
@@ -249,7 +254,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
      * @param resolver
      */
     private static Long getNextJobInstanceId(@Nonnull ResourceResolver resolver) {
-        if(!resolver) throw new IllegalArgumentException("resolver == null")
+        if (!resolver) throw new IllegalArgumentException("resolver == null")
 
         final rootResource = resolver.getResource(JOB_INSTANCE_ROOT)
         final nextId = (rootResource.children.asList().size() + 1) as Long

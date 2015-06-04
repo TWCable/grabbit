@@ -36,15 +36,16 @@ class JcrNodesReader implements ItemReader<JcrNode> {
     @Override
     JcrNode read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
         Iterator<JcrNode> nodeIterator = theNodeIterator()
-        if(nodeIterator == null) throw new IllegalStateException("nodeIterator must be set.")
+        if (nodeIterator == null) throw new IllegalStateException("nodeIterator must be set.")
 
-        if(nodeIterator.hasNext()) {
+        if (nodeIterator.hasNext()) {
             nodeIterator.next()
         }
         else {
             null
         }
     }
+
 
     private Iterator<JcrNode> theNodeIterator() {
         ServerBatchJobContext serverBatchJobContext = ServerBatchJobContext.THREAD_LOCAL.get()

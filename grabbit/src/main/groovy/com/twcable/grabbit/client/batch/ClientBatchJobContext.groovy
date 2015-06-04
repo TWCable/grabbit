@@ -21,7 +21,7 @@ import groovy.transform.CompileStatic
 import javax.jcr.Session
 
 /**
- * Helper class that wraps a {@link ThreadLocal<ClientBatchJobContext>} variable used to store {@link InputStream}
+ * Helper class that wraps a {@link ThreadLocal} variable used to store {@link InputStream}
  * and {@link Session} in ThreadLocal.
  */
 @CompileStatic
@@ -31,6 +31,7 @@ class ClientBatchJobContext {
 
     final InputStream inputStream
     final Session session
+
 
     ClientBatchJobContext(InputStream inputStream, Session session) {
         this.inputStream = inputStream

@@ -55,20 +55,23 @@ class GrabbitResourceProvider implements ResourceProvider {
     public static final String GRABBIT_JOB = "${GRABBIT_ROOT}/job"
     public static final String GRABBIT_JOB_RESOURCE_TYPE = "twcable:grabbit/job"
 
+
     @Activate
     void activate(ComponentContext context) {
         def roots = context.properties.get(PROVIDER_ROOTS)
         providerRoots = ((roots instanceof String) ? [roots] : roots) as List<String>
     }
 
+
     @Override
     Resource getResource(ResourceResolver resourceResolver, HttpServletRequest httpServletRequest, String path) {
         getResource(resourceResolver, path)
     }
 
+
     @Override
     Resource getResource(ResourceResolver resolver, String path) {
-        switch(path) {
+        switch (path) {
             case ~/^${GRABBIT_JOB}$/:
                 log.debug "Called for path : ${path}"
                 return getJobResource(resolver, path, GRABBIT_JOB_RESOURCE_TYPE)
@@ -81,20 +84,25 @@ class GrabbitResourceProvider implements ResourceProvider {
         }
     }
 
+
     @Override
     Iterator<Resource> listChildren(Resource resource) {
         log.debug "List Children called for ${resource}"
         return null
     }
 
+
     private static Resource getJobResource(ResourceResolver resourceResolver, String path, String resourceType) {
         final metadata = new ResourceMetadata(resolutionPath: path)
 
         final jobId = getJobIdFromPath(path)
-        if(jobId) { metadata.put(JobResource.JOB_EXECUTION_ID, jobId) }
+        if (jobId) {
+            metadata.put(JobResource.JOB_EXECUTION_ID, jobId)
+        }
 
         new JobResource(resourceResolver, metadata, resourceType)
     }
+
 
     protected static String getJobIdFromPath(String path) {
         Matcher m = path =~ /\/job\/(.+).(html|json)$/

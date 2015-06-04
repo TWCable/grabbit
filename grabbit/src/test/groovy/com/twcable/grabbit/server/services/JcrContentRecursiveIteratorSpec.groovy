@@ -31,17 +31,17 @@ class JcrContentRecursiveIteratorSpec extends Specification {
     def "Can create a non-recursive iterator for a node"() {
         given:
         FakeNodeBuilder fakeNodeBuilder =
-                node("page",
-                        node("jcr:content",
-                                property("jcr:data", "foo" )
-                        ),
-                        node("childpage1",
-                                property("jcr:primaryType", "cq:Page"),
-                        ),
-                        node("childpage2",
-                                property("jcr:primaryType", "cq:Page"),
-                        )
+            node("page",
+                node("jcr:content",
+                    property("jcr:data", "foo")
+                ),
+                node("childpage1",
+                    property("jcr:primaryType", "cq:Page"),
+                ),
+                node("childpage2",
+                    property("jcr:primaryType", "cq:Page"),
                 )
+            )
         JcrNode rootNode = fakeNodeBuilder.build()
 
         when:
@@ -54,17 +54,18 @@ class JcrContentRecursiveIteratorSpec extends Specification {
 
     }
 
+
     def "Can create iterator that is recursive on jcr content nodes"() {
         given:
         FakeNodeBuilder fakeNodeBuilder =
-                node("page",
-                        node("jcr:content",
-                            node("subnode1",
-                                property("nt:unstructured")),
-                            node("subnode2",
-                                property("nt:unstructured"))
-                        )
+            node("page",
+                node("jcr:content",
+                    node("subnode1",
+                        property("nt:unstructured")),
+                    node("subnode2",
+                        property("nt:unstructured"))
                 )
+            )
         JcrNode rootNode = fakeNodeBuilder.build()
 
         when:

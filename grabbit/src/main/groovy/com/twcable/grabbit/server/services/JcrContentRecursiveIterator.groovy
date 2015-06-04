@@ -19,8 +19,8 @@ package com.twcable.grabbit.server.services
 import groovy.transform.CompileStatic
 import org.apache.jackrabbit.commons.flat.TreeTraverser
 
-import javax.jcr.NodeIterator
 import javax.jcr.Node as JcrNode
+import javax.jcr.NodeIterator
 
 /**
  * Custom Node Iterator that will iterate through a list of Nodes containing of the root node and its children
@@ -36,6 +36,7 @@ final class JcrContentRecursiveIterator implements Iterator<JcrNode> {
     private Iterator<JcrNode> recursiveNodes
     private JcrNode previous
 
+
     public JcrContentRecursiveIterator(JcrNode root) {
         this.root = root
         this.doneRoot = false
@@ -48,17 +49,18 @@ final class JcrContentRecursiveIterator implements Iterator<JcrNode> {
         !doneRoot || children.hasNext() || recursiveNodes.hasNext()
     }
 
+
     @Override
     JcrNode next() {
 
         //always process root first
-        if(!doneRoot){
+        if (!doneRoot) {
             doneRoot = true
             return root
         }
 
         //if there are recursive nodes to traverse do those next
-        if(recursiveNodes) {
+        if (recursiveNodes) {
             return recursiveNodes.next()
         }
 
@@ -69,13 +71,13 @@ final class JcrContentRecursiveIterator implements Iterator<JcrNode> {
         this.previous = childNode
 
         //if the childNode is the JCR node, we need all it's children
-        if(childNode.name.equalsIgnoreCase("jcr:content")){
+        if (childNode.name.equalsIgnoreCase("jcr:content")) {
             this.recursiveNodes = TreeTraverser.nodeIterator(childNode)
             return recursiveNodes.next()
         }
 
         //if the previously processed childNode contains a JCR node child we need all of it's contents as well
-        if(previous.hasNode("jcr:content")){
+        if (previous.hasNode("jcr:content")) {
             JcrNode jcrNode = previous.getNode("jcr:content")
             this.recursiveNodes = TreeTraverser.nodeIterator(jcrNode)
             return previous
@@ -83,6 +85,7 @@ final class JcrContentRecursiveIterator implements Iterator<JcrNode> {
 
         return childNode
     }
+
 
     @Override
     void remove() {

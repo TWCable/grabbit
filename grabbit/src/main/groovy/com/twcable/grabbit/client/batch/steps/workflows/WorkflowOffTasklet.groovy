@@ -32,18 +32,21 @@ class WorkflowOffTasklet implements Tasklet {
 
     private String workflowConfigs
 
+
     void setWorkflowManager(WorkflowManager workflowManager) {
         this.workflowManager = workflowManager
     }
+
 
     void setWorkflowConfigs(String workflowConfigs) {
         log.info("WorkflowConfig : ${workflowConfigs}")
         this.workflowConfigs = workflowConfigs
     }
 
+
     @Override
     RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        if(!workflowConfigs || !workflowConfigs.contains("/etc/workflow") /* temporary for testing */ ) {
+        if (!workflowConfigs || !workflowConfigs.contains("/etc/workflow") /* temporary for testing */) {
             //nothing to process as there are no workflow configs for the current path
             log.info "Nothing to process..."
             return RepeatStatus.FINISHED

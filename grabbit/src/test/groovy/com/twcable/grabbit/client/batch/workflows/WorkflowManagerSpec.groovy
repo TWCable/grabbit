@@ -21,7 +21,11 @@ import com.twcable.grabbit.client.batch.workflows.impl.DefaultWorkFlowManager
 import spock.lang.Specification
 import spock.lang.Subject
 
-import java.util.concurrent.*
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 @Subject(WorkflowManager)
 class WorkflowManagerSpec extends Specification {
@@ -31,7 +35,7 @@ class WorkflowManagerSpec extends Specification {
         ExecutorService threadPool = Executors.newCachedThreadPool()
         WorkflowLauncher workflowLauncher = new StubWorkflowLauncher(5)
         WorkflowManager workflowManager = new DefaultWorkFlowManager(workflowLauncher: workflowLauncher)
-        Collection<String> workflowIds = ['id1','id2','id3']
+        Collection<String> workflowIds = ['id1', 'id2', 'id3']
 
         //Simulates a WhiteList with 10 paths.
         //In this case (worst case for the most part), all of the 10 paths

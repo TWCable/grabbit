@@ -28,6 +28,7 @@ abstract class AbstractJcrDao {
 
     public static final String ROOT_RESOURCE_NAME = "/var/grabbit/job/repository"
 
+
     protected abstract void ensureRootResource()
 
     /**

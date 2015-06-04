@@ -16,8 +16,8 @@
 
 package com.twcable.grabbit.server.batch.steps.jcrnodes
 
-import com.twcable.jackalope.NodeBuilder as FakeNodeBuilder
 import com.twcable.grabbit.proto.NodeProtos
+import com.twcable.jackalope.NodeBuilder as FakeNodeBuilder
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -35,16 +35,16 @@ class JcrNodesProcessorSpec extends Specification {
     def "Can marshall a JCR Node to a Protobuf Message"() {
         given:
         FakeNodeBuilder fakeNodeBuilder =
-                node("default.groovy",
-                        node("jcr:content",
-                                property("jcr:data", "foo" )
-                        ),
-                        property("jcr:primaryType", NT_FILE),
-                        property("jcr:lastModified", "Date"),
-                        property("multiValueLong", [1L,2L,4L] as Object[]),
-                        property("multiValueString", ["a", "b", "c"] as Object[]),
+            node("default.groovy",
+                node("jcr:content",
+                    property("jcr:data", "foo")
+                ),
+                property("jcr:primaryType", NT_FILE),
+                property("jcr:lastModified", "Date"),
+                property("multiValueLong", [1L, 2L, 4L] as Object[]),
+                property("multiValueString", ["a", "b", "c"] as Object[]),
 
-                )
+            )
         JcrNode aJcrNode = fakeNodeBuilder.build()
 
         when:

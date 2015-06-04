@@ -38,42 +38,51 @@ public class JcrJobExplorerFactoryBean extends AbstractJobExplorerFactoryBean im
 
     private JcrJobRepositoryFactoryBean repositoryFactory
 
+
     public void setRepositoryFactory(JcrJobRepositoryFactoryBean repositoryFactory) {
         this.repositoryFactory = repositoryFactory;
     }
+
 
     JcrJobExplorerFactoryBean(JcrJobRepositoryFactoryBean repositoryFactory) {
         this.repositoryFactory = repositoryFactory
     }
 
-    JcrJobExplorerFactoryBean() { }
+
+    JcrJobExplorerFactoryBean() {}
+
 
     @Override
     protected JobInstanceDao createJobInstanceDao() throws Exception {
         repositoryFactory.jobInstanceDao
     }
 
+
     @Override
     protected JobExecutionDao createJobExecutionDao() throws Exception {
         repositoryFactory.jobExecutionDao
     }
+
 
     @Override
     protected StepExecutionDao createStepExecutionDao() throws Exception {
         repositoryFactory.stepExecutionDao
     }
 
+
     @Override
     protected ExecutionContextDao createExecutionContextDao() throws Exception {
         repositoryFactory.executionContextDao
     }
 
+
     @Override
     public JobExplorer getObject() throws Exception {
         return new SimpleJobExplorer(createJobInstanceDao(), createJobExecutionDao(), createStepExecutionDao(),
-                createExecutionContextDao());
+            createExecutionContextDao());
 
     }
+
 
     @Override
     void afterPropertiesSet() throws Exception {

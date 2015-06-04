@@ -30,19 +30,21 @@ class NodeDecorator {
     @Delegate
     private Node innerNode
 
+
     private NodeDecorator(Node node) {
         this.innerNode = node
     }
 
+
     static NodeDecorator from(@Nonnull Node node) {
-        if(node == null) throw new IllegalArgumentException("Node can not be null!")
+        if (node == null) throw new IllegalArgumentException("Node can not be null!")
         return new NodeDecorator(node)
     }
 
 
     void setProperty(PropertyDecorator propertyDecorator) {
         try {
-            if(!propertyDecorator.hasValues()) {
+            if (!propertyDecorator.hasValues()) {
                 setProperty(propertyDecorator.name, propertyDecorator.getPropertyValue(), propertyDecorator.type)
             }
             else {
@@ -50,16 +52,16 @@ class NodeDecorator {
                 setProperty(propertyDecorator.name, values, propertyDecorator.type)
             }
         }
-        catch(ValueFormatException ex) {
-            if(ex.message.contains("Multivalued property can not be set to a single value")) {
+        catch (ValueFormatException ex) {
+            if (ex.message.contains("Multivalued property can not be set to a single value")) {
                 //If this is the exception, that means that a property with the name already exists
                 final Property currentProperty = getProperty(propertyDecorator.name)
-                if(currentProperty.multiple) {
-                    final Value[] values = [ propertyDecorator.getPropertyValue() ]
+                if (currentProperty.multiple) {
+                    final Value[] values = [propertyDecorator.getPropertyValue()]
                     setProperty(propertyDecorator.name, values, propertyDecorator.type)
                 }
             }
-            else if(ex.message.contains("Single-valued property can not be set to an array of values")) {
+            else if (ex.message.contains("Single-valued property can not be set to an array of values")) {
                 setProperty(propertyDecorator.name, propertyDecorator.getPropertyValues().first(), propertyDecorator.type)
             }
         }

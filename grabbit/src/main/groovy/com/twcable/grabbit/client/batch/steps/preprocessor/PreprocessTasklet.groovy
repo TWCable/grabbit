@@ -32,7 +32,7 @@ import javax.jcr.RepositoryException
 import javax.jcr.Session
 
 /**
-  * A Custom Tasklet that will read a {@link PreProcessorProtos.Preprocessors} object from {@link PreprocessTasklet#theInputStream()}  and it to the {@link PreprocessTasklet#theSession()}
+ * A Custom Tasklet that will read a {@link PreProcessorProtos.Preprocessors} object from {@link PreprocessTasklet#theInputStream()}  and it to the {@link PreprocessTasklet#theSession()}
  *  See client-batch-job.xml for how this is used.
  */
 @Slf4j
@@ -52,7 +52,7 @@ class PreprocessTasklet implements Tasklet {
         log.info "Start writing namespaces."
         PreProcessorProtos.Preprocessors preprocessors = PreProcessorProtos.Preprocessors.parseDelimitedFrom(theInputStream())
 
-        if(!preprocessors) {
+        if (!preprocessors) {
             log.warn "No namespaces received from server"
             log.info "Finished writing namespaces."
             return RepeatStatus.FINISHED
@@ -66,15 +66,18 @@ class PreprocessTasklet implements Tasklet {
         return RepeatStatus.FINISHED
     }
 
+
     private InputStream theInputStream() {
         ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()
         clientBatchJobContext.inputStream
     }
 
+
     private Session theSession() {
         ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()
         clientBatchJobContext.session
     }
+
 
     private static void writeToJcr(PreProcessorProtos.Preprocessors preprocessorsProto, Session session) {
         try {
@@ -85,8 +88,8 @@ class PreprocessTasklet implements Tasklet {
                 try {
                     namespaceHelper.registerNamespace(namespaceEntry.prefix, namespaceEntry.uri)
                 }
-                catch(NamespaceException e) {
-                    if(e.message.contains("mapping already exists")) {
+                catch (NamespaceException e) {
+                    if (e.message.contains("mapping already exists")) {
                         log.warn "Mapping for Nameapace prefix : ${namespaceEntry.prefix} already exists. Received NamespaceEntry mapping : ${namespaceEntry}"
                         return
                     }

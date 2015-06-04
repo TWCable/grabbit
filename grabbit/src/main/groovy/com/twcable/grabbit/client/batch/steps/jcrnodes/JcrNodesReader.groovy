@@ -38,12 +38,13 @@ class JcrNodesReader implements ItemReader<NodeProtos.Node> {
     @Override
     NodeProtos.Node read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
         NodeProtos.Node nodeProto = NodeProtos.Node.parseDelimitedFrom(theInputStream())
-        if(!nodeProto) {
+        if (!nodeProto) {
             log.info "Received all data from Server"
             return null
         }
         return nodeProto
     }
+
 
     private InputStream theInputStream() {
         ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()

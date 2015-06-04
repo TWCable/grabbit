@@ -37,38 +37,41 @@ import javax.servlet.http.HttpServletResponse
 
 @Slf4j
 @CompileStatic
-@SlingServlet( methods = [ 'GET', 'PUT' ], resourceTypes = [ 'twcable:grabbit/job' ] )
+@SlingServlet(methods = ['GET', 'PUT'], resourceTypes = ['twcable:grabbit/job'])
 class GrabbitServlet extends SlingAllMethodsServlet {
 
-    @Reference(bind='setConfigurableApplicationContext')
+    @Reference(bind = 'setConfigurableApplicationContext')
     ConfigurableApplicationContext configurableApplicationContext
 
-    @Reference(bind='setClientService')
+    @Reference(bind = 'setClientService')
     ClientService clientService
 
-    @Reference(bind='setServerService')
+    @Reference(bind = 'setServerService')
     ServerService serverService
+
 
     @Override
     void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) {
         final path = request.getParameter("path")
 
-        if(path) { //Server Get Request
+        if (path) { //Server Get Request
             final decodedPath = URLDecoder.decode(path, "utf-8")
             response.contentType = "application/octet-stream"
 
             final afterDateString = URLDecoder.decode(request.getParameter("after") ?: "", "utf-8")
 
-            if(afterDateString) { log.info "Path : $decodedPath, AfterDate String : $afterDateString. Will send only delta content" }
+            if (afterDateString) {
+                log.info "Path : $decodedPath, AfterDate String : $afterDateString. Will send only delta content"
+            }
 
             serverService.getContentForRootPath(decodedPath, afterDateString ?: null, response.outputStream)
         }
         else {
             final jobExecutionId = request.resource.resourceMetadata[JobResource.JOB_EXECUTION_ID] as String ?: ""
-            if(request.pathInfo.endsWith("html")) {
+            if (request.pathInfo.endsWith("html")) {
                 response.writer.write("TODO : This will be replaced by a UI representation for the Jobs Status")
             }
-            else if(request.pathInfo.endsWith("json")) {
+            else if (request.pathInfo.endsWith("json")) {
                 final String jsonString = getJsonString(jobExecutionId)
                 log.debug "Current Status : ${jsonString}"
                 response.contentType = "application/json"
@@ -81,9 +84,10 @@ class GrabbitServlet extends SlingAllMethodsServlet {
         }
     }
 
+
     @Override
     protected void doPut(SlingHttpServletRequest request, SlingHttpServletResponse response) {
-        if(!request.inputStream) throw new IllegalStateException("Input cannot be null or empty")
+        if (!request.inputStream) throw new IllegalStateException("Input cannot be null or empty")
 
         final input = IOUtils.toString(request.inputStream, request.characterEncoding)
         log.debug "Input: ${input}"
@@ -96,14 +100,15 @@ class GrabbitServlet extends SlingAllMethodsServlet {
         response.writer.write(new JsonBuilder(jobExecutionIds).toString())
     }
 
+
     private String getJsonString(String jobId) {
         final JobExplorer jobExplorer = configurableApplicationContext.getBean("clientJobExplorer", JobExplorer)
-        if(jobId.isNumber()) {
+        if (jobId.isNumber()) {
             //Returns Status for A Job
             final ClientJobStatus status = ClientJobStatus.get(jobExplorer, Long.valueOf(jobId))
             new JsonBuilder(status).toString()
         }
-        else if (jobId == "all" ){
+        else if (jobId == "all") {
             //Returns Status for All Jobs Currently persisted in JobRepository
             //They are returned in Descending order, with newest job being the first one
             final Collection<ClientJobStatus> statuses = ClientJobStatus.getAll(jobExplorer)

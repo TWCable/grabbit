@@ -20,7 +20,11 @@ import com.twcable.grabbit.DateUtil
 import com.twcable.grabbit.jcr.JcrUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import org.apache.sling.api.resource.*
+import org.apache.sling.api.resource.ModifiableValueMap
+import org.apache.sling.api.resource.Resource
+import org.apache.sling.api.resource.ResourceResolver
+import org.apache.sling.api.resource.ResourceResolverFactory
+import org.apache.sling.api.resource.ValueMap
 import org.springframework.batch.core.BatchStatus
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.JobExecution
@@ -38,7 +42,7 @@ import static org.apache.sling.api.resource.ResourceUtil.getOrCreateResource
  */
 @CompileStatic
 @Slf4j
-public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecutionDao {
+public class JcrStepExecutionDao extends AbstractJcrDao implements StepExecutionDao {
 
     public static final String STEP_EXECUTION_ROOT = "${ROOT_RESOURCE_NAME}/stepExecutions"
 
@@ -63,6 +67,7 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
 
     private ResourceResolverFactory resourceResolverFactory
 
+
     JcrStepExecutionDao(ResourceResolverFactory rrf) {
         this.resourceResolverFactory = rrf
     }
@@ -74,8 +79,8 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
      */
     @Override
     void saveStepExecution(@Nonnull final StepExecution stepExecution) {
-        if(!stepExecution) throw new IllegalArgumentException("stepExecution == null")
-        if(stepExecution.id != null) throw new IllegalStateException("stepExecution.id must be null")
+        if (!stepExecution) throw new IllegalArgumentException("stepExecution == null")
+        if (stepExecution.id != null) throw new IllegalStateException("stepExecution.id must be null")
 
         final id = generateNextId()
         stepExecution.id = id
@@ -90,8 +95,8 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
      */
     @Override
     void saveStepExecutions(@Nonnull final Collection<StepExecution> stepExecutions) {
-        if(!stepExecutions) throw new IllegalArgumentException("stepExecutions == null or empty")
-        if(stepExecutions.any { it.id != null}) throw new IllegalStateException("All stepExecution Ids must be null")
+        if (!stepExecutions) throw new IllegalArgumentException("stepExecutions == null or empty")
+        if (stepExecutions.any { it.id != null }) throw new IllegalStateException("All stepExecution Ids must be null")
         stepExecutions.each { saveStepExecution(it) }
     }
 
@@ -102,12 +107,12 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
      */
     @Override
     void updateStepExecution(@Nonnull final StepExecution stepExecution) {
-        if(!stepExecution) throw new IllegalArgumentException("stepExecution == null")
-        if(!stepExecution.id) throw new IllegalArgumentException("stepExecution == null")
-        if(!stepExecution.jobExecutionId) throw new IllegalStateException("stepExecution.jobExecutionId == null")
-        if(!stepExecution.stepName) throw new IllegalStateException("stepExecution.stepName == null")
-        if(!stepExecution.startTime) throw new IllegalStateException("stepExecution.startTime == null")
-        if(!stepExecution.status) throw new IllegalStateException("stepExecution.status == null")
+        if (!stepExecution) throw new IllegalArgumentException("stepExecution == null")
+        if (!stepExecution.id) throw new IllegalArgumentException("stepExecution == null")
+        if (!stepExecution.jobExecutionId) throw new IllegalStateException("stepExecution.jobExecutionId == null")
+        if (!stepExecution.stepName) throw new IllegalStateException("stepExecution.stepName == null")
+        if (!stepExecution.startTime) throw new IllegalStateException("stepExecution.startTime == null")
+        if (!stepExecution.status) throw new IllegalStateException("stepExecution.status == null")
         saveOrUpdate("${stepExecution.id}", stepExecution)
     }
 
@@ -118,8 +123,8 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
      */
     @Override
     StepExecution getStepExecution(@Nonnull final JobExecution jobExecution, @Nonnull final Long stepExecutionId) {
-        if(!jobExecution) throw new IllegalArgumentException("jobExecution == null")
-        if(!stepExecutionId) throw new IllegalArgumentException("stepExecutionId == null")
+        if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
+        if (!stepExecutionId) throw new IllegalArgumentException("stepExecutionId == null")
 
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final Resource rootResource = getOrCreateResource(resolver, STEP_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
@@ -127,7 +132,7 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
                 final properties = resource.adaptTo(ValueMap)
                 (properties[ID] as Long) == stepExecutionId
             }
-            if(!stepExecutionResource) return null as StepExecution
+            if (!stepExecutionResource) return null as StepExecution
 
             final properties = stepExecutionResource.adaptTo(ValueMap)
 
@@ -145,7 +150,7 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
      */
     @Override
     void addStepExecutions(@Nonnull final JobExecution jobExecution) {
-        if(!jobExecution) throw new IllegalArgumentException("jobExecution == null")
+        if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
         //TODO : JOB_EXECUTION's ID must exist
 
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
@@ -187,10 +192,10 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
 
             //Retrieve all properties from the ExecutionContext in a map
             final properties = getStepExecutionProperties(execution) << ([
-                    (ResourceResolver.PROPERTY_RESOURCE_TYPE) : NT_UNSTRUCTURED
+                (ResourceResolver.PROPERTY_RESOURCE_TYPE): NT_UNSTRUCTURED
             ] as Map<String, Object>)
 
-            if(!existingResource) {
+            if (!existingResource) {
                 //Resource doesn't exist. Creating it
 
                 final createdResource = resolver.create(rootResource, executionId, properties)
@@ -217,25 +222,25 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
     private static Map<String, Object> getStepExecutionProperties(StepExecution execution) {
         execution.incrementVersion()
         [
-                (ID) : execution.id,
-                (NAME) : execution.stepName,
-                (JOB_EXECUTION_ID) : execution.jobExecutionId,
-                //Map implementation sets StartTime/EndTime to null .. but looks like I can't store nulls in JCR
-                (START_TIME) : execution.startTime ? DateUtil.getISOStringFromDate(execution.startTime) : "NULL",
-                (END_TIME) : execution.endTime ? DateUtil.getISOStringFromDate(execution.endTime) : "NULL",
-                (STATUS) : execution.status.toString(),
-                (COMMIT_COUNT) : execution.commitCount,
-                (READ_COUNT) : execution.readCount,
-                (FILTER_COUNT) : execution.filterCount,
-                (WRITE_COUNT) : execution.writeCount,
-                (EXIT_CODE) : execution.exitStatus.exitCode,
-                (EXIT_MESSAGE) : execution.exitStatus.exitDescription,
-                (READ_SKIP_COUNT) : execution.readSkipCount,
-                (WRITE_SKIP_COUNT) : execution.writeSkipCount,
-                (PROCESS_SKIP_COUNT) : execution.processSkipCount,
-                (ROLL_BACK_COUNT) : execution.rollbackCount,
-                (LAST_UPDATED) : execution.lastUpdated ? DateUtil.getISOStringFromDate(execution.lastUpdated) : "NULL",
-                (VERSION) : execution.version
+            (ID)                : execution.id,
+            (NAME)              : execution.stepName,
+            (JOB_EXECUTION_ID)  : execution.jobExecutionId,
+            //Map implementation sets StartTime/EndTime to null .. but looks like I can't store nulls in JCR
+            (START_TIME)        : execution.startTime ? DateUtil.getISOStringFromDate(execution.startTime) : "NULL",
+            (END_TIME)          : execution.endTime ? DateUtil.getISOStringFromDate(execution.endTime) : "NULL",
+            (STATUS)            : execution.status.toString(),
+            (COMMIT_COUNT)      : execution.commitCount,
+            (READ_COUNT)        : execution.readCount,
+            (FILTER_COUNT)      : execution.filterCount,
+            (WRITE_COUNT)       : execution.writeCount,
+            (EXIT_CODE)         : execution.exitStatus.exitCode,
+            (EXIT_MESSAGE)      : execution.exitStatus.exitDescription,
+            (READ_SKIP_COUNT)   : execution.readSkipCount,
+            (WRITE_SKIP_COUNT)  : execution.writeSkipCount,
+            (PROCESS_SKIP_COUNT): execution.processSkipCount,
+            (ROLL_BACK_COUNT)   : execution.rollbackCount,
+            (LAST_UPDATED)      : execution.lastUpdated ? DateUtil.getISOStringFromDate(execution.lastUpdated) : "NULL",
+            (VERSION)           : execution.version
 
         ] as Map<String, Object>
     }
@@ -253,7 +258,7 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
         stepExecution.endTime = getDate(properties[END_TIME] as String)
         stepExecution.status = BatchStatus.valueOf(properties[STATUS] as String)
         stepExecution.commitCount = properties[COMMIT_COUNT] as Integer ?: 0
-        stepExecution.readCount= properties[READ_COUNT] as Integer ?: 0
+        stepExecution.readCount = properties[READ_COUNT] as Integer ?: 0
         stepExecution.filterCount = properties[FILTER_COUNT] as Integer ?: 0
         stepExecution.writeCount = properties[WRITE_COUNT] as Integer ?: 0
         stepExecution.exitStatus = new ExitStatus(properties[EXIT_CODE] as String, properties[EXIT_MESSAGE] as String)
@@ -267,6 +272,7 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
         stepExecution
     }
 
+
     private static Date getDate(String value) {
         value == "NULL" ? null : DateUtil.getDateFromISOString(value)
     }
@@ -279,11 +285,11 @@ public class JcrStepExecutionDao  extends AbstractJcrDao  implements StepExecuti
     protected void ensureRootResource() {
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             //ResourceUtil.getOrCreateResource()
-            if(!getOrCreateResource(resolver, STEP_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
+            if (!getOrCreateResource(resolver, STEP_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
                 throw new IllegalStateException("Cannot get or create RootResource for : ${STEP_EXECUTION_ROOT}")
             }
-            if(!getOrCreateResource(resolver, JcrJobExecutionDao.JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
+            if (!getOrCreateResource(resolver, JcrJobExecutionDao.JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
                 throw new IllegalStateException("Cannot get or create RootResource for : ${JcrJobExecutionDao.JOB_EXECUTION_ROOT}")
             }

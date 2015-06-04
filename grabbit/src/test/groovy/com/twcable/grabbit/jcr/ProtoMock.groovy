@@ -30,10 +30,11 @@ class ProtoMock {
             setValue(NodeProtos.Value.newBuilder().
                 setStringValue(value).
                 setBytesValue(ByteString.copyFrom(value.bytes))
-        ).build()
+            ).build()
     }
 
-    static getMultiValuedProperty(final int type = PropertyType.STRING, final String... values = ["value1", "value2"] ) {
+
+    static getMultiValuedProperty(final int type = PropertyType.STRING, final String... values = ["value1", "value2"]) {
 
         final theValues = values.collect { String value ->
             NodeProtos.Value.newBuilder().
@@ -45,6 +46,6 @@ class ProtoMock {
             setType(type).
             setValues(NodeProtos.Values.newBuilder().
                 addAllValue(theValues)
-        ).build()
+            ).build()
     }
 }

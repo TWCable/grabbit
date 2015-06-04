@@ -22,7 +22,7 @@ import javax.jcr.Node as JcrNode
 import javax.servlet.ServletOutputStream
 
 /**
- * Helper class that wraps a {@link ThreadLocal<ClientBatchJobContext>} variable used to store {@link ServletOutputStream}
+ * Helper class that wraps a {@link ThreadLocal < ClientBatchJobContext >} variable used to store {@link ServletOutputStream}
  * , {@link ServerBatchJobContext#namespacesIterator} and {@link ServerBatchJobContext#nodeIterator} in ThreadLocal.
  */
 @CompileStatic
@@ -33,6 +33,7 @@ class ServerBatchJobContext {
     final ServletOutputStream servletOutputStream
     final Iterator<Map.Entry<String, String>> namespacesIterator
     final Iterator<JcrNode> nodeIterator
+
 
     ServerBatchJobContext(ServletOutputStream servletOutputStream, Iterator<Map.Entry<String, String>> namespacesIterator,
                           Iterator<JcrNode> nodeIterator) {

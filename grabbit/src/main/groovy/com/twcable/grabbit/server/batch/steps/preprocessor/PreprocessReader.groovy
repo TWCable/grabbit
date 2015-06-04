@@ -40,10 +40,12 @@ class PreprocessReader implements ItemReader<Entry<String, String>> {
 
         if (namespaces.hasNext()) {
             namespaces.next()
-        } else {
+        }
+        else {
             null
         }
     }
+
 
     private Iterator<Entry<String, String>> theNamespaces() {
         ServerBatchJobContext serverBatchJobContext = ServerBatchJobContext.THREAD_LOCAL.get()

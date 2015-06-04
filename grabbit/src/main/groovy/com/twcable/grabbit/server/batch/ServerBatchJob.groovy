@@ -41,14 +41,16 @@ class ServerBatchJob {
     private final JobParameters jobParameters
     private final JobLauncher jobLauncher
 
+
     public void run() {
         jobLauncher.run(job, jobParameters)
     }
 
+
     protected ServerBatchJob(@Nonnull Job job, @Nonnull JobParameters jobParameters, @Nonnull JobLauncher jobLauncher) {
-        if(job == null) throw new IllegalArgumentException("Server job must be set.")
-        if(jobParameters == null) throw new IllegalArgumentException("Server jobParameters must be set.")
-        if(jobLauncher == null) throw new IllegalArgumentException("Server jobLauncher must be set.")
+        if (job == null) throw new IllegalArgumentException("Server job must be set.")
+        if (jobParameters == null) throw new IllegalArgumentException("Server jobParameters must be set.")
+        if (jobLauncher == null) throw new IllegalArgumentException("Server jobLauncher must be set.")
 
         this.job = job
         this.jobParameters = jobParameters
@@ -65,15 +67,17 @@ class ServerBatchJob {
         Iterator<JcrNode> nodeIterator
         ServletOutputStream servletOutputStream
 
+
         ConfigurationBuilder(@Nonnull ConfigurableApplicationContext configurableApplicationContext) {
             this.configAppContext = configurableApplicationContext
         }
 
+
         PathBuilder andConfiguration(Iterator<Map.Entry<String, String>> namespacesIterator,
                                      Iterator<JcrNode> nodeIterator, ServletOutputStream servletOutputStream) {
-            if(namespacesIterator == null) throw new IllegalArgumentException("namespacesIterator == null")
-            if(nodeIterator == null) throw new IllegalArgumentException("nodeIterator == null")
-            if(servletOutputStream == null) throw new IllegalArgumentException("servletOutputStream == null")
+            if (namespacesIterator == null) throw new IllegalArgumentException("namespacesIterator == null")
+            if (nodeIterator == null) throw new IllegalArgumentException("nodeIterator == null")
+            if (servletOutputStream == null) throw new IllegalArgumentException("servletOutputStream == null")
 
             this.namespacesIterator = namespacesIterator
             this.nodeIterator = nodeIterator
@@ -86,12 +90,14 @@ class ServerBatchJob {
         final ConfigurationBuilder configurationBuilder
         String path
 
+
         PathBuilder(ConfigurationBuilder configurationBuilder) {
             this.configurationBuilder = configurationBuilder
         }
 
+
         ContentAfterDateBuilder andPath(String path) {
-            if(path == null) throw new IllegalArgumentException("path == null")
+            if (path == null) throw new IllegalArgumentException("path == null")
             this.path = path
             return new ContentAfterDateBuilder(this)
         }
@@ -101,9 +107,11 @@ class ServerBatchJob {
         final PathBuilder pathBuilder
         String contentAfterDate
 
+
         ContentAfterDateBuilder(PathBuilder pathBuilder) {
             this.pathBuilder = pathBuilder
         }
+
 
         Builder andContentAfterDate(String dateString) {
             this.contentAfterDate = dateString
@@ -116,29 +124,31 @@ class ServerBatchJob {
         final ConfigurationBuilder configurationBuilder
         final ContentAfterDateBuilder afterDateBuilder
 
+
         protected Builder(ContentAfterDateBuilder afterDateBuilder) {
             this.afterDateBuilder = afterDateBuilder
             this.configurationBuilder = afterDateBuilder.pathBuilder.configurationBuilder
         }
 
+
         ServerBatchJob build() {
 
             ServerBatchJobContext serverBatchJobContext =
-                    new ServerBatchJobContext(
-                            configurationBuilder.servletOutputStream,
-                            configurationBuilder.namespacesIterator,
-                            configurationBuilder.nodeIterator
-                    )
+                new ServerBatchJobContext(
+                    configurationBuilder.servletOutputStream,
+                    configurationBuilder.namespacesIterator,
+                    configurationBuilder.nodeIterator
+                )
             ServerBatchJobContext.THREAD_LOCAL.set(serverBatchJobContext)
 
             return new ServerBatchJob(
-                    (Job) configurationBuilder.configAppContext.getBean("serverJob", Job),
-                    new JobParametersBuilder()
-                            .addLong("timestamp", System.currentTimeMillis())
-                            .addString(PATH, afterDateBuilder.pathBuilder.path)
-                            .addString(CONTENT_AFTER_DATE, afterDateBuilder.contentAfterDate)
-                            .toJobParameters(),
-                    (JobLauncher) configurationBuilder.configAppContext.getBean("serverJobLauncher" ,JobLauncher)
+                (Job)configurationBuilder.configAppContext.getBean("serverJob", Job),
+                new JobParametersBuilder()
+                    .addLong("timestamp", System.currentTimeMillis())
+                    .addString(PATH, afterDateBuilder.pathBuilder.path)
+                    .addString(CONTENT_AFTER_DATE, afterDateBuilder.contentAfterDate)
+                    .toJobParameters(),
+                (JobLauncher)configurationBuilder.configAppContext.getBean("serverJobLauncher", JobLauncher)
             )
         }
 

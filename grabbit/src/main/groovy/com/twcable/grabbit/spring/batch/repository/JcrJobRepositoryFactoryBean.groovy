@@ -51,27 +51,33 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
 
     private ExecutionContextSerializer executionContextSerializer
 
+
     void setResourceResolverFactory(ResourceResolverFactory resourceResolverFactory) {
         log.info "Setting RRF : ${resourceResolverFactory}"
         this.resourceResolverFactory = resourceResolverFactory
     }
+
 
     void setExecutionContextSerializer(ExecutionContextSerializer executionContextSerializer) {
         log.info "Setting ExecutionContextSerializer : ${executionContextSerializer}"
         this.executionContextSerializer = executionContextSerializer
     }
 
+
     JobExecutionDao getJobExecutionDao() {
         jobExecutionDao
     }
+
 
     JobInstanceDao getJobInstanceDao() {
         jobInstanceDao
     }
 
+
     StepExecutionDao getStepExecutionDao() {
         stepExecutionDao
     }
+
 
     ExecutionContextDao getExecutionContextDao() {
         executionContextDao
@@ -84,9 +90,11 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
         this(new ResourcelessTransactionManager())
     }
 
+
     public JcrJobRepositoryFactoryBean(PlatformTransactionManager transactionManager) {
         setTransactionManager(transactionManager)
     }
+
 
     @Override
     protected JobInstanceDao createJobInstanceDao() throws Exception {
@@ -96,6 +104,7 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
         jobInstanceDao
     }
 
+
     @Override
     protected JobExecutionDao createJobExecutionDao() throws Exception {
         log.info "Create JobExecution"
@@ -104,6 +113,7 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
         jobExecutionDao
     }
 
+
     @Override
     protected StepExecutionDao createStepExecutionDao() throws Exception {
         log.info "Create StepExecution"
@@ -111,6 +121,7 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
         stepExecutionDao.ensureRootResource()
         stepExecutionDao
     }
+
 
     @Override
     protected ExecutionContextDao createExecutionContextDao() throws Exception {

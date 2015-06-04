@@ -25,11 +25,18 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
 
-import static JcrJobExecutionDao.*
+import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.CREATE_TIME
+import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.END_TIME
+import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.EXECUTION_ID
+import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.EXIT_CODE
+import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.EXIT_MESSAGE
+import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.INSTANCE_ID
+import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.JOB_NAME
+import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.STATUS
+import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.VERSION
 import static com.twcable.jackalope.JCRBuilder.node
 import static com.twcable.jackalope.JCRBuilder.property
-import static com.twcable.jackalope.JCRBuilder.*
-
+import static com.twcable.jackalope.JCRBuilder.repository
 
 @Subject(JcrJobExecutionDao)
 class JcrJobExecutionDaoSpec extends Specification {
@@ -37,53 +44,55 @@ class JcrJobExecutionDaoSpec extends Specification {
     @Shared
     ResourceResolverFactory mockFactory
 
+
     def setupSpec() {
         final builder =
-                node("var",
-                    node("grabbit",
-                        node("job",
-                            node("repository",
-                                node("jobExecutions",
-                                    node("1",
-                                        property(INSTANCE_ID, 1),
-                                        property(EXECUTION_ID, 1),
-                                        property(STATUS, "COMPLETED"),
-                                        property(EXIT_CODE, "code"),
-                                        property(EXIT_MESSAGE, "message"),
-                                        property(CREATE_TIME, "2014-12-27T16:59:18.669-05:00"),
-                                        property(END_TIME, "2014-12-29T16:59:18.669-05:00"),
-                                        property(JOB_NAME, "someJob"),
-                                        property(VERSION, 1)
-                                    ),
-                                    node("2",
-                                        property(INSTANCE_ID, 1),
-                                        property(EXECUTION_ID, 2),
-                                        property(STATUS, "STARTED"),
-                                        property(EXIT_CODE, "code"),
-                                        property(EXIT_MESSAGE, "message"),
-                                        property(CREATE_TIME, "2014-12-28T16:59:18.669-05:00"),
-                                        property(END_TIME, "NULL"),
-                                        property(JOB_NAME, "someJob")
-                                    ),
-                                    node("3",
-                                        property(INSTANCE_ID, 2),
-                                        property(EXECUTION_ID, 3),
-                                        property(STATUS, "STARTED"),
-                                        property(EXIT_CODE, "code"),
-                                        property(EXIT_MESSAGE, "message"),
-                                        property(CREATE_TIME, "2014-12-29T16:59:18.669-05:00"),
-                                        property(END_TIME, "NULL"),
-                                        property(JOB_NAME, "someOtherJob")
-                                    )
+            node("var",
+                node("grabbit",
+                    node("job",
+                        node("repository",
+                            node("jobExecutions",
+                                node("1",
+                                    property(INSTANCE_ID, 1),
+                                    property(EXECUTION_ID, 1),
+                                    property(STATUS, "COMPLETED"),
+                                    property(EXIT_CODE, "code"),
+                                    property(EXIT_MESSAGE, "message"),
+                                    property(CREATE_TIME, "2014-12-27T16:59:18.669-05:00"),
+                                    property(END_TIME, "2014-12-29T16:59:18.669-05:00"),
+                                    property(JOB_NAME, "someJob"),
+                                    property(VERSION, 1)
                                 ),
-                                node("jobInstances",
-                                    node("1"))
-                            )
+                                node("2",
+                                    property(INSTANCE_ID, 1),
+                                    property(EXECUTION_ID, 2),
+                                    property(STATUS, "STARTED"),
+                                    property(EXIT_CODE, "code"),
+                                    property(EXIT_MESSAGE, "message"),
+                                    property(CREATE_TIME, "2014-12-28T16:59:18.669-05:00"),
+                                    property(END_TIME, "NULL"),
+                                    property(JOB_NAME, "someJob")
+                                ),
+                                node("3",
+                                    property(INSTANCE_ID, 2),
+                                    property(EXECUTION_ID, 3),
+                                    property(STATUS, "STARTED"),
+                                    property(EXIT_CODE, "code"),
+                                    property(EXIT_MESSAGE, "message"),
+                                    property(CREATE_TIME, "2014-12-29T16:59:18.669-05:00"),
+                                    property(END_TIME, "NULL"),
+                                    property(JOB_NAME, "someOtherJob")
+                                )
+                            ),
+                            node("jobInstances",
+                                node("1"))
                         )
                     )
                 )
+            )
         mockFactory = new SimpleResourceResolverFactory(repository(builder).build())
     }
+
 
     def "EnsureRootResource for JcrJobExecutionDao"() {
         when:
@@ -94,6 +103,7 @@ class JcrJobExecutionDaoSpec extends Specification {
         notThrown(IllegalStateException)
 
     }
+
 
     def "FindJobExecutions for given JobInstance"() {
         when:
@@ -106,6 +116,7 @@ class JcrJobExecutionDaoSpec extends Specification {
         result.first().id == 2
     }
 
+
     def "GetLastJobExecution for given JobInstance"() {
         when:
         final jobExecutionDao = new JcrJobExecutionDao(mockFactory)
@@ -116,6 +127,7 @@ class JcrJobExecutionDaoSpec extends Specification {
         result.id == 2
 
     }
+
 
     def "FindRunningJobExecutions for given Job Name"() {
         when:
@@ -128,6 +140,7 @@ class JcrJobExecutionDaoSpec extends Specification {
         result.first().id == 2
     }
 
+
     def "GetJobExecution for given JobExecution id"() {
         when:
         final jobExecutionDao = new JcrJobExecutionDao(mockFactory)
@@ -139,6 +152,7 @@ class JcrJobExecutionDaoSpec extends Specification {
         result.id == 2
         result.status == BatchStatus.valueOf("STARTED")
     }
+
 
     def "SynchronizeStatus for a given JobExecution"() {
         when:

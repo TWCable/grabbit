@@ -16,8 +16,8 @@
 
 package com.twcable.grabbit.client.batch.steps.jcrnodes
 
-import com.twcable.grabbit.jcr.JcrUtil
 import com.twcable.grabbit.client.batch.ClientBatchJobContext
+import com.twcable.grabbit.jcr.JcrUtil
 import com.twcable.grabbit.proto.NodeProtos
 import spock.lang.Specification
 import spock.lang.Subject
@@ -39,19 +39,19 @@ class JcrNodesWriterSpec extends Specification {
         nodeBuilder.setName("/default.groovy")
         NodeProtos.Properties.Builder propertiesBuilder = NodeProtos.Properties.newBuilder()
         NodeProtos.Property aProperty = NodeProtos.Property
-                .newBuilder()
-                .setName("jcr:primaryType")
-                .setType(STRING)
-                .setValue(NodeProtos.Value.newBuilder().setStringValue("nt:file"))
-                .build()
+            .newBuilder()
+            .setName("jcr:primaryType")
+            .setType(STRING)
+            .setValue(NodeProtos.Value.newBuilder().setStringValue("nt:file"))
+            .build()
 
         propertiesBuilder.addProperty(aProperty)
         aProperty = NodeProtos.Property
-                .newBuilder()
-                .setName("jcr:lastModified")
-                .setType(STRING)
-                .setValue(NodeProtos.Value.newBuilder().setStringValue("Date"))
-                .build()
+            .newBuilder()
+            .setName("jcr:lastModified")
+            .setType(STRING)
+            .setValue(NodeProtos.Value.newBuilder().setStringValue("Date"))
+            .build()
         propertiesBuilder.addProperty(aProperty)
         nodeBuilder.setProperties(propertiesBuilder.build())
         NodeProtos.Node nodeProto = nodeBuilder.build()
@@ -71,32 +71,33 @@ class JcrNodesWriterSpec extends Specification {
 
     }
 
+
     def "Can get a Jcr Unstructured Node given a single Protobuf Message Node"() {
         NodeProtos.Node.Builder nodeBuilder = NodeProtos.Node.newBuilder()
         nodeBuilder.setName("/default")
         NodeProtos.Properties.Builder propertiesBuilder = NodeProtos.Properties.newBuilder()
         NodeProtos.Property aProperty = NodeProtos.Property
-                .newBuilder()
-                .setName("jcr:primaryType")
-                .setType(STRING)
-                .setValue(NodeProtos.Value.newBuilder().setStringValue("nt:unstructured"))
-                .build()
+            .newBuilder()
+            .setName("jcr:primaryType")
+            .setType(STRING)
+            .setValue(NodeProtos.Value.newBuilder().setStringValue("nt:unstructured"))
+            .build()
 
         propertiesBuilder.addProperty(aProperty)
 
         aProperty = NodeProtos.Property
-                .newBuilder()
-                .setName("multiValuedLong")
-                .setType(LONG)
-                .setValues(
-                NodeProtos.Values.newBuilder().addAllValue(
-                        [
-                                NodeProtos.Value.newBuilder().setStringValue("12345").build(),
-                                NodeProtos.Value.newBuilder().setStringValue("54321").build()
-                        ]
-                )
+            .newBuilder()
+            .setName("multiValuedLong")
+            .setType(LONG)
+            .setValues(
+            NodeProtos.Values.newBuilder().addAllValue(
+                [
+                    NodeProtos.Value.newBuilder().setStringValue("12345").build(),
+                    NodeProtos.Value.newBuilder().setStringValue("54321").build()
+                ]
+            )
         )
-                .build()
+            .build()
         propertiesBuilder.addProperty(aProperty)
         nodeBuilder.setProperties(propertiesBuilder.build())
         NodeProtos.Node nodeProto = nodeBuilder.build()

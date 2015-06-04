@@ -34,8 +34,10 @@ class GrabbitConfiguration {
     boolean deltaContent
     Collection<PathConfiguration> pathConfigurations
 
+
     private GrabbitConfiguration(@Nonnull String user, @Nonnull String pass, @Nonnull String host,
-                                 @Nonnull String port, boolean deltaContent, @Nonnull Collection<PathConfiguration> pathConfigs) {
+                                 @Nonnull String port, boolean deltaContent,
+                                 @Nonnull Collection<PathConfiguration> pathConfigs) {
         // all input is being verified by the "create" factory method
         this.serverUsername = user
         this.serverPassword = pass
@@ -44,6 +46,7 @@ class GrabbitConfiguration {
         this.deltaContent = deltaContent
         this.pathConfigurations = pathConfigs
     }
+
 
     public static GrabbitConfiguration create(@Nonnull String configJson) {
         log.debug "Input: ${configJson}"
@@ -69,14 +72,15 @@ class GrabbitConfiguration {
         if (errorBuilder.hasErrors()) throw errorBuilder.build()
 
         return new GrabbitConfiguration(
-                serverUsername,
-                serverPassword,
-                serverHost,
-                serverPort,
-                deltaContent,
-                pathConfigurations
+            serverUsername,
+            serverPassword,
+            serverHost,
+            serverPort,
+            deltaContent,
+            pathConfigurations
         )
     }
+
 
     private static String nonEmpty(Map<String, String> configMap, String key,
                                    ConfigurationException.Builder errorBuilder) {
@@ -85,48 +89,57 @@ class GrabbitConfiguration {
             if (val.isAllWhitespace())
                 errorBuilder.add(key, 'is empty')
             return val
-        } else {
+        }
+        else {
             errorBuilder.add(key, 'is missing')
             return null
         }
     }
 
+
     private static boolean boolVal(Map<String, String> configMap, String key) {
-        if(!configMap.containsKey(key)) {
+        if (!configMap.containsKey(key)) {
             log.warn "Input doesn't contain ${key} for a boolean value. Will default to false"
         }
         def boolVal = configMap.get(key) as boolean
         return boolVal
     }
 
+
     @CompileStatic
     static class ConfigurationException extends RuntimeException {
         final Map<String, String> errors
+
 
         ConfigurationException(@Nonnull String msg, @Nonnull Map<String, String> errors) {
             super(msg)
             this.errors = errors
         }
 
+
         static Builder builder() {
             return new Builder()
         }
+
 
         @CompileStatic
         static class Builder {
             private ImmutableMap.Builder mapBuilder = ImmutableMap.builder()
             private Map map
 
+
             ConfigurationException build() {
                 if (map == null) map = mapBuilder.build()
                 return new ConfigurationException("Errors: ${map}", map)
             }
+
 
             Builder add(String keyName, String errorMessage) {
                 if (map != null) throw new IllegalStateException("Can't continue to add after building or checking for errors")
                 mapBuilder.put(keyName, errorMessage)
                 return this
             }
+
 
             boolean hasErrors() {
                 map = mapBuilder.build()
@@ -139,6 +152,7 @@ class GrabbitConfiguration {
     static class PathConfiguration {
         String path
         Collection<String> workflowConfigIds
+
 
         protected PathConfiguration(@Nonnull String path, @Nonnull Collection<String> workflowConfigIds) {
             this.path = path

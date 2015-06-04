@@ -24,7 +24,7 @@ import org.springframework.batch.item.ItemProcessor
  * A Custom ItemProcessor that effectively acts as a Marshaller for Namespace {prefix->url} mapping.
  */
 @CompileStatic
-class PreprocessProcessor implements ItemProcessor<Map.Entry<String, String>, NamespaceEntry>{
+class PreprocessProcessor implements ItemProcessor<Map.Entry<String, String>, NamespaceEntry> {
 
     /**
      * Converts a Namespace {prefix->url} Entry to a Protocol Buffer Message {@link NamespaceEntry object}
@@ -33,8 +33,8 @@ class PreprocessProcessor implements ItemProcessor<Map.Entry<String, String>, Na
     NamespaceEntry process(Map.Entry<String, String> entry) throws Exception {
         NamespaceEntry.Builder namespaceEntryBuilder = NamespaceEntry.newBuilder()
         namespaceEntryBuilder
-                .setPrefix(entry.key)
-                .setUri(entry.value)
-                .build()
+            .setPrefix(entry.key)
+            .setUri(entry.value)
+            .build()
     }
 }

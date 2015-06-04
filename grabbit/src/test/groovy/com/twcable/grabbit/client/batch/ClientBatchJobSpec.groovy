@@ -34,9 +34,11 @@ class ClientBatchJobSpec extends Specification {
     @Shared
     def dateNow
 
+
     def setupSpec() {
         dateNow = new Date()
     }
+
 
     @Unroll
     def "Make sure ClientBatch job gets configured correctly"() {
@@ -44,12 +46,12 @@ class ClientBatchJobSpec extends Specification {
         final appContext = Mock(ConfigurableApplicationContext)
         appContext.getBean(_ as String, JobOperator) >> Mock(JobOperator)
         final job = new ClientBatchJob.ServerBuilder(appContext)
-                .andServer("host", "port")
-        .andCredentials("user", "pass")
-        .andDoDeltaContent(doDeltaContent)
-        .andClientJobExecutions(jobExecutions)
-        .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, []))
-        .build()
+            .andServer("host", "port")
+            .andCredentials("user", "pass")
+            .andDoDeltaContent(doDeltaContent)
+            .andClientJobExecutions(jobExecutions)
+            .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, []))
+            .build()
 
         then:
         job != null
@@ -66,6 +68,7 @@ class ClientBatchJobSpec extends Specification {
 
     }
 
+
     def getJobExecutions() {
         def ex1 = new JobExecution(1, new JobParametersBuilder().addString("path", "/path1").toJobParameters())
         ex1.endTime = dateNow
@@ -74,6 +77,6 @@ class ClientBatchJobSpec extends Specification {
         ex2.endTime = dateNow
         ex2.status = BatchStatus.FAILED
 
-        [ ex1, ex2 ]
+        [ex1, ex2]
     }
 }

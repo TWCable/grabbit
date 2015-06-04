@@ -27,7 +27,7 @@ import org.springframework.batch.core.JobExecutionListener
  */
 @Slf4j
 @CompileStatic
-class ServerBatchJobExecutionListener implements JobExecutionListener{
+class ServerBatchJobExecutionListener implements JobExecutionListener {
 
     /**
      * Callback before a job executes.
@@ -47,7 +47,11 @@ class ServerBatchJobExecutionListener implements JobExecutionListener{
     void afterJob(JobExecution jobExecution) {
         log.info "Clearing ThreadLocal for current job: ${jobExecution} . Job Complete"
         ServerBatchJobContext serverBatchJobContext = ServerBatchJobContext.THREAD_LOCAL.get()
-        try { serverBatchJobContext.servletOutputStream.close() } catch (Exception ignore) { /* just doing cleanup */ }
+        try {
+            serverBatchJobContext.servletOutputStream.close()
+        }
+        catch (Exception ignore) { /* just doing cleanup */
+        }
         ServerBatchJobContext.THREAD_LOCAL.remove()
         final long timeTaken = jobExecution.endTime.time - jobExecution.startTime.time
         log.info "Content sent for ${jobExecution.jobParameters.getString(ServerBatchJob.PATH)} took : ${timeTaken} milliseconds\n\n"

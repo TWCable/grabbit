@@ -16,9 +16,9 @@
 
 package com.twcable.grabbit.client.batch.steps.jcrnodes
 
+import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import com.twcable.grabbit.jcr.NodeDecorator
 import com.twcable.grabbit.jcr.PropertyDecorator
-import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import com.twcable.grabbit.proto.NodeProtos
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -35,7 +35,11 @@ import javax.jcr.Session
 import javax.jcr.nodetype.NodeType
 
 import static javax.jcr.Node.JCR_CONTENT
-import static org.apache.jackrabbit.JcrConstants.*
+import static org.apache.jackrabbit.JcrConstants.JCR_DATA
+import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
+import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
+import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
+import static org.apache.jackrabbit.JcrConstants.NT_FILE
 
 /**
  * A Custom ItemWriter that will write the provided Jcr Nodes to the {@link JcrNodesWriter#theSession()}
@@ -52,6 +56,7 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
         //no-op
     }
 
+
     @Override
     void afterWrite(List nodeProtos) {
         log.info "Saving ${nodeProtos.size()} nodes"
@@ -61,18 +66,21 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
         }
     }
 
+
     @Override
     void onWriteError(Exception exception, List nodeProtos) {
         log.error "Exception writing JCR Nodes to current JCR Session : ${theSession()}. ", exception
     }
 
+
     @Override
     void write(List<? extends NodeProtos.Node> nodeProtos) throws Exception {
         Session session = theSession()
-        for(NodeProtos.Node nodeProto : nodeProtos) {
+        for (NodeProtos.Node nodeProto : nodeProtos) {
             writeToJcr(nodeProto, session)
         }
     }
+
 
     private static <T> T withStopWatch(String stopWatchId, Closure<T> cl) {
         StopWatch stopWatch = new StopWatch(stopWatchId)
@@ -86,13 +94,14 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
         return retVal
     }
 
+
     private static void writeToJcr(NodeProtos.Node nodeProto, Session session) {
         log.debug "Received NodeProto: ${nodeProto}"
         List<NodeProtos.Property> properties = nodeProto.properties.propertyList
         final String primaryType = properties.find { NodeProtos.Property protoProperty -> protoProperty.name == JCR_PRIMARYTYPE }.value.stringValue
         log.debug "Primary Type: ${primaryType}"
 
-        if(primaryType == NT_FILE) {
+        if (primaryType == NT_FILE) {
             def temp = nodeProto.name.split("/")
             final String fileName = temp.last()
             final String parentName = nodeProto.name.replaceAll("/${fileName}", "")
@@ -110,10 +119,11 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
         else {
             JcrNode currentNode = JcrUtils.getOrCreateByPath(nodeProto.name, primaryType, session)
             properties.each { NodeProtos.Property protoProperty ->
-                if(  JCR_PRIMARYTYPE != protoProperty.name && (protoProperty.hasValue() || protoProperty.hasValues())) {
-                    if(protoProperty.name == JCR_MIXINTYPES) {
+                if (JCR_PRIMARYTYPE != protoProperty.name && (protoProperty.hasValue() || protoProperty.hasValues())) {
+                    if (protoProperty.name == JCR_MIXINTYPES) {
                         addMixins(protoProperty, currentNode)
-                    } else {
+                    }
+                    else {
                         final String propertyPrefix = protoProperty.name.split(":")[0]
                         log.debug "Current node ${protoProperty.name} prefix : ${propertyPrefix}"
                         addProperty(protoProperty, currentNode)
@@ -131,7 +141,7 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
      */
     private static void addMixins(NodeProtos.Property property, JcrNode node) {
         property.values.valueList.each { NodeProtos.Value value ->
-            if(node.canAddMixin(value.stringValue)) {
+            if (node.canAddMixin(value.stringValue)) {
                 node.addMixin(value.stringValue)
             }
             else {
@@ -160,10 +170,11 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
         try {
             //Need to check if jcr:lastModified can be added to the current node via its NodeType definition
             //as it cannot be added to all the nodes
-            if(currentNode.primaryNodeType.canSetProperty(JCR_LASTMODIFIED, lastModified)) {
+            if (currentNode.primaryNodeType.canSetProperty(JCR_LASTMODIFIED, lastModified)) {
                 currentNode.setProperty(JCR_LASTMODIFIED, lastModified)
             }
-        } catch(RepositoryException ex) {
+        }
+        catch (RepositoryException ex) {
             log.error "Exception while setting jcr:lastModified on ${currentNode.path}.", ex
         }
     }

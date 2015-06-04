@@ -45,12 +45,13 @@ class ClientBatchJob {
     public static final String PASSWORD = "password"
     public static final String CONTENT_AFTER_DATE = "contentAfterDate"
 
-    private final Map<String,String> jobParameters
+    private final Map<String, String> jobParameters
     private final JobOperator jobOperator
 
+
     protected ClientBatchJob(@Nonnull Map<String, String> jobParameters, @Nonnull JobOperator jobOperator) {
-        if(jobParameters == null) throw new IllegalArgumentException("JobParameters == null")
-        if(jobOperator == null) throw new IllegalArgumentException("jobOperator == null")
+        if (jobParameters == null) throw new IllegalArgumentException("JobParameters == null")
+        if (jobOperator == null) throw new IllegalArgumentException("jobOperator == null")
 
         this.jobParameters = jobParameters
         this.jobOperator = jobOperator
@@ -80,9 +81,11 @@ class ClientBatchJob {
         String host
         String port
 
+
         ServerBuilder(ConfigurableApplicationContext configurableApplicationContext) {
             this.configAppContext = configurableApplicationContext
         }
+
 
         CredentialsBuilder andServer(String host, String port) {
             this.host = host
@@ -97,9 +100,11 @@ class ClientBatchJob {
         String username
         String password
 
+
         CredentialsBuilder(ServerBuilder parentBuilder) {
             this.parentBuilder = parentBuilder
         }
+
 
         DeltaContentBuilder andCredentials(String username, String password) {
             this.username = username
@@ -113,9 +118,11 @@ class ClientBatchJob {
         final CredentialsBuilder parentBuilder
         boolean doDeltaContent
 
+
         DeltaContentBuilder(CredentialsBuilder parentBuilder) {
             this.parentBuilder = parentBuilder
         }
+
 
         JobExecutionsBuilder andDoDeltaContent(boolean doDeltaContent) {
             this.doDeltaContent = doDeltaContent
@@ -128,9 +135,11 @@ class ClientBatchJob {
         final DeltaContentBuilder parentBuilder
         List<JobExecution> jobExecutions
 
+
         JobExecutionsBuilder(DeltaContentBuilder parentBuilder) {
             this.parentBuilder = parentBuilder
         }
+
 
         ConfigurationBuilder andClientJobExecutions(List<JobExecution> jobExecutions) {
             this.jobExecutions = jobExecutions
@@ -143,9 +152,11 @@ class ClientBatchJob {
         final JobExecutionsBuilder parentBuilder
         PathConfiguration pathConfiguration
 
+
         ConfigurationBuilder(JobExecutionsBuilder parentBuilder) {
             this.parentBuilder = parentBuilder
         }
+
 
         Builder andConfiguration(PathConfiguration config) {
             this.pathConfiguration = config
@@ -162,6 +173,7 @@ class ClientBatchJob {
         final JobExecutionsBuilder jobExecutionsBuilder
         final ServerBuilder serverBuilder
 
+
         Builder(ConfigurationBuilder parentBuilder) {
             this.configsBuilder = parentBuilder
             this.pathConfiguration = configsBuilder.pathConfiguration
@@ -171,27 +183,28 @@ class ClientBatchJob {
             this.serverBuilder = credentialsBuilder.parentBuilder
         }
 
+
         ClientBatchJob build() {
             final jobParameters = [
-                    "timestamp"           : System.currentTimeMillis() as String,
-                    "${PATH}"             : pathConfiguration.path,
-                    "${HOST}"             : serverBuilder.host,
-                    "${PORT}"             : serverBuilder.port,
-                    "${USERNAME}"         : credentialsBuilder.username,
-                    "${PASSWORD}"         : credentialsBuilder.password,
-                    "${WORKFLOW_CONFIGS}" : pathConfiguration.workflowConfigIds.join("|")
+                "timestamp"          : System.currentTimeMillis() as String,
+                "${PATH}"            : pathConfiguration.path,
+                "${HOST}"            : serverBuilder.host,
+                "${PORT}"            : serverBuilder.port,
+                "${USERNAME}"        : credentialsBuilder.username,
+                "${PASSWORD}"        : credentialsBuilder.password,
+                "${WORKFLOW_CONFIGS}": pathConfiguration.workflowConfigIds.join("|")
             ] as Map<String, String>
 
             if (deltaContentBuilder.doDeltaContent) {
                 final lastSuccessFulJobExecution = jobExecutionsBuilder.jobExecutions?.find {
                     it.jobParameters.getString(PATH) == pathConfiguration.path && (it.status == BatchStatus.COMPLETED)
                 }
-                if(lastSuccessFulJobExecution) {
+                if (lastSuccessFulJobExecution) {
                     final contentAfterDate = DateUtil.getISOStringFromDate(lastSuccessFulJobExecution.endTime)
                     log.info "Last Successful run for ${pathConfiguration.path} was on $contentAfterDate"
                     return new ClientBatchJob(
-                            jobParameters + (["${CONTENT_AFTER_DATE}": contentAfterDate ] as Map<String, String>),
-                            serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
+                        jobParameters + (["${CONTENT_AFTER_DATE}": contentAfterDate] as Map<String, String>),
+                        serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
                     )
                 }
                 else {
@@ -199,8 +212,8 @@ class ClientBatchJob {
                 }
             }
             return new ClientBatchJob(
-                    jobParameters,
-                    serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
+                jobParameters,
+                serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
             )
         }
     }
