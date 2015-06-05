@@ -44,8 +44,7 @@ class ServerServiceSpec extends Specification {
     ServerService syncServerService
 
 
-    def setup() {
-
+    def setupSpec() {
         configurableApplicationContext = new ClassPathXmlApplicationContext("META-INF/spring/server-batch-job.xml")
 
         FakeNodeBuilder fakeNodeBuilder =
@@ -64,7 +63,6 @@ class ServerServiceSpec extends Specification {
 
         syncServerService = new DefaultServerService(slingRepository: slingRepository,
             configurableApplicationContext: configurableApplicationContext)
-
     }
 
 
