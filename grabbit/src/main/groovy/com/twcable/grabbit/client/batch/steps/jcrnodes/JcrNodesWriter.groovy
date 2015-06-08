@@ -16,9 +16,9 @@
 
 package com.twcable.grabbit.client.batch.steps.jcrnodes
 
-import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import com.twcable.grabbit.jcr.NodeDecorator
 import com.twcable.grabbit.jcr.PropertyDecorator
+import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import com.twcable.grabbit.proto.NodeProtos
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -120,16 +120,15 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
         }
         else {
             JcrNode currentNode = JcrUtils.getOrCreateByPath(nodeProto.name, primaryType, session)
+            final NodeProtos.Property mixinProperty = properties.find {NodeProtos.Property property -> property.name == JCR_MIXINTYPES }
+            if(mixinProperty) {
+                addMixins(mixinProperty, currentNode)
+            }
             properties.each { NodeProtos.Property protoProperty ->
-                if (JCR_PRIMARYTYPE != protoProperty.name && (protoProperty.hasValue() || protoProperty.hasValues())) {
-                    if (protoProperty.name == JCR_MIXINTYPES) {
-                        addMixins(protoProperty, currentNode)
-                    }
-                    else {
-                        final String propertyPrefix = protoProperty.name.split(":")[0]
-                        log.debug "Current node ${protoProperty.name} prefix : ${propertyPrefix}"
-                        addProperty(protoProperty, currentNode)
-                    }
+                if( !(protoProperty.name in [JCR_PRIMARYTYPE, JCR_MIXINTYPES]) && (protoProperty.hasValue() || protoProperty.hasValues())) {
+                    final String propertyPrefix = protoProperty.name.split(":")[0]
+                    log.debug "Current node ${protoProperty.name} prefix : ${propertyPrefix}"
+                    addProperty(protoProperty, currentNode)
                 }
             }
             addLastModifiedProperty(currentNode)
@@ -145,6 +144,7 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
         property.values.valueList.each { NodeProtos.Value value ->
             if (node.canAddMixin(value.stringValue)) {
                 node.addMixin(value.stringValue)
+                log.info "Added mixin ${value.stringValue} for : ${node.name}."
             }
             else {
                 log.warn "Encountered invalid mixin type while unmarshalling for Proto value : ${value}"
