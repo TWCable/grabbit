@@ -102,11 +102,13 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
         log.debug "Primary Type: ${primaryType}"
 
         if (primaryType == NT_FILE) {
-            def temp = nodeProto.name.split("/")
-            final String fileName = temp.last()
-            final String parentName = nodeProto.name.replaceAll("/${fileName}", "")
-            final JcrNode parentNode = JcrUtils.getOrCreateByPath(parentName, null, session)
-            JcrNode fileNode = JcrUtils.getOrAddNode(parentNode, fileName, NodeType.NT_FILE)
+            def currentNameArray = nodeProto.name.split("/")
+            //currentNameArray[-1] finds the member of the last index
+            final String currentFileName = currentNameArray[-1]
+            //The path leading up to the second to last index.  e.g /content/foo/bar of /content/foo/bar/file
+            final String immediateParentName = currentNameArray[0..-2].join("/")
+            final JcrNode parentNode = JcrUtils.getOrCreateByPath(immediateParentName, null, session)
+            JcrNode fileNode = JcrUtils.getOrAddNode(parentNode, currentFileName, NodeType.NT_FILE)
             JcrNode theNode = JcrUtils.getOrAddNode(fileNode, JCR_CONTENT, NodeType.NT_RESOURCE)
 
             //TODO : This is a workaround for the case where a chunk gets 'saved' in JCR and the last node was 'nt:file'
