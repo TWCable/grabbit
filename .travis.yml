@@ -1,4 +1,9 @@
-language: java
+language: groovy
+
+addons:
+  apt:
+    packages:
+      - protobuf-compiler
 
 jdk:
   - oraclejdk7
