@@ -72,12 +72,14 @@ dependencies {
         exclude module: "httpcore"
         exclude module: "httpclient-cache"
         exclude module: "httpmime"
+        exclude module: "fluent-hc"
     }
     compile "org.apache.httpcomponents:httpcore-osgi:${httpcomponents_core_version}", {
         exclude module: "httpclient-cache"
         exclude module: "httpcore"
         exclude module: "httpcore-nio"
         exclude module: "httpmime"
+        exclude module: "fluent-hc"
     }
 
     compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.protobuf-java:${servicemix_protobuf_java_version}"
