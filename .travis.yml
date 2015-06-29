@@ -5,6 +5,11 @@ addons:
     packages:
       - protobuf-compiler
 
+#Yeah, we are going to want to cache our build dependencies so our builds aren't held up downloading for every container
+cache:
+  directories:
+    - $HOME/.gradle
+
 jdk:
   - oraclejdk7
   - oraclejdk8
