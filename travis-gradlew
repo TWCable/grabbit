@@ -1,0 +1,9 @@
+#!/bin/bash
+#This wrapper's primary purpose is to serve TravisCI by wrapping the "regular" Gradle Wrapper; detect test, or build failure; and close the process with the appropriate exit code
+#The "regular" Gradle wrapper in valid use operation always exits with 0, regardless of test runner failure, or compiler daemon failure
+exec 3<&1
+stderr=$( ./gradlew $@ -i  2>&1 >&3 )  
+exec <&3-
+if [[ $stderr == *FAILURE* ]]; then
+    exit 1
+fi
