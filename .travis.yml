@@ -24,7 +24,5 @@ sudo: false
 env:
   - GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=''"
 
-#Travis will mark a build as a failed if the script/install process exits(1).  Since the normal Gradle wrapper exits 0 even if the test runner reports failures, we have to wrap the wrapper.  
-#We want to replace the default install task.  Travis automatically adds "./gradlew assemble" if it detects a gradle project
-install: ./travis-gradlew assemble
-script: ./travis-gradlew check
+install: ./gradlew assemble
+script: ./gradlew check
