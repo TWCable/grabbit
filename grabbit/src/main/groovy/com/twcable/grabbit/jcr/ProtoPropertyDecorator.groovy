@@ -4,11 +4,11 @@ import com.twcable.grabbit.DateUtil
 import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
 import com.twcable.grabbit.proto.NodeProtos.Value as ProtoValue
 import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j
 import org.apache.jackrabbit.value.ValueFactoryImpl
 
 import javax.annotation.Nonnull
 import javax.jcr.Node as JCRNode
-import javax.jcr.Property
 import javax.jcr.PropertyType
 import javax.jcr.Value
 import javax.jcr.ValueFormatException
@@ -17,6 +17,7 @@ import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 
 @CompileStatic
+@Slf4j
 class ProtoPropertyDecorator {
 
     @Delegate
@@ -30,30 +31,28 @@ class ProtoPropertyDecorator {
     void writeToNode(@Nonnull JCRNode node) {
         if(primaryType || mixinType) throw new IllegalStateException("Refuse to write jcr:primaryType or jcr:mixinType as normal properties.  These are not allowed")
         try {
-            if (!innerProtoProperty.hasValues()) {
-                node.setProperty(innerProtoProperty.name, getPropertyValue(), innerProtoProperty.type)
+            if (multiple) {
+                node.setProperty(this.name, getPropertyValues(), this.type)
             }
             else {
-                Value[] values = getPropertyValues()
-                node.setProperty(innerProtoProperty.name, values, innerProtoProperty.type)
+                node.setProperty(this.name, getPropertyValue(), this.type)
             }
         }
         catch (ValueFormatException ex) {
-            /**
-             * We do this for the case were Grabbit attempts to write a property of a property type, different than the type already written
-             * i.e String vs String[]
-             */
-            if (ex.message.contains("Multivalued property can not be set to a single value")) {
-                //If this is the exception, that means that a property with the name already exists
-                final Property currentProperty = node.getProperty(innerProtoProperty.name)
-                currentProperty.remove()
-                if (currentProperty.multiple) {
-                    final Value[] values = [getPropertyValue()]
-                    node.setProperty(innerProtoProperty.name, values, innerProtoProperty.type)
-                }
+            //We do this for the case were Grabbit attempts to write a property of a type different from the type already written i.e String vs String[]
+            //Get the problem property already set on the node
+            final existingProperty = node.getProperty(name)
+
+            log.debug "Failure initially setting property ${name} with type: ${PropertyType.nameFromValue(type)}${multiple ? '[]' : ''} to existing property with type: ${PropertyType.nameFromValue(existingProperty.type)}${existingProperty.multiple ? '[]' : ''}.  Trying to resolve..."
+            //If the type is different than what we expect to write, or the cardinality is different; remove what is already written, and retry
+            if(existingProperty.type != this.type || existingProperty.multiple ^ this.multiple) {
+                existingProperty.remove()
+                node.session.save()
+                this.writeToNode(node)
+                log.debug "Resolve successful..."
             }
-            else if (ex.message.contains("Single-valued property can not be set to an array of values")) {
-                node.setProperty(innerProtoProperty.name, getPropertyValues().first(), innerProtoProperty.type)
+            else {
+                log.warn "WARNING!  Property ${name} will not be written to ${node.name}!  There was a problem when writing value type ${PropertyType.nameFromValue(type)}${multiple ? '[]' : ''} to existing node with same type, due to a ValueFormatException, and we were unable to recover"
             }
         }
     }
@@ -66,6 +65,11 @@ class ProtoPropertyDecorator {
 
     boolean isMixinType() {
         innerProtoProperty.name == JCR_MIXINTYPES
+    }
+
+
+    boolean isMultiple() {
+        return hasValues()
     }
 
 

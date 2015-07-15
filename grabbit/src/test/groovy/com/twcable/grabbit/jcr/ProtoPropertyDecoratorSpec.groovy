@@ -10,11 +10,7 @@ import org.apache.jackrabbit.value.DateValue
 import org.apache.jackrabbit.value.StringValue
 import spock.lang.Specification
 
-import javax.jcr.Node
-import javax.jcr.Property
-import javax.jcr.PropertyType
-import javax.jcr.Value
-import javax.jcr.ValueFormatException
+import javax.jcr.*
 
 import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
@@ -53,7 +49,7 @@ class ProtoPropertyDecoratorSpec extends Specification {
 
         when:
         PropertyProto someProperty = PropertyProto.newBuilder()
-                                            .setName("someproperty")
+                                            .setName("property")
                                             .setType(PropertyType.STRING)
                                             .setValue(
                                                 ProtoValue.newBuilder()
@@ -66,7 +62,7 @@ class ProtoPropertyDecoratorSpec extends Specification {
         propertyDecorator.writeToNode(mockNode)
 
         then:
-        1 * mockNode.setProperty("someproperty", new StringValue("somevalue"), PropertyType.STRING)
+        1 * mockNode.setProperty("property", new StringValue("somevalue"), PropertyType.STRING)
     }
 
 
@@ -76,7 +72,7 @@ class ProtoPropertyDecoratorSpec extends Specification {
 
         when:
         PropertyProto someMultiProperty = PropertyProto.newBuilder()
-                                              .setName("somemultivalueproperty")
+                                              .setName("property")
                                               .setType(PropertyType.STRING)
                                               .setValues(
                                                   ProtoValues.newBuilder()
@@ -94,48 +90,72 @@ class ProtoPropertyDecoratorSpec extends Specification {
         propertyDecorator.writeToNode(mockNode)
 
         then:
-        1 * mockNode.setProperty("somemultivalueproperty", [new StringValue("value1"), new StringValue("value2")] as Value[], PropertyType.STRING)
+        1 * mockNode.setProperty("property", [new StringValue("value1"), new StringValue("value2")] as Value[], PropertyType.STRING)
     }
 
 
     def "A single-value property that is attempted to be written to a multi-value property can recover, and be written"() {
-        given:
-        final mockNode = Mock(Node)
-
         when:
-        PropertyProto someProperty = PropertyProto.newBuilder()
-                                              .setName("somename")
-                                              .setType(PropertyType.STRING)
-                                              .setValue(
-                                                  ProtoValue.newBuilder()
-                                                      .setStringValue("somevalue")
-                                                      .build()
-                                              )
-                                              .build()
-
-        mockNode.setProperty("somename", new StringValue("somevalue"), PropertyType.STRING) >> { throw new ValueFormatException("Multivalued property can not be set to a single value") }
-        mockNode.getProperty("somename") >> {
-            Mock(Property) {
-                isMultiple() >> true
+        final mockNode = Mock(Node) {
+            //Initially, the property value will be of the wrong type, so the jcr will throw a ValueFormatException.  The proceeding call, we should have resolved the problem
+            setProperty("property", new StringValue("somevalue"), PropertyType.STRING) >> {
+                throw new ValueFormatException("Multivalued property can not be set to a single value")
+            } >> Mock(Property)
+            getProperty("property") >> {
+                Mock(Property) {
+                    1 * remove()
+                    isMultiple() >> true
+                    getType() >> PropertyType.STRING
+                }
+            }
+            getSession() >> {
+                Mock(Session) {
+                    1 * save()
+                }
             }
         }
+
+        PropertyProto someProperty = PropertyProto.newBuilder()
+                                        .setName("property")
+                                        .setType(PropertyType.STRING)
+                                        .setValue(
+                                            ProtoValue.newBuilder()
+                                                .setStringValue("somevalue")
+                                                .build()
+                                        )
+                                        .build()
 
         final propertyDecorator = new ProtoPropertyDecorator(someProperty)
         propertyDecorator.writeToNode(mockNode)
 
         then:
         notThrown(ValueFormatException)
-        1 * mockNode.setProperty("somename", [new StringValue("somevalue")] as Value[], PropertyType.STRING)
     }
 
 
     def "A multi-value property that is attempted to be written to a single-value property can recover, and be written"() {
-        given:
-        final mockNode = Mock(Node)
-
         when:
+        final mockNode = Mock(Node) {
+            //Initially, the property value will be of the wrong type, so the jcr will throw a ValueFormatException.  The proceeding call, we should have resolved the problem
+            setProperty("property", [new StringValue("value1"), new StringValue("value2")] as Value[], PropertyType.STRING) >> {
+                throw new ValueFormatException("Single-valued property can not be set to an array of values")
+            } >> Mock(Property)
+            getProperty("property") >> {
+                Mock(Property) {
+                    1 * remove()
+                    isMultiple() >> false
+                    getType() >> PropertyType.STRING
+                }
+            }
+            getSession() >> {
+                Mock(Session) {
+                    1 * save()
+                }
+            }
+        }
+
         PropertyProto someMultiProperty = PropertyProto.newBuilder()
-                                                .setName("somemultivalueproperty")
+                                                .setName("property")
                                                 .setType(PropertyType.STRING)
                                                 .setValues(
                                                     ProtoValues.newBuilder()
@@ -149,14 +169,12 @@ class ProtoPropertyDecoratorSpec extends Specification {
                                                 )
                                                 .build()
 
-        mockNode.setProperty("somemultivalueproperty", [new StringValue("value1"), new StringValue("value2")] as Value[], PropertyType.STRING) >> { throw new ValueFormatException("Single-valued property can not be set to an array of values") }
 
         final propertyDecorator = new ProtoPropertyDecorator(someMultiProperty)
         propertyDecorator.writeToNode(mockNode)
 
         then:
         notThrown(ValueFormatException)
-        1 * mockNode.setProperty("somemultivalueproperty", new StringValue("value1"), PropertyType.STRING)
     }
 
 
