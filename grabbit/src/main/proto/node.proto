@@ -9,6 +9,7 @@ option java_outer_classname = "NodeProtos";
 message Node {
     required string name = 1;
     required Properties properties = 2;
+    repeated Node mandatoryChildNode = 3;
 }
 
 message Properties {

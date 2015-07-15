@@ -19,6 +19,7 @@ package com.twcable.grabbit.client.batch.steps.jcrnodes
 import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import com.twcable.grabbit.jcr.JcrUtil
 import com.twcable.grabbit.proto.NodeProtos
+import org.apache.jackrabbit.JcrConstants
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -36,25 +37,44 @@ class JcrNodesWriterSpec extends Specification {
 
     def "Can get a Jcr File Node given a single Protobuf Message Node"() {
         given:
+
         NodeProtos.Node.Builder nodeBuilder = NodeProtos.Node.newBuilder()
         nodeBuilder.setName("/default.groovy")
         NodeProtos.Properties.Builder propertiesBuilder = NodeProtos.Properties.newBuilder()
         NodeProtos.Property aProperty = NodeProtos.Property
             .newBuilder()
-            .setName("jcr:primaryType")
+            .setName(JcrConstants.JCR_PRIMARYTYPE)
             .setType(STRING)
-            .setValue(NodeProtos.Value.newBuilder().setStringValue("nt:file"))
+            .setValue(NodeProtos.Value.newBuilder().setStringValue(JcrConstants.NT_FILE))
             .build()
 
         propertiesBuilder.addProperty(aProperty)
         aProperty = NodeProtos.Property
             .newBuilder()
-            .setName("jcr:lastModified")
+            .setName(JcrConstants.JCR_LASTMODIFIED)
             .setType(STRING)
             .setValue(NodeProtos.Value.newBuilder().setStringValue("Date"))
             .build()
         propertiesBuilder.addProperty(aProperty)
         nodeBuilder.setProperties(propertiesBuilder.build())
+
+        // Child Node jcr:content
+        NodeProtos.Node.Builder childNodeBuilder = NodeProtos.Node.newBuilder()
+        childNodeBuilder.setName("/default.groovy/$JcrConstants.JCR_CONTENT")
+        NodeProtos.Properties.Builder childPropertiesBuilder = NodeProtos.Properties.newBuilder()
+        NodeProtos.Property childProperty = NodeProtos.Property
+                .newBuilder()
+                .setName(JcrConstants.JCR_PRIMARYTYPE)
+                .setType(STRING)
+                .setValue(NodeProtos.Value.newBuilder().setStringValue(JcrConstants.NT_RESOURCE))
+                .build()
+        childPropertiesBuilder.addProperty(childProperty)
+
+        childNodeBuilder.setProperties(childPropertiesBuilder.build())
+
+        // Adding Child Node
+        nodeBuilder.addMandatoryChildNode(childNodeBuilder.build())
+
         NodeProtos.Node nodeProto = nodeBuilder.build()
 
         Session session = JcrUtil.getSession(repository().build(), "admin")
@@ -67,8 +87,8 @@ class JcrNodesWriterSpec extends Specification {
         JcrNode jcrNode = session.getNode("/default.groovy")
         jcrNode != null
         jcrNode.hasProperties()
-        JcrNode jcrAnotherNode = session.getNode("/default.groovy/${JcrNode.JCR_CONTENT}")
-        jcrAnotherNode != null
+        JcrNode childNode = session.getNode("/default.groovy/$JcrConstants.JCR_CONTENT")
+        childNode != null
 
     }
 

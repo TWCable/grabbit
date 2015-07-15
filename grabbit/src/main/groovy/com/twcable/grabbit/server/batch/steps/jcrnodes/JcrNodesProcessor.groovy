@@ -25,11 +25,11 @@ import com.twcable.grabbit.proto.NodeProtos.Property
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.springframework.batch.item.ItemProcessor
-
 import javax.jcr.Node as JcrNode
 import javax.jcr.Property as JcrProperty
 import javax.jcr.PropertyType
 import javax.jcr.Value
+import javax.jcr.nodetype.ItemDefinition
 
 import static javax.jcr.PropertyType.BINARY
 import static javax.jcr.PropertyType.BOOLEAN
@@ -55,7 +55,6 @@ import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
 
     private String contentAfterDate
-
 
     void setContentAfterDate(String contentAfterDate) {
         this.contentAfterDate = contentAfterDate
@@ -88,10 +87,65 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
             }
         }
 
-        final List<JcrProperty> properties = jcrNode.properties.toList()
-        Node.Builder nodeBuilder = Node.newBuilder()
-        nodeBuilder.setName(jcrNode.path)
+        // Skip this node because it has already been processed by its parent
+        if(isRequiredNode(jcrNode)) {
+            return null;
+        } else {
+            // Build parent node
+            return buildNode(jcrNode, getRequiredChildNodes(jcrNode))
+        }
+    }
 
+    /**
+     * Build node and "only" mandatory child nodes
+     * @param JCR Node
+     * @param Mandatory childNodes
+     * @return Node Proto node
+     */
+    private Node buildNode(JcrNode jcrNode, Collection<JcrNode> childNodes) {
+        final Node.Builder nodeBuilder = Node.newBuilder()
+        nodeBuilder.setName(jcrNode.path)
+        nodeBuilder.setProperties(buildProperties(jcrNode))
+        childNodes?.each {
+            nodeBuilder.addMandatoryChildNode(buildNode(it, getRequiredChildNodes(it)))
+        }
+        return nodeBuilder.build()
+    }
+
+    /**
+     * Identify all required child nodes
+     * @param JCR Node
+     * @return list of required child nodes
+     */
+    private static Collection<JcrNode> getRequiredChildNodes(JcrNode jcrNode) {
+        return hasMandatoryChildNodes(jcrNode) ? jcrNode.getNodes().findAll{JcrNode childJcrNode -> isRequiredNode(childJcrNode)} : null
+    }
+
+    /**
+     * Checks for mandatory child nodes
+     * @param JCR Node
+     * @return boolean flag for mandatory child node
+     */
+    private static boolean hasMandatoryChildNodes(JcrNode jcrNode) {
+        return jcrNode.primaryNodeType.childNodeDefinitions.any { ((ItemDefinition)it).mandatory }
+    }
+
+    /**
+     * Checks required node
+     * @param JCR node
+     * @return boolean flag for mandatory node
+     */
+    private static boolean isRequiredNode(JcrNode node) {
+        return node.definition.isMandatory()
+    }
+
+    /**
+     * Build Proto Property object from JCR node
+     * @param jcrNode for Proto properties
+     * @return Proto Property object
+     */
+    private static NodeProtos.Properties buildProperties(JcrNode jcrNode) {
+        final List<JcrProperty> properties = jcrNode.properties.toList()
         Properties.Builder propertiesBuilder = Properties.newBuilder()
         properties.each { JcrProperty jcrProperty ->
             //Before adding a property to the Current Node Proto message, check if the property
@@ -101,11 +155,8 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
                 propertiesBuilder.addProperty(property)
             }
         }
-        nodeBuilder.setProperties(propertiesBuilder.build())
-
-        nodeBuilder.build()
+        propertiesBuilder.build()
     }
-
     /**
      * Returns the "jcr:created", "jcr:lastModified" or "cq:lastModified" date property
      * for current Jcr Node
