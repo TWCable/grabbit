@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package com.twcable.grabbit.client.batch.steps.preprocessor
+package com.twcable.grabbit.client.batch.steps.namespace
 
 import com.twcable.grabbit.client.batch.ClientBatchJobContext
-import com.twcable.grabbit.proto.PreProcessorProtos
+import com.twcable.grabbit.proto.NamespaceProtos.NamespaceEntry
+import com.twcable.grabbit.proto.NamespaceProtos.NamespaceRegistry
+import com.twcable.grabbit.proto.NamespaceProtos.Namespaces
 import groovy.transform.CompileStatic
 import groovy.transform.WithWriteLock
 import groovy.util.logging.Slf4j
@@ -32,13 +34,13 @@ import javax.jcr.RepositoryException
 import javax.jcr.Session
 
 /**
- * A Custom Tasklet that will read a {@link PreProcessorProtos.Preprocessors} object from {@link PreprocessTasklet#theInputStream()}  and it to the {@link PreprocessTasklet#theSession()}
+ * A Custom Tasklet that will read a {@link NamespaceProtos.Namespaces} object from {@link NamespaceSyncTasklet#theInputStream()}  and it to the {@link NamespaceSyncTasklet#theSession()}
  *  See client-batch-job.xml for how this is used.
  */
 @Slf4j
 @CompileStatic
 @SuppressWarnings('GrMethodMayBeStatic')
-class PreprocessTasklet implements Tasklet {
+class NamespaceSyncTasklet implements Tasklet {
 
     /**
      * This tasklet can be potentially executed by any number of threads, with possible
@@ -50,17 +52,17 @@ class PreprocessTasklet implements Tasklet {
     @Override
     RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         log.info "Start writing namespaces."
-        PreProcessorProtos.Preprocessors preprocessors = PreProcessorProtos.Preprocessors.parseDelimitedFrom(theInputStream())
+        Namespaces namespaces = Namespaces.parseDelimitedFrom(theInputStream())
 
-        if (!preprocessors) {
+        if (!namespaces) {
             log.warn "No namespaces received from server"
             log.info "Finished writing namespaces."
             return RepeatStatus.FINISHED
         }
 
-        log.debug "Received Preprocessor : ${preprocessors}"
+        log.debug "Received namespaces : ${namespaces}"
 
-        writeToJcr(preprocessors, theSession())
+        writeToJcr(namespaces, theSession())
         theSession().save()
         log.info "Finished writing namespaces."
         return RepeatStatus.FINISHED
@@ -79,12 +81,12 @@ class PreprocessTasklet implements Tasklet {
     }
 
 
-    private static void writeToJcr(PreProcessorProtos.Preprocessors preprocessorsProto, Session session) {
+    private static void writeToJcr(Namespaces namespaces, Session session) {
         try {
-            log.debug "Received Preprocessors Proto: ${preprocessorsProto}"
+            log.debug "Received Namespaces Proto: ${namespaces}"
             final NamespaceHelper namespaceHelper = new NamespaceHelper(session)
-            PreProcessorProtos.NamespaceRegistry namespaceRegistryProto = preprocessorsProto.namespaceRegistry
-            namespaceRegistryProto.entryList.each { PreProcessorProtos.NamespaceEntry namespaceEntry ->
+            NamespaceRegistry namespaceRegistryProto = namespaces.namespaceRegistry
+            namespaceRegistryProto.entryList.each { NamespaceEntry namespaceEntry ->
                 try {
                     namespaceHelper.registerNamespace(namespaceEntry.prefix, namespaceEntry.uri)
                 }
@@ -101,7 +103,7 @@ class PreprocessTasklet implements Tasklet {
             session.save()
         }
         catch (RepositoryException e) {
-            log.error "Exception while unmarshalling Preprocessors: ${preprocessorsProto}", e
+            log.error "Exception while unmarshalling Namespaces: ${namespaces}", e
         }
     }
 }

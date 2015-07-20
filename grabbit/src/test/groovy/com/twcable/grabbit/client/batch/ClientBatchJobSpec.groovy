@@ -50,7 +50,7 @@ class ClientBatchJobSpec extends Specification {
             .andCredentials("user", "pass")
             .andDoDeltaContent(doDeltaContent)
             .andClientJobExecutions(jobExecutions)
-            .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, [], []))
+            .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, [], [], deleteBeforeWrite))
             .build()
 
         then:
@@ -58,13 +58,14 @@ class ClientBatchJobSpec extends Specification {
         job.jobParameters != null
         job.jobParameters.get("${ClientBatchJob.PATH}") == path
         job.jobParameters.get("${ClientBatchJob.CONTENT_AFTER_DATE}") == contentAfterDate
+        job.jobParameters.get("${ClientBatchJob.DELETE_BEFORE_WRITE}").toBoolean() == deleteBeforeWrite
 
         where:
-        doDeltaContent | path     | contentAfterDate
-        true           | "/path1" | DateUtil.getISOStringFromDate(dateNow)
-        false          | "/path1" | null
-        true           | "/path2" | null
-        false          | "/path2" | null
+        doDeltaContent | path     | contentAfterDate                        | deleteBeforeWrite
+        true           | "/path1" | DateUtil.getISOStringFromDate(dateNow)  | true
+        false          | "/path1" | null                                    | false
+        true           | "/path2" | null                                    | true
+        false          | "/path2" | null                                    | false
 
     }
 

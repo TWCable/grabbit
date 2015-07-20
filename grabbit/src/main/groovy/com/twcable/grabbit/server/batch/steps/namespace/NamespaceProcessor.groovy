@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.twcable.grabbit.server.batch.steps.preprocessor
+package com.twcable.grabbit.server.batch.steps.namespace
 
-import com.twcable.grabbit.proto.PreProcessorProtos.NamespaceEntry
+import com.twcable.grabbit.proto.NamespaceProtos.NamespaceEntry
 import groovy.transform.CompileStatic
 import org.springframework.batch.item.ItemProcessor
 
@@ -24,7 +24,7 @@ import org.springframework.batch.item.ItemProcessor
  * A Custom ItemProcessor that effectively acts as a Marshaller for Namespace {prefix->url} mapping.
  */
 @CompileStatic
-class PreprocessProcessor implements ItemProcessor<Map.Entry<String, String>, NamespaceEntry> {
+class NamespaceProcessor implements ItemProcessor<Map.Entry<String, String>, NamespaceEntry> {
 
     /**
      * Converts a Namespace {prefix->url} Entry to a Protocol Buffer Message {@link NamespaceEntry object}

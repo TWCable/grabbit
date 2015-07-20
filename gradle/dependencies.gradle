@@ -84,6 +84,9 @@ dependencies {
 
     compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.protobuf-java:${servicemix_protobuf_java_version}"
 
+    //For cleaner mocking
+    testCompile "org.objenesis:objenesis:${objenesis_version}"
+
 }
 
 // workaround for http://issues.gradle.org/browse/GRADLE-1682

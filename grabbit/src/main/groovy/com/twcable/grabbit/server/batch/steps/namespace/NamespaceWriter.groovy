@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.twcable.grabbit.server.batch.steps.preprocessor
+package com.twcable.grabbit.server.batch.steps.namespace
 
-import com.twcable.grabbit.proto.PreProcessorProtos.NamespaceEntry
-import com.twcable.grabbit.proto.PreProcessorProtos.NamespaceRegistry
-import com.twcable.grabbit.proto.PreProcessorProtos.Preprocessors
+import com.twcable.grabbit.proto.NamespaceProtos.NamespaceEntry
+import com.twcable.grabbit.proto.NamespaceProtos.NamespaceRegistry
+import com.twcable.grabbit.proto.NamespaceProtos.Namespaces
 import com.twcable.grabbit.server.batch.ServerBatchJobContext
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -28,14 +28,14 @@ import org.springframework.batch.item.ItemWriter
 import javax.servlet.ServletOutputStream
 
 /**
- * A Custom ItemWriter that will write the provided Protocol Buffer NamespacesEntries to the {@link PreprocessWriter#theServletOutputStream()}
- * Will flush the {@link PreprocessWriter#theServletOutputStream()} after writing provided Protocol Buffer NamespaceEntries
+ * A Custom ItemWriter that will write the provided Protocol Buffer NamespacesEntries to the {@link NamespaceWriter#theServletOutputStream()}
+ * Will flush the {@link NamespaceWriter#theServletOutputStream()} after writing provided Protocol Buffer NamespaceEntries
  * @see ItemWriteListener
  */
 @Slf4j
 @CompileStatic
 @SuppressWarnings('GrMethodMayBeStatic')
-class PreprocessWriter implements ItemWriter<NamespaceEntry>, ItemWriteListener {
+class NamespaceWriter implements ItemWriter<NamespaceEntry>, ItemWriteListener {
 
     @Override
     void write(List<? extends NamespaceEntry> namespaceEntries) throws Exception {
@@ -45,12 +45,12 @@ class PreprocessWriter implements ItemWriter<NamespaceEntry>, ItemWriteListener 
         NamespaceRegistry.Builder namespaceRegistryBuilder = NamespaceRegistry.newBuilder()
         namespaceRegistryBuilder.addAllEntry(namespaceEntries)
 
-        Preprocessors preprocessors = Preprocessors.newBuilder()
+        Namespaces nameSpaces = Namespaces.newBuilder()
             .setNamespaceRegistry(namespaceRegistryBuilder.build())
             .build()
 
-        log.debug "Writing Preprocessor Proto message : ${preprocessors}"
-        preprocessors.writeDelimitedTo(servletOutputStream)
+        log.debug "Writing Namespace Proto message : ${nameSpaces}"
+        nameSpaces.writeDelimitedTo(servletOutputStream)
     }
 
 

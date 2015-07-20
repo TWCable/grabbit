@@ -115,6 +115,7 @@ Under "path configurations"
 
 * __excludePaths__: This allows excluding specific subpaths from what will be retrieved from the parent path. See more detail below.
 * __workflowConfigIds__: Before the client retrieves content for the path from the server, it will make sure that the specified workflows are disabled. They will be re-enabled when all content specifying that workflow has finished copying. (Grabbit handles the situation of multiple paths specifying "overlapping" workflows.) This is particularly useful for areas like the DAM where a number of relatively expensive workflows will just "redo" what is already being copied.
+* __deleteBeforeWrite__: Before the client retrieves content, should the workspace identified by the path be cleared?  When used in combination with _excludePaths_, nodes indicated by _excludePaths_ will not be deleted
 
 #### Exclude Paths
 

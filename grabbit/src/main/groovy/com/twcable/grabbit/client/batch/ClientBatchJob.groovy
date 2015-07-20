@@ -45,6 +45,7 @@ class ClientBatchJob {
     public static final String USERNAME = "username"
     public static final String PASSWORD = "password"
     public static final String CONTENT_AFTER_DATE = "contentAfterDate"
+    public static final String DELETE_BEFORE_WRITE = "deleteBeforeWrite"
 
     private final Map<String, String> jobParameters
     private final JobOperator jobOperator
@@ -152,6 +153,7 @@ class ClientBatchJob {
     static class ConfigurationBuilder {
         final JobExecutionsBuilder parentBuilder
         PathConfiguration pathConfiguration
+        boolean willDeleteBeforeWrite
 
 
         ConfigurationBuilder(JobExecutionsBuilder parentBuilder) {
@@ -161,6 +163,7 @@ class ClientBatchJob {
 
         Builder andConfiguration(PathConfiguration config) {
             this.pathConfiguration = config
+            this.willDeleteBeforeWrite = pathConfiguration.deleteBeforeWrite
             return new Builder(this)
         }
     }
@@ -187,14 +190,15 @@ class ClientBatchJob {
 
         ClientBatchJob build() {
             final jobParameters = [
-                "timestamp"           : System.currentTimeMillis() as String,
-                "${PATH}"             : pathConfiguration.path,
-                "${HOST}"             : serverBuilder.host,
-                "${PORT}"             : serverBuilder.port,
-                "${USERNAME}"         : credentialsBuilder.username,
-                "${PASSWORD}"         : credentialsBuilder.password,
-                "${EXCLUDE_PATHS}"    : pathConfiguration.excludePaths.join("*"),
-                "${WORKFLOW_CONFIGS}" : pathConfiguration.workflowConfigIds.join("|")
+                "timestamp"              : System.currentTimeMillis() as String,
+                "${PATH}"                : pathConfiguration.path,
+                "${HOST}"                : serverBuilder.host,
+                "${PORT}"                : serverBuilder.port,
+                "${USERNAME}"            : credentialsBuilder.username,
+                "${PASSWORD}"            : credentialsBuilder.password,
+                "${EXCLUDE_PATHS}"       : pathConfiguration.excludePaths.join("*"),
+                "${WORKFLOW_CONFIGS}"    : pathConfiguration.workflowConfigIds.join("|"),
+                "${DELETE_BEFORE_WRITE}" : "${pathConfiguration.deleteBeforeWrite}"
             ] as Map<String, String>
 
             if (deltaContentBuilder.doDeltaContent) {

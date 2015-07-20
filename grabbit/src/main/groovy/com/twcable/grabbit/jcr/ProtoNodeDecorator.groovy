@@ -95,7 +95,7 @@ class ProtoNodeDecorator {
         property.values.valueList.each { ProtoValue value ->
             if (node.canAddMixin(value.stringValue)) {
                 node.addMixin(value.stringValue)
-                log.info "Added mixin ${value.stringValue} for : ${node.name}."
+                log.debug "Added mixin ${value.stringValue} for : ${node.name}."
             }
             else {
                 log.warn "Encountered invalid mixin type while unmarshalling for Proto value : ${value}"

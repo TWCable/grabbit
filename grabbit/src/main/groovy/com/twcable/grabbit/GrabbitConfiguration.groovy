@@ -67,7 +67,8 @@ class GrabbitConfiguration {
             def path = nonEmpty(config, 'path', errorBuilder)
             def excludePaths = nonEmptyCollection(config["excludePaths"] as Collection<String>, errorBuilder)
             def workflowConfigIds = config["workflowConfigIds"] as Collection<String> ?: [] as Collection<String>
-            new PathConfiguration(path, excludePaths, workflowConfigIds)
+            def deleteBeforeWrite = boolVal(config, 'deleteBeforeWrite')
+            new PathConfiguration(path, excludePaths, workflowConfigIds, deleteBeforeWrite)
         } ?: [] as Collection<PathConfiguration>
 
         if (pathConfigurations.isEmpty()) errorBuilder.add('pathConfigurations', 'is empty')
@@ -120,7 +121,7 @@ class GrabbitConfiguration {
 
     private static boolean boolVal(Map<String, String> configMap, String key) {
         if (!configMap.containsKey(key)) {
-            log.warn "Input doesn't contain ${key} for a boolean value. Will default to false"
+            log.debug "Input doesn't contain ${key} for a boolean value. Will default to false"
         }
         def boolVal = configMap.get(key) as boolean
         return boolVal
@@ -174,6 +175,7 @@ class GrabbitConfiguration {
         String path
         Collection<String> excludePaths
         Collection<String> workflowConfigIds
+        boolean deleteBeforeWrite
 
         void setPath(@Nullable String path) {
             this.path = ( path!=null && path.endsWith("/") ) ? path[0..-2] : path
@@ -186,10 +188,11 @@ class GrabbitConfiguration {
                 return excludePaths
         }
 
-        protected PathConfiguration(@Nonnull String path, @Nonnull Collection<String> excludePaths, @Nonnull Collection<String> workflowConfigIds) {
+        protected PathConfiguration(@Nonnull String path, @Nonnull Collection<String> excludePaths, @Nonnull Collection<String> workflowConfigIds, boolean deleteBeforeWrite) {
             setPath(path)
             this.excludePaths = getAbsolutePaths(excludePaths)
             this.workflowConfigIds = workflowConfigIds
+            this.deleteBeforeWrite = deleteBeforeWrite
         }
     }
 

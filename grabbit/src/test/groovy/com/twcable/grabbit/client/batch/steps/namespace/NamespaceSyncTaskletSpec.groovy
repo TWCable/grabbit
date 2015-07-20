@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.twcable.grabbit.client.batch.steps.preprocessor
+package com.twcable.grabbit.client.batch.steps.namespace
 
 import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import org.slf4j.Logger
@@ -31,16 +31,16 @@ import java.util.concurrent.TimeUnit
 import static com.twcable.jackalope.JCRBuilder.node
 import static com.twcable.jackalope.JCRBuilder.repository
 
-@Subject(PreprocessTasklet)
-class PreprocessTaskletSpec extends Specification {
+@Subject(NamespaceSyncTasklet)
+class NamespaceSyncTaskletSpec extends Specification {
 
     def "WriteLock on Execute method should handle multi-threading correctly"() {
         setup:
         def threadPool = Executors.newCachedThreadPool()
-        def tasklet = new PreprocessTasklet()
+        def tasklet = new NamespaceSyncTasklet()
 
         def logField = getLogFieldForTasklet()
-        def originalValue = logField.get(PreprocessTasklet)
+        def originalValue = logField.get(NamespaceSyncTasklet)
 
         //Mock the logger API's info() method to use the custom StringWriter
         def infoLog = new StringWriter()
@@ -85,7 +85,7 @@ class PreprocessTaskletSpec extends Specification {
 
 
     def getLogFieldForTasklet() {
-        def logField = PreprocessTasklet.getDeclaredField("log")
+        def logField = NamespaceSyncTasklet.getDeclaredField("log")
 
         //Get around "private" field access
         logField.accessible = true

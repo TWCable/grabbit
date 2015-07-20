@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.twcable.grabbit.server.batch.steps.preprocessor
+package com.twcable.grabbit.server.batch.steps.namespace
 
 import com.twcable.grabbit.server.batch.ServerBatchJobContext
 import groovy.transform.CompileStatic
@@ -31,7 +31,7 @@ import static java.util.Map.Entry
  */
 @CompileStatic
 @SuppressWarnings("GrMethodMayBeStatic")
-class PreprocessReader implements ItemReader<Entry<String, String>> {
+class NamespaceReader implements ItemReader<Entry<String, String>> {
 
     @Override
     Entry<String, String> read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
