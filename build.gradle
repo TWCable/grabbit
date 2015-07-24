@@ -46,6 +46,8 @@ allprojects {
 
 ext.vendor = 'Time Warner Cable - Converged Technology Group - CMS Team'
 ext.organization = "Time Warner Cable"
+ext.providerUrl = "https://www.timewarnercable.com"
+ext.providerLink = "https://github.com/TWCable/grabbit"
 
 configure(excludeProjects()) {
     apply plugin: 'groovy'
@@ -53,7 +55,7 @@ configure(excludeProjects()) {
     apply from: "${rootProject.projectDir}/testutils/gradle/testing.gradle"
 
     jar.manifest {
-        attributes 'Specification-Version': project.version    
+        attributes 'Specification-Version': project.version
         attributes 'Bundle-Vendor': project.vendor
         attributes 'Implementation-Title': project.name
         attributes 'Implementation-Version': project.version

@@ -12,24 +12,15 @@ if (installTask != null) tasks.remove(installTask)
 
 apply plugin: 'cqpackage'
 
-ext.bundleName = 'Grabbit'
+ext.packageName = project.name
+ext.bundleName = project.name
 ext.bundleDescription = 'Grabbit'
 ext.symbolicName = "com.twcable.grabbit"
+jar.baseName = 'grabbit'
 
-cqPackage.bundleInstallRoot = '/apps/grabbit/install'
-cqPackage.nativeStartLevel = 30
-cqPackage.dependencyStartLevel = 20
+createPackage.bundleInstallRoot = '/apps/grabbit/install'
 
-bundle.installPath = '/apps/grabbit/install/${cqPackage.nativeStartLevel}'
-
-dependencies {
-    // This project's runtime for inclusion in the CQ package
-    cq_package project(path: ":${name}", configuration: 'runtime')
-    cq_package project(path: ":${name}", configuration: 'default')
-
-    native_cq_package files("${project.jar.archivePath}")
-}
-
+bundle.installPath = '/apps/grabbit/install'
 
 jar {
     from ('src/main/content/SLING-INF/content', {
