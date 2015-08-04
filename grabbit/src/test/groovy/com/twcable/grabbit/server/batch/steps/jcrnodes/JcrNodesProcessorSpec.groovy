@@ -34,6 +34,10 @@ import static com.twcable.jackalope.JCRBuilder.node
 import static com.twcable.jackalope.JCRBuilder.property
 import static javax.jcr.PropertyType.LONG
 import static javax.jcr.PropertyType.STRING
+import org.joda.time.DateTime
+import javax.jcr.NodeIterator
+import spock.lang.Shared
+import spock.lang.Unroll
 
 @Subject(JcrNodesProcessor)
 class JcrNodesProcessorSpec extends Specification {
@@ -190,5 +194,152 @@ class JcrNodesProcessorSpec extends Specification {
 
     private static PropertyIterator propertyIterator(JcrProperty... properties) {
         new PropertyIteratorAdapter(properties.iterator())
+    }
+
+    /* Node Processing & DeltaContent testing */
+
+    def "Process a mandatory child node with no date properties but modified parent"() {
+        //If a node has no date properties but is a mandatory child node whose parent has updated date properties
+        //it should be processed and passed through as deltaContent
+        given:
+        DateTime currentDate = new DateTime()
+
+        JcrNode node = Mock(JcrNode) {  //mocks a parent with updated lastModified property
+            getPath() >> "testParent"
+            getProperties() >> propertyIterator(primaryTypeProperty(JcrConstants.NT_FILE))
+            hasProperty(JcrConstants.JCR_LASTMODIFIED) >> true
+            getProperty(JcrConstants.JCR_LASTMODIFIED) >> Mock(JcrProperty){
+                getDate() >> currentDate.toCalendar(Locale.default)
+            }
+            getDefinition() >> Mock(NodeDefinition) {
+                isMandatory() >> false //not mandatory child
+            }
+            getPrimaryNodeType() >> Mock(NodeType) {
+                getChildNodeDefinitions() >> Mock(NodeDefinition) {
+                    isMandatory() >> true //has mandatory child
+                }
+            }
+
+            getNodes() >> Mock(NodeIterator) {
+                hasNext() >>> true >> false
+                next() >> Mock(JcrNode) {
+                    getPath() >> "testMandatoryChild" //child node with no date properties
+                    getProperties() >> propertyIterator(primaryTypeProperty(JcrConstants.NT_UNSTRUCTURED))
+                    getDefinition() >> Mock(NodeDefinition) {
+                        isMandatory() >> true //mandatory child node
+                    }
+                    getPrimaryNodeType() >> Mock(NodeType) {
+                        getChildNodeDefinitions() >> Mock(NodeDefinition) {
+                            isMandatory() >> false //has no children
+                        }
+                    }
+                }
+            }
+        }
+
+        when:
+        JcrNodesProcessor jcrNodesProcessor = new JcrNodesProcessor()
+        DateTime dateTime = new DateTime(2015, 8, 4, 15, 24, 34, 961)
+        jcrNodesProcessor.contentAfterDate = (dateTime.toString())
+        NodeProtos.Node nodeProto = jcrNodesProcessor.process(node)
+
+        then:
+        nodeProto != null
+        nodeProto.properties.propertyList.first().value.stringValue == JcrConstants.NT_FILE
+        nodeProto.mandatoryChildNodeList.size() == 1
+        nodeProto.mandatoryChildNodeList.first().name == "testMandatoryChild" //making sure child was processed
+        nodeProto.mandatoryChildNodeList.first().properties.propertyList.first().name == JcrConstants.JCR_PRIMARYTYPE
+        nodeProto.mandatoryChildNodeList.first().properties.propertyList.first().value.stringValue == JcrConstants.NT_UNSTRUCTURED
+    }
+
+
+    @Shared
+    DateTime oldDate = new DateTime(2015, 8, 4, 15, 24, 34, 961)
+
+    @Unroll
+    def "Process a node with old date properties: #propList"() {
+        //tests for all situations with non-deltaContent nodes (not updated since last sync)
+        when:
+        JcrNodesProcessor jcrNodesProcessor = new JcrNodesProcessor()
+        jcrNodesProcessor.setContentAfterDate(oldDate.plusDays(1).toString())
+        NodeProtos.Node nodeProto = jcrNodesProcessor.process(aJcrNode)
+        aJcrNode.properties.toList()
+
+        then:
+        nodeProto == null //not copying old data
+
+        where:
+        aJcrNode << [
+                node("testComponent",
+                        property(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                        property(JcrConstants.JCR_CREATED, oldDate.toCalendar(Locale.default)),
+                ).build(),
+                node("testComponent",
+                        property(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                        property(JcrConstants.JCR_LASTMODIFIED, oldDate.toCalendar(Locale.default))
+                ).build(),
+                node("testComponent",
+                        property(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                        property("cq:lastModified", oldDate.toCalendar(Locale.default))
+                ).build(),
+                node("testComponent",
+                        property(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                        property(JcrConstants.JCR_CREATED, oldDate.toCalendar(Locale.default)),
+                        property(JcrConstants.JCR_LASTMODIFIED, oldDate.toCalendar(Locale.default))
+                ).build(),
+                node("testComponent",
+                        property(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                        property(JcrConstants.JCR_CREATED, oldDate.toCalendar(Locale.default)),
+                        property("cq:lastModified", oldDate.toCalendar(Locale.default))
+                ).build(),
+        ]
+        propList = aJcrNode.properties.toList().findAll {it.name != JcrConstants.JCR_PRIMARYTYPE}.collectEntries { [(it.name): new DateTime(it.value.date.time.time)]}
+    }
+
+    @Shared
+    DateTime currentDate = new DateTime()
+
+    @Unroll
+    def "Process a node with updated content and date properties: #propList"() {
+        when:
+        JcrNodesProcessor jcrNodesProcessor = new JcrNodesProcessor()
+        jcrNodesProcessor.setContentAfterDate(oldDate.plusDays(1).toString())
+        NodeProtos.Node nodeProto = jcrNodesProcessor.process(aJcrNode)
+        aJcrNode.properties.toList()
+
+        then:
+        nodeProto != null //checking that new data is being copied
+        nodeProto.hasProperties()
+
+        where:
+        aJcrNode << [
+                node("testComponent",
+                        property(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                        //nothing is 'infinitely old' so we are syncing nodes without date properties
+                ).build(),
+                node("testComponent",
+                        property(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                        property(JcrConstants.JCR_CREATED, currentDate.toCalendar(Locale.default)),
+                ).build(),
+                node("testComponent",
+                        property(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                        property(JcrConstants.JCR_LASTMODIFIED, currentDate.toCalendar(Locale.default))
+                ).build(),
+                node("testComponent",
+                        property(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                        property("cq:lastModified", currentDate.toCalendar(Locale.default))
+                ).build(),
+                node("testComponent",
+                        property(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                        property(JcrConstants.JCR_CREATED, oldDate.toCalendar(Locale.default)),
+                        property(JcrConstants.JCR_LASTMODIFIED, currentDate.toCalendar(Locale.default))
+                ).build(),
+                node("testComponent",
+                        property(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED),
+                        property(JcrConstants.JCR_CREATED, oldDate.toCalendar(Locale.default)),
+                        property("cq:lastModified", currentDate.toCalendar(Locale.default))
+                ).build(),
+        ]
+        propList = aJcrNode.properties.toList().findAll {it.name != JcrConstants.JCR_PRIMARYTYPE}.collectEntries { [(it.name): new DateTime(it.value.date.time.time)]}
     }
 }
