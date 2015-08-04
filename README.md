@@ -93,6 +93,7 @@ A `json` configuration file of following format is used to configure Grabbit.
     "serverPassword" : "<password>",
     "serverHost" : "some.other.server",
     "serverPort" : "4502",
+    "deltaContent" : true,
     "pathConfigurations" :  [
         {
             "path" : "/content/someContent",
@@ -133,6 +134,8 @@ A `json` configuration file of following format is used to configure Grabbit.
     * __path__: The path to recursively grab content from.
 
 #### Optional fields
+
+* __deltaContent__: boolean, where ```false``` has grabbit sync & overwrite all content nodes regardles of date properties, and ```true``` syncs only 'delta' or changed content. Changed content is determined by comparing either of the jcr:lastModified, cq:lastModified, or jcr:created Date with the Date when the path was successfully synced as recorded by the Grabbit Client. Thus, deltaContent will only work with paths that remained the same between two runs. Nodes without any date properties will also be synced, so as not to miss new content of unstructured nodes.
 
 Under "path configurations"
 

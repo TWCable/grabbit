@@ -77,11 +77,7 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
             final Date afterDate = DateUtil.getDateFromISOString(contentAfterDate)
             log.debug "ContentAfterDate received : ${afterDate}. Will ignore content created or modified before the afterDate"
             final date = getDate(jcrNode)
-            if (!date) {
-                //we want delta content but node doesn't have any date property to compare with. So we ignore it
-                return null
-            }
-            if (date.before(afterDate)) {
+            if (date && date.before(afterDate)) { //if there are no date properties, we treat nodes as new
                 log.debug "Not sending any data older than ${afterDate}"
                 return null
             }
@@ -165,14 +161,14 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
      */
     private static Date getDate(JcrNode jcrNode) {
         final String CQ_LAST_MODIFIED = "cq:lastModified"
-        if (jcrNode.hasProperty(JCR_CREATED)) {
-            return jcrNode.getProperty(JCR_CREATED).date.time
-        }
-        else if (jcrNode.hasProperty(JCR_LASTMODIFIED)) {
+        if (jcrNode.hasProperty(JCR_LASTMODIFIED)) {
             return jcrNode.getProperty(JCR_LASTMODIFIED).date.time
         }
         else if (jcrNode.hasProperty(CQ_LAST_MODIFIED)) {
             return jcrNode.getProperty(CQ_LAST_MODIFIED).date.time
+        }
+        else if (jcrNode.hasProperty(JCR_CREATED)) {
+            return jcrNode.getProperty(JCR_CREATED).date.time
         }
         return null
     }
