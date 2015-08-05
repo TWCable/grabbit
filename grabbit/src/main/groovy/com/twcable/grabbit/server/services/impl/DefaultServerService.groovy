@@ -18,8 +18,8 @@ package com.twcable.grabbit.server.services.impl
 
 import com.twcable.grabbit.jcr.JcrUtil
 import com.twcable.grabbit.server.batch.ServerBatchJob
-import com.twcable.grabbit.server.services.JcrContentExclusionIterator
-import com.twcable.grabbit.server.services.JcrContentRecursiveIterator
+import com.twcable.grabbit.server.services.ExcludePathNodeIterator
+import com.twcable.grabbit.server.services.RootNodeWithMandatoryIterator
 import com.twcable.grabbit.server.services.ServerService
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -69,7 +69,7 @@ class DefaultServerService implements ServerService {
             if (path.split("/").last() == ".") {
                 final String actualPath = path.substring(0, path.length() - 2)
                 final JcrNode rootNode = session.getNode(actualPath)
-                nodeIterator = new JcrContentRecursiveIterator(rootNode)
+                nodeIterator = new RootNodeWithMandatoryIterator(rootNode)
             }
             else {
                 final JcrNode rootNode = session.getNode(path)
@@ -77,7 +77,7 @@ class DefaultServerService implements ServerService {
             }
 
             //Iterator wrapper for excludePaths exclusions
-            nodeIterator = new JcrContentExclusionIterator(nodeIterator, excludePaths)
+            nodeIterator = new ExcludePathNodeIterator(nodeIterator, excludePaths)
 
             ServerBatchJob batchJob = new ServerBatchJob.ConfigurationBuilder(configurableApplicationContext)
                 .andConfiguration(new NamespaceHelper(session).namespaces.iterator(), nodeIterator, servletOutputStream)

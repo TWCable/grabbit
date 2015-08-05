@@ -25,8 +25,8 @@ import javax.jcr.Node as JcrNode
 import static com.twcable.jackalope.JCRBuilder.node
 import static com.twcable.jackalope.JCRBuilder.property
 
-@Subject(JcrContentExclusionIterator)
-class JcrContentExclusionIteratorSpec extends Specification {
+@Subject(ExcludePathNodeIterator)
+class ExcludePathNodeIteratorSpec extends Specification {
 
     def "Can create an exclusion iterator for a node with exclusions"() {
         given:
@@ -45,14 +45,14 @@ class JcrContentExclusionIteratorSpec extends Specification {
         JcrNode rootNode = fakeNodeBuilder.build()
 
         when:
-        final nodeIterator = new JcrContentExclusionIterator(new JcrContentRecursiveIterator(rootNode), ["page/jcr:content"] as Collection)
+        final nodeIterator = new ExcludePathNodeIterator(new RootNodeWithMandatoryIterator(rootNode), ["page/jcr:content"] as Collection)
         final root = nodeIterator.next()
         def childNodes = nodeIterator.collect()
 
         then:
-        root.name == "page"
+        root.getName() == "page"
         childNodes.size() == 2
-        childNodes.find { JcrNode node -> node.name == "jcr:content" } == null
+        childNodes.find { JcrNode node -> node.getName() == "jcr:content" } == null
 
     }
 
@@ -73,11 +73,11 @@ class JcrContentExclusionIteratorSpec extends Specification {
         JcrNode rootNode = fakeNodeBuilder.build()
 
         when:
-        final Iterator<JcrNode> nodeIterator = new JcrContentExclusionIterator(new JcrContentRecursiveIterator(rootNode), (Collection<String>)Collections.EMPTY_LIST)
+        final Iterator<JcrNode> nodeIterator = new ExcludePathNodeIterator(new RootNodeWithMandatoryIterator(rootNode), (Collection<String>)Collections.EMPTY_LIST)
         final JcrNode root = nodeIterator.next()
         final JcrNode firstChild = nodeIterator.next()
         then:
-        root.name == "page"
-        firstChild.name == "jcr:content"
+        root.getName() == "page"
+        firstChild.getName() == "jcr:content"
     }
 }

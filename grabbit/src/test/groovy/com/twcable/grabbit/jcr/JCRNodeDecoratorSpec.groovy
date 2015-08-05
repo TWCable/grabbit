@@ -20,8 +20,11 @@ import com.day.cq.commons.jcr.JcrConstants
 import spock.lang.Specification
 
 import javax.jcr.Node
+import javax.jcr.NodeIterator
 import javax.jcr.Property
 import javax.jcr.RepositoryException
+import javax.jcr.nodetype.ItemDefinition
+import javax.jcr.nodetype.NodeDefinition
 import javax.jcr.nodetype.NodeType
 
 import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
@@ -103,6 +106,83 @@ class JCRNodeDecoratorSpec extends Specification {
 
         then:
         nodeDecorator.getPrimaryType() == JcrConstants.NT_FILE
+    }
+
+
+    def "isRequiredNode()"() {
+        given:
+        Node node = Mock(Node) {
+            getDefinition() >> Mock(NodeDefinition) {
+                isMandatory() >> isMandatory
+            }
+        }
+
+        when:
+        final nodeDecorator = new JCRNodeDecorator(node)
+
+        then:
+        nodeDecorator.isRequiredNode() == isMandatory
+
+        where:
+        isMandatory << [true, false]
+    }
+
+
+    def "hasMandatoryChildNodes()"() {
+        given:
+        Node node = Mock(Node) {
+            getPrimaryNodeType() >> Mock(NodeType) {
+                getChildNodeDefinitions() >> [
+                        Mock(ItemDefinition) { isMandatory() >> firstDefinition } as NodeDefinition,
+                        Mock(ItemDefinition) { isMandatory() >> secondDefinition } as NodeDefinition
+                ]
+            }
+        }
+
+        when:
+        final nodeDecorator = new JCRNodeDecorator(node)
+
+        then:
+        nodeDecorator.hasMandatoryChildNodes() == hasMandatoryChildNodes
+
+        where:
+        hasMandatoryChildNodes  |   firstDefinition |   secondDefinition
+        true                    |   true            |   false
+        true                    |   true            |   true
+        false                   |   false           |   false
+    }
+
+
+    def "getRequiredChildNodes()"() {
+        given:
+        Node node = Mock(Node) {
+            getNodes() >> Mock(NodeIterator) {
+                hasNext() >>> true >> false
+                next() >> Mock(Node) {
+                    getDefinition() >> Mock(NodeDefinition) {
+                        isMandatory() >> true
+                    }
+                }
+            }
+        }
+
+        when: "The node has children"
+        final nodeDecorator = Spy(JCRNodeDecorator, constructorArgs: [node]) {
+            hasMandatoryChildNodes() >> true
+        }
+
+        then:
+        nodeDecorator.getRequiredChildNodes().size() == 1
+
+        and: "If no child nodes, getRequiredChildNodes() returns null"
+
+        when:
+        final otherNodeDecorator = Spy(JCRNodeDecorator, constructorArgs: [Mock(Node)]) {
+            hasMandatoryChildNodes() >> false
+        }
+
+        then:
+        otherNodeDecorator.getRequiredChildNodes() == null
     }
 
 

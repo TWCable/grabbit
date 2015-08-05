@@ -24,12 +24,12 @@ import javax.jcr.Node as JcrNode
  * Accounts for cases where certain paths(i.e nodes) needs to be excluded.
  */
 @CompileStatic
-final class  JcrContentExclusionIterator implements Iterator<JcrNode> {
+final class ExcludePathNodeIterator implements Iterator<JcrNode> {
 
     private Iterator<JcrNode> nodeIterator
     private Collection<String> excludePathList
 
-    public JcrContentExclusionIterator(Iterator<JcrNode> nodeIterator, Collection<String> excludePaths) {
+    public ExcludePathNodeIterator(Iterator<JcrNode> nodeIterator, Collection<String> excludePaths) {
         this.nodeIterator = nodeIterator
         this.excludePathList = (excludePaths == null) ? (Collection<String>)Collections.EMPTY_LIST : excludePaths
     }

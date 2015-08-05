@@ -17,7 +17,6 @@
 package com.twcable.grabbit.server.batch.steps.jcrnodes
 
 import com.twcable.grabbit.server.batch.ServerBatchJobContext
-import com.twcable.grabbit.server.services.JcrContentExclusionIterator
 import groovy.transform.CompileStatic
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.NonTransientResourceException
