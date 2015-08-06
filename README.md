@@ -14,12 +14,22 @@ Moreover, by doing a continuous stream, we avoid the latency issues. Depending o
 
 *__"Grabbit"__ obviously refers to this "grabbing" content from one CQ instance and copying it to another. However it also refers to "Jackrabbit," the reference JCR implementation that the content is being copied to and from.*
  
+# AEM Support
+
+Below details AEM version support for the various releases of Grabbit.  
+```
+v4.0.0 - AEM 6.1/CQ 5.6
+v3.0.0 - CQ 5.6
+v2.0.1 - CQ 5.6
+v2.0.0 - CQ 5.6
+```
+
 # Runtime Dependencies
 
-* AEM/CQ v6.1
+* AEM/CQ 
 * To run Grabbit in your AEM/CQ instance, **you need to install a Fragment Bundle once per instance. It can be found [here](https://bintray.com/artifact/download/twcable/aem/dependencies/Sun-Misc-Fragment-Bundle-1.0.0.zip)**
 
-# Building #
+# Building From Source #
 
 ## Full Clean Build & Install ##
 
@@ -47,7 +57,10 @@ brew link --force --overwrite protobuf241
 
 _For both Windows and Mac : To verify that installation was successful, `protoc --version` should display `2.4.1`_
 
-### Adding AEM dependent libraries ###
+### Adding AEM dependent libraries (Grabbit version >= 4.0.0 only) ###
+
+For AEM 6.1, some required Adobe dependencies are not available publicly, and must be placed in the Grabbit project
+directory in order for Grabbit to be built from source.  
 
 #### Get workflow-console jar from AEM instance
 
