@@ -72,7 +72,7 @@ class ServerServiceSpec extends Specification {
 
         when:
         //This will also actually execute the Batch Job internally
-        syncServerService.getContentForRootPath("/default.groovy", (Collection<String>)Collections.EMPTY_LIST, "", mockServletOutputStream)
+        syncServerService.getContentForRootPath("admin", "/default.groovy", (Collection<String>)Collections.EMPTY_LIST, "", mockServletOutputStream)
 
         then:
         mockServletOutputStream != null
@@ -85,7 +85,7 @@ class ServerServiceSpec extends Specification {
 
         when:
         //This will also actually execute the Batch Job internally
-        syncServerService.getContentForRootPath("/default.groovy", ["/default.groovy/jcr:content"] as Collection<String>, "", mockServletOutputStream)
+        syncServerService.getContentForRootPath("admin", "/default.groovy", ["/default.groovy/jcr:content"] as Collection<String>, "", mockServletOutputStream)
 
         then:
         mockServletOutputStream != null

@@ -42,8 +42,9 @@ class ClientBatchJob {
     public static final String WORKFLOW_CONFIGS = "workflowConfigIds"
     public static final String HOST = "host"
     public static final String PORT = "port"
-    public static final String USERNAME = "username"
-    public static final String PASSWORD = "password"
+    public static final String SERVER_USERNAME = "serverUsername"
+    public static final String SERVER_PASSWORD = "serverPassword"
+    public static final String CLIENT_USERNAME = "clientUsername"
     public static final String CONTENT_AFTER_DATE = "contentAfterDate"
     public static final String DELETE_BEFORE_WRITE = "deleteBeforeWrite"
 
@@ -99,8 +100,9 @@ class ClientBatchJob {
     @CompileStatic
     static class CredentialsBuilder {
         final ServerBuilder parentBuilder
-        String username
-        String password
+        String clientUsername
+        String serverUsername
+        String serverPassword
 
 
         CredentialsBuilder(ServerBuilder parentBuilder) {
@@ -108,9 +110,10 @@ class ClientBatchJob {
         }
 
 
-        DeltaContentBuilder andCredentials(String username, String password) {
-            this.username = username
-            this.password = password
+        DeltaContentBuilder andCredentials(String clientUsername, String serverUsername, String serverPassword) {
+            this.clientUsername = clientUsername
+            this.serverUsername = serverUsername
+            this.serverPassword = serverPassword
             return new DeltaContentBuilder(this)
         }
     }
@@ -194,8 +197,9 @@ class ClientBatchJob {
                 "${PATH}"                : pathConfiguration.path,
                 "${HOST}"                : serverBuilder.host,
                 "${PORT}"                : serverBuilder.port,
-                "${USERNAME}"            : credentialsBuilder.username,
-                "${PASSWORD}"            : credentialsBuilder.password,
+                "${CLIENT_USERNAME}"     : credentialsBuilder.clientUsername,
+                "${SERVER_USERNAME}"     : credentialsBuilder.serverUsername,
+                "${SERVER_PASSWORD}"     : credentialsBuilder.serverPassword,
                 "${EXCLUDE_PATHS}"       : pathConfiguration.excludePaths.join("*"),
                 "${WORKFLOW_CONFIGS}"    : pathConfiguration.workflowConfigIds.join("|"),
                 "${DELETE_BEFORE_WRITE}" : "${pathConfiguration.deleteBeforeWrite}"

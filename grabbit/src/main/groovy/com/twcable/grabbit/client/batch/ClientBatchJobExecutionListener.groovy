@@ -82,7 +82,8 @@ class ClientBatchJobExecutionListener implements JobExecutionListener {
         HttpEntity responseEntity = response.entity
         final InputStream inputStream = responseEntity.content
 
-        final Session session = JcrUtil.getSession(slingRepository, "admin")
+        final clientUsername = jobParameters.getString(ClientBatchJob.CLIENT_USERNAME)
+        final Session session = JcrUtil.getSession(slingRepository, clientUsername)
 
         ClientBatchJobContext clientBatchJobContext = new ClientBatchJobContext(inputStream, session)
         ClientBatchJobContext.THREAD_LOCAL.set(clientBatchJobContext)
@@ -118,8 +119,8 @@ class ClientBatchJobExecutionListener implements JobExecutionListener {
         final excludePaths = (excludePathParam != null && !excludePathParam.isEmpty() ? excludePathParam.split(/\*/) : Collections.EMPTY_LIST) as Collection<String>
         final String host = jobParameters.getString(ClientBatchJob.HOST)
         final String port = jobParameters.getString(ClientBatchJob.PORT)
-        final String username = jobParameters.getString(ClientBatchJob.USERNAME)
-        final String password = jobParameters.getString(ClientBatchJob.PASSWORD)
+        final String username = jobParameters.getString(ClientBatchJob.SERVER_USERNAME)
+        final String password = jobParameters.getString(ClientBatchJob.SERVER_PASSWORD)
         final String contentAfterDate = jobParameters.getString(ClientBatchJob.CONTENT_AFTER_DATE) ?: ""
 
         final String encodedContentAfterDate = URLEncoder.encode(contentAfterDate, 'utf-8')

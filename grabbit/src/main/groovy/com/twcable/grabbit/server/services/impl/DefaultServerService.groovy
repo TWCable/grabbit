@@ -52,6 +52,7 @@ class DefaultServerService implements ServerService {
 
 
     void getContentForRootPath(
+            @Nullable String serverUsername,
             @Nonnull String path,
             @Nullable Collection<String> excludePaths,
             @Nullable String afterDateString, @Nonnull ServletOutputStream servletOutputStream) {
@@ -60,7 +61,7 @@ class DefaultServerService implements ServerService {
         if (excludePaths == null) excludePaths = (Collection<String>) Collections.EMPTY_LIST
         if (servletOutputStream == null) throw new IllegalStateException("servletOutputStream == null")
 
-        JcrUtil.withSession(slingRepository, "admin") { Session session ->
+        JcrUtil.withSession(slingRepository, serverUsername) { Session session ->
             Iterator<JcrNode> nodeIterator
 
             //If the path is of type "/a/b/.", that means we should not do a recursive search of b's children

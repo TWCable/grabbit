@@ -55,7 +55,7 @@ class DefaultClientService implements ClientService {
 
 
     @Override
-    Collection<Long> initiateGrab(GrabbitConfiguration configuration) {
+    Collection<Long> initiateGrab(GrabbitConfiguration configuration, String clientUsername) {
 
         Collection<Long> jobExecutionIds = []
 
@@ -69,7 +69,7 @@ class DefaultClientService implements ClientService {
             try {
                 final clientBatchJob = new ClientBatchJob.ServerBuilder(configurableApplicationContext)
                     .andServer(configuration.serverHost, configuration.serverPort)
-                    .andCredentials(configuration.serverUsername, configuration.serverPassword)
+                    .andCredentials(clientUsername, configuration.serverUsername, configuration.serverPassword)
                     .andDoDeltaContent(doDeltaContent)
                     .andClientJobExecutions(clientJobExecutions)
                     .andConfiguration(pathConfig)
