@@ -62,9 +62,17 @@ class GrabbitServlet extends SlingAllMethodsServlet {
 
             final afterDateString = URLDecoder.decode(request.getParameter("after") ?: "", "utf-8")
 
-            if(afterDateString) { log.info "Path : $decodedPath, Exclude Paths: $decodedExcludePaths, AfterDate String : $afterDateString. Will send only delta content" }
+            if(afterDateString) {
+                log.info "Path : $decodedPath, Exclude Paths: $decodedExcludePaths, " +
+                        "AfterDate String : $afterDateString. Will send only delta content"
+            }
 
-            serverService.getContentForRootPath(decodedPath, decodedExcludePaths ?: null, afterDateString ?: null, response.outputStream)
+            //The Login of the user making this request.
+            //This user will be used to connect to JCR
+            //If the User is null, 'anonymous' will be used to connect to JCR
+            final serverUsername = request.remoteUser
+            serverService.getContentForRootPath(serverUsername, decodedPath, decodedExcludePaths ?: null,
+                    afterDateString ?: null, response.outputStream)
         }
         else {
             final jobExecutionId = request.resource.resourceMetadata[JobResource.JOB_EXECUTION_ID] as String ?: ""
@@ -92,8 +100,12 @@ class GrabbitServlet extends SlingAllMethodsServlet {
         final input = IOUtils.toString(request.inputStream, request.characterEncoding)
         log.debug "Input: ${input}"
 
+        //The Login of the user making this request.
+        //This user will be used to connect to JCR
+        //If the User is null, 'anonymous' will be used to connect to JCR
+        final clientUsername = request.remoteUser
         final GrabbitConfiguration configuration = GrabbitConfiguration.create(input)
-        Collection<Long> jobExecutionIds = clientService.initiateGrab(configuration)
+        Collection<Long> jobExecutionIds = clientService.initiateGrab(configuration, clientUsername)
         log.info "Jobs started : ${jobExecutionIds}"
         response.status = HttpServletResponse.SC_OK
         response.contentType = "application/json"

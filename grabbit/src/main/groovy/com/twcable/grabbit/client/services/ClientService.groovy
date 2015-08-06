@@ -23,7 +23,8 @@ interface ClientService {
     /**
      * This API will perform Content Grab for the given configuration
      * @param configuration : the {@link GrabbitConfiguration}
+     * @param clientUsername : the user that will be used by Grabbit Client
      * @return Collection of Job's Execution Ids
      */
-    Collection<Long> initiateGrab(GrabbitConfiguration configuration)
+    Collection<Long> initiateGrab(GrabbitConfiguration configuration, String clientUsername)
 }
