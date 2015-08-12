@@ -1,5 +1,9 @@
 # RELEASE NOTES
 
+## 4.0.1
+
+* Updated Client and Server to use request credentials as login credentials when creating a JCR session (GH-56)
+
 ## 4.0.0
 
 * Updated for AEM 6.1
