@@ -14,6 +14,15 @@ Moreover, by doing a continuous stream, we avoid the latency issues. Depending o
 
 *__"Grabbit"__ obviously refers to this "grabbing" content from one CQ instance and copying it to another. However it also refers to "Jackrabbit," the reference JCR implementation that the content is being copied to and from.*
  
+# AEM Support
+
+Below details AEM version support for the various releases of Grabbit.  
+```
+v3.0.x - CQ 5.6
+v2.0.1 - CQ 5.6
+v2.0.0 - CQ 5.6
+```
+
 # Runtime Dependencies
 
 * AEM/CQ v5.6.1
