@@ -119,7 +119,10 @@ class DefaultWorkFlowManager implements WorkflowManager {
      */
     private void processConfig(String id, LauncherState state) {
         final ConfigEntry currentEntry = workflowLauncher.configEntries.find { it.id == id }
-        if (state == LauncherState.OFF && !currentEntry.enabled) {
+        if (currentEntry == null) {
+            log.info "Current Workflow Launcher ${id} is not found. No-op"
+        }
+        else if (state == LauncherState.OFF && !currentEntry.enabled) {
             log.info "Current Workflow Launcher : ${id} is already Turned Off. No-op"
         }
         else if (state == LauncherState.ON && currentEntry.enabled) {
