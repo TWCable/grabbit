@@ -69,9 +69,6 @@
         <property name="corePoolSize" value="10"/>
     </bean>
 
-    <!-- A Bean for executing several pre-sync tasks concurrently -->
-    <bean id="asyncTaskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor" />
-
     <!-- A Bean that provides ExecutionContextSerializer for JcrExecutionContextDao -->
     <bean id="executionContextSerializer"
           class="org.springframework.batch.core.repository.dao.DefaultExecutionContextSerializer" />

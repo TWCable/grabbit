@@ -38,23 +38,19 @@
     <import resource="client-deleteBeforeWrite-steps.xml" />
 
     <batch:job id="clientJob" xmlns="http://www.springframework.org/schema/batch" job-repository="clientJobRepository">
-        <!--  Do any presync tasks concurrently that we can, e.g turning off workflows -->
-        <batch:split id="preSyncFlow" task-executor="asyncTaskExecutor" next="clientNamespaceSync">
-            <batch:flow>
-                <batch:step id="clientWorkflowOff">
-                    <batch:tasklet ref="clientWorkflowOffTasklet" transaction-manager="clientTransactionManager"/>
-                </batch:step>
-            </batch:flow>
-            <batch:flow>
-                <batch:decision id="deleteBeforeWriteDecision" decider="deleteBeforeWriteDecider">
-                    <end on="NO"/>
-                    <next on="YES" to="deleteBeforeWrite" />
-                </batch:decision>
-                <batch:step id="deleteBeforeWrite">
-                    <batch:tasklet ref="deleteBeforeWriteTasklet" transaction-manager="clientTransactionManager"/>
-                </batch:step>
-            </batch:flow>
-        </batch:split>
+
+        <batch:step id="clientWorkflowOff" next="deleteBeforeWriteDecision">
+            <batch:tasklet ref="clientWorkflowOffTasklet" transaction-manager="clientTransactionManager"/>
+        </batch:step>
+
+        <batch:decision id="deleteBeforeWriteDecision" decider="deleteBeforeWriteDecider">
+            <next on="NO" to="clientNamespaceSync"/>
+            <next on="YES" to="deleteBeforeWrite" />
+        </batch:decision>
+
+        <batch:step id="deleteBeforeWrite" next="clientNamespaceSync">
+            <batch:tasklet ref="deleteBeforeWriteTasklet" transaction-manager="clientTransactionManager"/>
+        </batch:step>
 
         <!-- Writes JCR namespaces streamed from the server-->
         <batch:step id="clientNamespaceSync" next="clientJcrNodes">
