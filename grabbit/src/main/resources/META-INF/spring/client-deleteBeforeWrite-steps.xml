@@ -23,7 +23,7 @@
         <bean id="deleteBeforeWriteDecider" class="com.twcable.grabbit.client.batch.steps.workspace.DeleteBeforeWriteDecider" />
         <bean id="deleteBeforeWriteTasklet" class="com.twcable.grabbit.client.batch.steps.workspace.DeleteBeforeWriteTasklet" scope="step">
             <constructor-arg name="jobPath" value="#{jobParameters[path]}" />
-            <constructor-arg name="excludePaths" value="#{jobParameters[path]}" />
-            <constructor-arg name="slingRepository" value="slingRepository" />
+            <constructor-arg name="excludePaths" value="#{jobParameters[excludePaths]}" />
+            <constructor-arg name="slingRepository" ref="slingRepository" />
         </bean>
 </beans>
