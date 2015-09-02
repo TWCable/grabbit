@@ -60,7 +60,7 @@ class NamespaceSyncTasklet implements Tasklet {
             return RepeatStatus.FINISHED
         }
 
-        log.debug "Received namespaces : ${namespaces}"
+        log.trace "Received namespaces : ${namespaces}"
 
         writeToJcr(namespaces, theSession())
         theSession().save()
@@ -83,7 +83,6 @@ class NamespaceSyncTasklet implements Tasklet {
 
     private static void writeToJcr(Namespaces namespaces, Session session) {
         try {
-            log.debug "Received Namespaces Proto: ${namespaces}"
             final NamespaceHelper namespaceHelper = new NamespaceHelper(session)
             NamespaceRegistry namespaceRegistryProto = namespaces.namespaceRegistry
             namespaceRegistryProto.entryList.each { NamespaceEntry namespaceEntry ->
