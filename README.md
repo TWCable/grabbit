@@ -202,6 +202,12 @@ __Sample of a real Grabbit Job status__
 
 ![alt text](assets/ExampleGrabbitStatus.jpg)
 
+Two loggers are predefined for Grabbit. One for Grabbit Server and the other for Grabbit Client. 
+They are [batch-server.log](grabbit/src/main/content/SLING-INF/content/apps/grabbit/config/org.apache.sling.commons.log.LogManager.factory.config-com.twcable.grabbit.server.batch.xml) and [batch-client.log](grabbit/src/main/content/SLING-INF/content/apps/grabbit/config/org.apache.sling.commons.log.LogManager.factory.config-com.twcable.grabbit.client.batch.xml) respectively.
+These log files are for anything logged in **com.twcable.grabbit.server.batch** and **com.twcable.grabbit.client.batch** packages.
+
+If you want to see what nodes are being written on the Grabbit Client, change the logging for `batch-client.log` above to `DEBUG` or `TRACE`.
+
 # General Layout
 
 There are two primary components to Grabbit: a client and a server that run in the two CQ instances that you want to copy to and from (respectively). The server has a GET Servlet to handle requests to grab data, and the client has a POST Servlet to manage starting jobs. Normally the client Servlet is used via a form, but can be called with "curl" or the like for scripted remote management.

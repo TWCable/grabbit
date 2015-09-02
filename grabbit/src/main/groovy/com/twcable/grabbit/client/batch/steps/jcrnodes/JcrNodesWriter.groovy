@@ -47,6 +47,9 @@ class JcrNodesWriter implements ItemWriter<ProtoNode>, ItemWriteListener {
     @Override
     void afterWrite(List nodeProtos) {
         log.info "Saving ${nodeProtos.size()} nodes"
+        log.debug """Saving Nodes : ${(nodeProtos as List<ProtoNode>).collectMany { ProtoNode pNode ->
+            [ pNode.name , pNode.mandatoryChildNodeList.collect { it.name - pNode.name }]
+        }.flatten()}"""
         theSession().save()
         withStopWatch("Refreshing session: ${theSession()}") {
             theSession().refresh(false)
