@@ -1,5 +1,13 @@
 # RELEASE NOTES
 
+## 4.0.3
+
+* Adding DEBUG logging for nodes being saved on Client
+
+## 4.0.2
+
+* Bug fixes
+
 ## 4.0.1
 
 * Updated Client and Server to use request credentials as login credentials when creating a JCR session (GH-56)
