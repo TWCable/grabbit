@@ -1,0 +1,42 @@
+
+= Releasing A New Version
+
+== Update Files
+
+. Update the `version` property in link:../gradle.properties[`gradle.properties`]. We follow http://semver.org/spec/v2.0.0.html[Semantic Versioning 2.0.0], so increment accordingly
+
+. Update link:../RELEASE_NOTES.md[RELEASE_NOTES.md] with what has changed. Assuming the commit messages have been written well, it will generally be the subject lines of the commits since the last release, but edit (including adding) as appropriate for a human to easily understand what has changed
+
+== Create A Clean Build
+
+[source,bash]
+--
+$ ./gradlew clean check integrationTestReport createPackage
+--
+
+== Commit and Push
+
+[source,bash]
+--
+$ git add gradle.properties RELEASE_NOTES.md
+$ git commit -m v9.9.9   # "v" followed by the version number
+$ git tag v9.9.9
+$ git push origin HEAD:master
+$ git push origin v9.9.9
+--
+
+Create a https://github.com/TWCable/grabbit/releases/new[new GitHub release], selecting the just-uploaded tag from the list. There's no need for a "`Release title`", though copy & paste the latest version information from RELEASE_NOTES.md into the "`Describe this release`" box. If you want you can attach the built artifact to the GitHub release, but the "`official`" location is https://bintray.com/twcable/aem/Grabbit/view[BinTray].
+
+*NOTE*: If you are back-porting a release or the like, GitHub's "`release`" feature is extremely simplistic and always labels most recently create "release" record as being the "`Latest release`".
+
+
+== Upload to BinTray
+
+. https://bintray.com/twcable/aem/Grabbit/new/version[Create a new version record] ("`Name`" is the version without the "v". Leave "`Description`" blank)
+. Fill in the "`Version Details`" -- most notably the "`VCS tag`". Everything else will be inherited from the main project metadata.
+. Using your BinTray username and https://bintray.com/profile/edit[your API key], use the following curl command with appropriate substitutions:
+
+[source,bash]
+--
+curl -u ${USER_NAME}:${API_KEY} -T grabbit/build/distributions/grabbit-${VERSION}.zip -X PUT https://bintray.com/api/v1/content/twcable/aem/Grabbit/${VERSION}/grabbit-${VERSION}.zip\?publish\=1
+--

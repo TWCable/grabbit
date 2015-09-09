@@ -229,6 +229,10 @@ There are two primary components to Grabbit: a client and a server that run in t
 A recommended systems layout style is to have all content from a production publisher copied down to a staging "data warehouse" (DW) server to which all lower environments (beta, continuous integration, developer workstations, etc.) will connect. That way minimal load is placed on Production, and additional DW machines can be added to scale out if needed, each of which can grab from the "main" DW.
 The client sends an HTTP GET request with a content path and "last grab time" to the server and receives a ProtoBuf stream of all the content below it that has changed. The client's BasicAuth credentials are used to create the JCR Session, so the client can never see content they don't have explicit access to. There are a number of ways to tune how the client works, including specifying multiple focused paths, parallel or serial execution, JCR Session batch size (the number of nodes to cache before flushing to disk), etc.
 
+# Releasing
+
+For the Grabbit developers, [instructions for releasing a new version of Grabbit](docs/RELEASING.adoc).
+
 # Library Attribution
 
 * [Groovy v2.3.6](http://groovy.codehaus.org/Download)
