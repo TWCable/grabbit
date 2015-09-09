@@ -1,5 +1,13 @@
 # RELEASE NOTES
 
+## 3.0.3
+
+* Adding DEBUG logging for nodes being saved on Client
+
+## 3.0.2
+
+* Fixed bug that crept in around deleteBeforeWrite
+
 ## 3.0.1
 
 * Updated Client and Server to use request credentials as login credentials when creating a JCR session (GH-56)
