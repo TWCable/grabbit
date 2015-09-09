@@ -28,6 +28,8 @@ jar {
     })
 }
 
+verifyBundles.dependsOn 'jar'
+
 jar.manifest {
 
     attributes 'Sling-Initial-Content': project.configFolders.collect {
