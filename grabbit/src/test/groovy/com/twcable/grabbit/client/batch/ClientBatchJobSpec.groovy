@@ -22,51 +22,46 @@ import org.springframework.batch.core.BatchStatus
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.JobParametersBuilder
 import org.springframework.batch.core.launch.JobOperator
-import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.context.ApplicationContext
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
 
 @Subject(ClientBatchJob)
+@SuppressWarnings("GroovyAccessibility")
 class ClientBatchJobSpec extends Specification {
 
     @Shared
-    def dateNow
-
-
-    def setupSpec() {
-        dateNow = new Date()
-    }
+    Date dateNow = new Date()
 
 
     @Unroll
-    def "Make sure ClientBatch job gets configured correctly"() {
+    def "Job Params: #path #doDeltaContent #contentAfterDate #deleteBeforeWrite"() {
         when:
-        final appContext = Mock(ConfigurableApplicationContext)
+        final appContext = Mock(ApplicationContext)
         appContext.getBean(_ as String, JobOperator) >> Mock(JobOperator)
         final job = new ClientBatchJob.ServerBuilder(appContext)
-            .andServer("host", "port")
-            .andCredentials("clientUser", "serverUser", "serverPass")
-            .andDoDeltaContent(doDeltaContent)
-            .andClientJobExecutions(jobExecutions)
-            .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, [], [], deleteBeforeWrite))
-            .build()
+                .andServer("host", "port")
+                .andCredentials("clientUser", "serverUser", "serverPass")
+                .andDoDeltaContent(doDeltaContent)
+                .andClientJobExecutions(jobExecutions)
+                .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, [], [], deleteBeforeWrite))
+                .build()
 
         then:
         job != null
         job.jobParameters != null
-        job.jobParameters.get("${ClientBatchJob.PATH}") == path
-        job.jobParameters.get("${ClientBatchJob.CONTENT_AFTER_DATE}") == contentAfterDate
-        job.jobParameters.get("${ClientBatchJob.DELETE_BEFORE_WRITE}").toBoolean() == deleteBeforeWrite
+        job.jobParameters.get(ClientBatchJob.PATH) == path
+        job.jobParameters.get(ClientBatchJob.CONTENT_AFTER_DATE) == contentAfterDate
+        job.jobParameters.get(ClientBatchJob.DELETE_BEFORE_WRITE).toBoolean() == deleteBeforeWrite
 
         where:
-        doDeltaContent | path     | contentAfterDate                        | deleteBeforeWrite
-        true           | "/path1" | DateUtil.getISOStringFromDate(dateNow)  | true
-        false          | "/path1" | null                                    | false
-        true           | "/path2" | null                                    | true
-        false          | "/path2" | null                                    | false
-
+        path     | doDeltaContent | contentAfterDate                       | deleteBeforeWrite
+        "/path1" | true           | DateUtil.getISOStringFromDate(dateNow) | true
+        "/path1" | false          | null                                   | false
+        "/path2" | true           | null                                   | true
+        "/path2" | false          | null                                   | false
     }
 
 
@@ -74,10 +69,12 @@ class ClientBatchJobSpec extends Specification {
         def ex1 = new JobExecution(1, new JobParametersBuilder().addString("path", "/path1").toJobParameters())
         ex1.endTime = dateNow
         ex1.status = BatchStatus.COMPLETED
+
         def ex2 = new JobExecution(2, new JobParametersBuilder().addString("path", "/path2").toJobParameters())
         ex2.endTime = dateNow
         ex2.status = BatchStatus.FAILED
 
         [ex1, ex2]
     }
+
 }

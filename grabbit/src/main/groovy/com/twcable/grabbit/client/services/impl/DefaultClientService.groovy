@@ -22,7 +22,6 @@ import com.twcable.grabbit.client.batch.ClientBatchJob
 import com.twcable.grabbit.client.services.ClientService
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import org.apache.felix.scr.annotations.Activate
 import org.apache.felix.scr.annotations.Component
 import org.apache.felix.scr.annotations.Reference
 import org.apache.felix.scr.annotations.Service
@@ -30,7 +29,7 @@ import org.apache.sling.jcr.api.SlingRepository
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.JobInstance
 import org.springframework.batch.core.explore.JobExplorer
-import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.context.ApplicationContext
 
 @Slf4j
 @CompileStatic
@@ -44,14 +43,8 @@ class DefaultClientService implements ClientService {
     @Reference(bind = 'setSlingRepository')
     SlingRepository slingRepository
 
-    @Reference(bind = 'setConfigurableApplicationContext')
-    ConfigurableApplicationContext configurableApplicationContext
-
-
-    @Activate
-    void activate() {
-        log.info "Activate\n\n"
-    }
+    @Reference(bind = 'setApplicationContext')
+    ApplicationContext applicationContext
 
 
     @Override
@@ -67,13 +60,13 @@ class DefaultClientService implements ClientService {
 
         for (PathConfiguration pathConfig : configuration.pathConfigurations) {
             try {
-                final clientBatchJob = new ClientBatchJob.ServerBuilder(configurableApplicationContext)
-                    .andServer(configuration.serverHost, configuration.serverPort)
-                    .andCredentials(clientUsername, configuration.serverUsername, configuration.serverPassword)
-                    .andDoDeltaContent(doDeltaContent)
-                    .andClientJobExecutions(clientJobExecutions)
-                    .andConfiguration(pathConfig)
-                    .build()
+                final clientBatchJob = new ClientBatchJob.ServerBuilder(applicationContext)
+                        .andServer(configuration.serverHost, configuration.serverPort)
+                        .andCredentials(clientUsername, configuration.serverUsername, configuration.serverPassword)
+                        .andDoDeltaContent(doDeltaContent)
+                        .andClientJobExecutions(clientJobExecutions)
+                        .andConfiguration(pathConfig)
+                        .build()
                 final Long currentJobExecutionId = clientBatchJob.start()
                 jobExecutionIds << currentJobExecutionId
             }
@@ -88,7 +81,7 @@ class DefaultClientService implements ClientService {
 
 
     private List<JobExecution> fetchAllClientJobExecutions() {
-        final explorer = configurableApplicationContext.getBean("clientJobExplorer", JobExplorer)
+        final explorer = applicationContext.getBean("clientJobExplorer", JobExplorer)
         final instances = explorer.getJobInstances("clientJob", 0, Integer.MAX_VALUE - 1) ?: [] as List<JobInstance>
         final executions = instances.collect { explorer.getJobExecutions(it) }.flatten() as List<JobExecution>
         executions

@@ -22,7 +22,7 @@ import groovy.util.logging.Slf4j
 import org.springframework.batch.core.BatchStatus
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.launch.JobOperator
-import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.context.ApplicationContext
 
 import javax.annotation.Nonnull
 
@@ -48,7 +48,9 @@ class ClientBatchJob {
     public static final String CONTENT_AFTER_DATE = "contentAfterDate"
     public static final String DELETE_BEFORE_WRITE = "deleteBeforeWrite"
 
+    @SuppressWarnings("GrFinalVariableAccess")
     private final Map<String, String> jobParameters
+    @SuppressWarnings("GrFinalVariableAccess")
     private final JobOperator jobOperator
 
 
@@ -80,12 +82,12 @@ class ClientBatchJob {
 
     @CompileStatic
     static class ServerBuilder {
-        final ConfigurableApplicationContext configAppContext
+        final ApplicationContext configAppContext
         String host
         String port
 
 
-        ServerBuilder(ConfigurableApplicationContext configurableApplicationContext) {
+        ServerBuilder(ApplicationContext configurableApplicationContext) {
             this.configAppContext = configurableApplicationContext
         }
 
@@ -193,16 +195,16 @@ class ClientBatchJob {
 
         ClientBatchJob build() {
             final jobParameters = [
-                "timestamp"              : System.currentTimeMillis() as String,
-                "${PATH}"                : pathConfiguration.path,
-                "${HOST}"                : serverBuilder.host,
-                "${PORT}"                : serverBuilder.port,
-                "${CLIENT_USERNAME}"     : credentialsBuilder.clientUsername,
-                "${SERVER_USERNAME}"     : credentialsBuilder.serverUsername,
-                "${SERVER_PASSWORD}"     : credentialsBuilder.serverPassword,
-                "${EXCLUDE_PATHS}"       : pathConfiguration.excludePaths.join("*"),
-                "${WORKFLOW_CONFIGS}"    : pathConfiguration.workflowConfigIds.join("|"),
-                "${DELETE_BEFORE_WRITE}" : "${pathConfiguration.deleteBeforeWrite}"
+                    timestamp            : System.currentTimeMillis() as String,
+                    (PATH)               : pathConfiguration.path,
+                    (HOST)               : serverBuilder.host,
+                    (PORT)               : serverBuilder.port,
+                    (CLIENT_USERNAME)    : credentialsBuilder.clientUsername,
+                    (SERVER_USERNAME)    : credentialsBuilder.serverUsername,
+                    (SERVER_PASSWORD)    : credentialsBuilder.serverPassword,
+                    (EXCLUDE_PATHS)      : pathConfiguration.excludePaths.join("*"),
+                    (WORKFLOW_CONFIGS)   : pathConfiguration.workflowConfigIds.join("|"),
+                    (DELETE_BEFORE_WRITE): "${pathConfiguration.deleteBeforeWrite}"
             ] as Map<String, String>
 
             if (deltaContentBuilder.doDeltaContent) {
@@ -212,18 +214,15 @@ class ClientBatchJob {
                 if (lastSuccessFulJobExecution) {
                     final contentAfterDate = DateUtil.getISOStringFromDate(lastSuccessFulJobExecution.endTime)
                     log.info "Last Successful run for ${pathConfiguration.path} was on $contentAfterDate"
-                    return new ClientBatchJob(
-                        jobParameters + (["${CONTENT_AFTER_DATE}": contentAfterDate] as Map<String, String>),
-                        serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
-                    )
+                    jobParameters.put(CONTENT_AFTER_DATE, contentAfterDate)
                 }
                 else {
                     log.warn "There was no successful job run for $pathConfiguration.path. Defaulting to normal content grab"
                 }
             }
             return new ClientBatchJob(
-                jobParameters,
-                serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
+                    jobParameters,
+                    serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
             )
         }
     }

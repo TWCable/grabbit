@@ -16,17 +16,19 @@
 
 package com.twcable.grabbit.server.batch.steps.jcrnodes
 
+import com.twcable.grabbit.jcr.AbstractJcrSpec
 import com.twcable.grabbit.proto.NodeProtos
 import com.twcable.jackalope.NodeBuilder as FakeNodeBuilder
-import com.twcable.jackalope.impl.jcr.ValueImpl
 import org.apache.jackrabbit.JcrConstants
-import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter
-import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter
-import spock.lang.Specification
+import org.joda.time.DateTime
+import spock.lang.Shared
 import spock.lang.Subject
+import spock.lang.Unroll
+
 import javax.jcr.Node as JcrNode
+import javax.jcr.NodeIterator
+import javax.jcr.Property
 import javax.jcr.Property as JcrProperty
-import javax.jcr.PropertyIterator
 import javax.jcr.nodetype.NodeDefinition
 import javax.jcr.nodetype.NodeType
 
@@ -34,13 +36,17 @@ import static com.twcable.jackalope.JCRBuilder.node
 import static com.twcable.jackalope.JCRBuilder.property
 import static javax.jcr.PropertyType.LONG
 import static javax.jcr.PropertyType.STRING
-import org.joda.time.DateTime
-import javax.jcr.NodeIterator
-import spock.lang.Shared
-import spock.lang.Unroll
 
 @Subject(JcrNodesProcessor)
-class JcrNodesProcessorSpec extends Specification {
+@SuppressWarnings("GrEqualsBetweenInconvertibleTypes")
+class JcrNodesProcessorSpec extends AbstractJcrSpec {
+
+    @Shared
+    DateTime oldDate = new DateTime(2015, 8, 4, 15, 24, 34, 961)
+
+    @Shared
+    DateTime currentDate = new DateTime()
+
 
     def "Can marshall a JCR Node to a Protobuf Message"() {
         given:
@@ -127,12 +133,13 @@ class JcrNodesProcessorSpec extends Specification {
         nodeProto == null
     }
 
+
     def "Example not found and extreme case where grand child node is also required"() {
         given:
         def thumbnailFile = "/content/dam/geometrixx-outdoors/activities/jcr:content/folderThumbnail"
         def parentNode = createNode(thumbnailFile, false, JcrConstants.NT_FILE,
                 [createNode("${thumbnailFile}/jcr:content", true, JcrConstants.NT_RESOURCE,
-                    [createNode("${thumbnailFile}/jcr:content/metadata", true, JcrConstants.NT_UNSTRUCTURED)])])
+                        [createNode("${thumbnailFile}/jcr:content/metadata", true, JcrConstants.NT_UNSTRUCTURED)])])
 
         when:
         NodeProtos.Node nodeProto = new JcrNodesProcessor().process(parentNode)
@@ -150,52 +157,6 @@ class JcrNodesProcessorSpec extends Specification {
         nodeProto.mandatoryChildNodeList.first().mandatoryChildNodeList.first().properties.propertyList.first().value.stringValue == JcrConstants.NT_UNSTRUCTURED
     }
 
-    private JcrNode createNode(String path, boolean isMandatory, String primaryType, Collection<JcrNode> children = []) {
-        def nodeDefinition = isMandatory ? mandatoryNodeDefinition() : nonMandatoryNodeDefinition()
-
-        def childDefinitions = children.collect {it.getDefinition()} as List<NodeDefinition>
-
-        def node = Mock(JcrNode) {
-            getPath() >> path
-            getDefinition() >> nodeDefinition
-            getProperties() >> propertyIterator(primaryTypeProperty(primaryType))
-            getPrimaryNodeType() >> Mock(NodeType) {
-                getChildNodeDefinitions() >> childDefinitions.toArray()
-            }
-        }
-
-        children.each { JcrNode child ->
-            child.getParent() >> node
-        }
-        node.getNodes() >> new NodeIteratorAdapter(children.iterator())
-
-        return node
-    }
-
-    private NodeDefinition mandatoryNodeDefinition() {
-        return Mock(NodeDefinition) {
-            isMandatory() >> true
-        }
-    }
-
-    private NodeDefinition nonMandatoryNodeDefinition() {
-        return Mock(NodeDefinition) {
-            isMandatory() >> false
-        }
-    }
-
-    private JcrProperty primaryTypeProperty(String propertyValue) {
-        return Mock(JcrProperty) {
-            getType() >> STRING
-            getName() >> JcrConstants.JCR_PRIMARYTYPE
-            getValue() >> new ValueImpl(propertyValue)
-        }
-    }
-
-    private static PropertyIterator propertyIterator(JcrProperty... properties) {
-        new PropertyIteratorAdapter(properties.iterator())
-    }
-
     /* Node Processing & DeltaContent testing */
 
     def "Process a mandatory child node with no date properties but modified parent"() {
@@ -208,7 +169,7 @@ class JcrNodesProcessorSpec extends Specification {
             getPath() >> "testParent"
             getProperties() >> propertyIterator(primaryTypeProperty(JcrConstants.NT_FILE))
             hasProperty(JcrConstants.JCR_LASTMODIFIED) >> true
-            getProperty(JcrConstants.JCR_LASTMODIFIED) >> Mock(JcrProperty){
+            getProperty(JcrConstants.JCR_LASTMODIFIED) >> Mock(JcrProperty) {
                 getDate() >> currentDate.toCalendar(Locale.default)
             }
             getDefinition() >> Mock(NodeDefinition) {
@@ -253,9 +214,6 @@ class JcrNodesProcessorSpec extends Specification {
     }
 
 
-    @Shared
-    DateTime oldDate = new DateTime(2015, 8, 4, 15, 24, 34, 961)
-
     @Unroll
     def "Process a node with old date properties: #propList"() {
         //tests for all situations with non-deltaContent nodes (not updated since last sync)
@@ -263,7 +221,6 @@ class JcrNodesProcessorSpec extends Specification {
         JcrNodesProcessor jcrNodesProcessor = new JcrNodesProcessor()
         jcrNodesProcessor.setContentAfterDate(oldDate.plusDays(1).toString())
         NodeProtos.Node nodeProto = jcrNodesProcessor.process(aJcrNode)
-        aJcrNode.properties.toList()
 
         then:
         nodeProto == null //not copying old data
@@ -293,11 +250,9 @@ class JcrNodesProcessorSpec extends Specification {
                         property("cq:lastModified", oldDate.toCalendar(Locale.default))
                 ).build(),
         ]
-        propList = aJcrNode.properties.toList().findAll {it.name != JcrConstants.JCR_PRIMARYTYPE}.collectEntries { [(it.name): new DateTime(it.value.date.time.time)]}
+        propList = nodeProperties(aJcrNode)
     }
 
-    @Shared
-    DateTime currentDate = new DateTime()
 
     @Unroll
     def "Process a node with updated content and date properties: #propList"() {
@@ -340,6 +295,14 @@ class JcrNodesProcessorSpec extends Specification {
                         property("cq:lastModified", currentDate.toCalendar(Locale.default))
                 ).build(),
         ]
-        propList = aJcrNode.properties.toList().findAll {it.name != JcrConstants.JCR_PRIMARYTYPE}.collectEntries { [(it.name): new DateTime(it.value.date.time.time)]}
+        propList = nodeProperties(aJcrNode)
+    }
+
+    static Map nodeProperties(JcrNode aJcrNode) {
+        return ((List<Property>)aJcrNode.properties.toList()).findAll {
+            it.name != JcrConstants.JCR_PRIMARYTYPE
+        }.collectEntries {
+            [(it.name): new DateTime(it.value.date.time.time)]
+        }
     }
 }

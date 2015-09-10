@@ -41,6 +41,8 @@ allprojects {
         // hack to allow getting to a working version of AEM 6.1 workflow-console jar
         // without running afoul of licensing restrictions
         flatDir { dirs rootProject.projectDir }
+
+        mavenLocal()
     }
 }
 

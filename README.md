@@ -241,8 +241,8 @@ For the Grabbit developers, [instructions for releasing a new version of Grabbit
 * [Groovy v2.3.6](http://groovy.codehaus.org/Download)
 * [Google Protocol Buffers v2.4.1](https://code.google.com/p/protobuf/downloads/list) - The compiler and runtime library is used for Serialization and De-serialization of Data
 * [Spring Batch v2.2.7.RELEASE](http://docs.spring.io/spring-batch/2.2.x/downloads.html) - It is used on the server and client to read/write, marshal/unmarshall and send/receive the data to client in a controlled manner.
-* [Jackalope v2.0.0](https://bintray.com/twcable/aem/jackalope/2.0.0/view) - Jackalope is used for testing
-* [CQ Gradle Plugins v2.0.1](https://bintray.com/twcable/aem/cq-gradle-plugins/2.0.1/view) : They provide Gradle build support.
+* [Jackalope](https://bintray.com/twcable/aem/jackalope/) - Jackalope is used for testing
+* [CQ Gradle Plugins](https://bintray.com/twcable/aem/cq-gradle-plugins/) : They provide Gradle build support.
 * [Gradle Protocol Buffers Plugin v0.9.1](http://search.maven.org/#artifactdetails%7Cws.antonov.gradle.plugins%7Cgradle-plugin-protobuf%7C0.9.1%7Cjar) - It provides easy integration of the ProtoBuf compiler with Gradle.
 
 # LICENSE

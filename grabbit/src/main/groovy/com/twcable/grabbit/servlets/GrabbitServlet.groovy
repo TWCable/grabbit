@@ -31,7 +31,7 @@ import org.apache.sling.api.SlingHttpServletRequest
 import org.apache.sling.api.SlingHttpServletResponse
 import org.apache.sling.api.servlets.SlingAllMethodsServlet
 import org.springframework.batch.core.explore.JobExplorer
-import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.context.ApplicationContext
 
 import javax.servlet.http.HttpServletResponse
 
@@ -40,8 +40,8 @@ import javax.servlet.http.HttpServletResponse
 @SlingServlet(methods = ['GET', 'PUT'], resourceTypes = ['twcable:grabbit/job'])
 class GrabbitServlet extends SlingAllMethodsServlet {
 
-    @Reference(bind = 'setConfigurableApplicationContext')
-    ConfigurableApplicationContext configurableApplicationContext
+    @Reference(bind = 'setApplicationContext')
+    ApplicationContext applicationContext
 
     @Reference(bind = 'setClientService')
     ClientService clientService
@@ -114,7 +114,7 @@ class GrabbitServlet extends SlingAllMethodsServlet {
 
 
     private String getJsonString(String jobId) {
-        final JobExplorer jobExplorer = configurableApplicationContext.getBean("clientJobExplorer", JobExplorer)
+        final JobExplorer jobExplorer = applicationContext.getBean("clientJobExplorer", JobExplorer)
         if (jobId.isNumber()) {
             //Returns Status for A Job
             final ClientJobStatus status = ClientJobStatus.get(jobExplorer, Long.valueOf(jobId))
