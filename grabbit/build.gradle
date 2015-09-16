@@ -1,3 +1,7 @@
+plugins {
+    id "com.jfrog.bintray" version "1.3.1"
+}
+
 apply from: "${rootProject.projectDir}/gradle/verifyComponentConfig.gradle"
 apply from: "${rootProject.projectDir}/gradle/utils.gradle"
 
@@ -32,7 +36,7 @@ dependencies {
 
 
 jar {
-    from ('src/main/content/SLING-INF/content', {
+    from('src/main/content/SLING-INF/content', {
         into 'SLING-INF/content'
     })
 }
@@ -72,7 +76,6 @@ jar.manifest {
     instruction 'Import-Package', "org.aopalliance.aop;version=1.0.0"
     instruction 'Import-Package', '*'
 
-
     // export everything to OSGi except *.impl packages
     instruction 'Export-Package', "!*.impl, *;-noimport:=false;version=${version}"
 }
@@ -110,14 +113,109 @@ idea {
         // The whole build dir is excluded by default, but we need build/generated-sources,
         // which contains the generated proto classes.
         excludeDirs = [
-            file("$buildDir/classes"),
-            file("$buildDir/docs"),
-            file("$buildDir/dependency-cache"),
-            file("$buildDir/libs"),
-            file("$buildDir/reports"),
-            file("$buildDir/resources"),
-            file("$buildDir/test-results"),
-            file("$buildDir/tmp"),
+                file("$buildDir/classes"),
+                file("$buildDir/docs"),
+                file("$buildDir/dependency-cache"),
+                file("$buildDir/libs"),
+                file("$buildDir/reports"),
+                file("$buildDir/resources"),
+                file("$buildDir/test-results"),
+                file("$buildDir/tmp"),
         ]
     }
+}
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(bintrayUpload)) {
+        if (!project.hasProperty('bintray.user') || !project.hasProperty('bintray.key')) {
+            throw new IllegalArgumentException((String)"Please define 'bintray.user' and " +
+                    "'bintray.key' properties. (Such as in ~/.gradle/gradle.properties)")
+        }
+    }
+}
+
+version = new Version(version as String)
+
+bintray {
+    user = project.properties['bintray.user']
+    key = project.properties['bintray.key']
+    filesSpec {
+        from tasks.getByPath('createPackage').archivePath
+        into '.'
+    }
+
+    publish = version.status == 'release'
+
+    pkg {
+        userOrg = 'twcable'
+        repo = 'aem'
+        name = 'Grabbit'
+
+        desc = 'The purpose of this project is to provide a reliable and fast solution for copying content from a Source to Destination. Source and destination can be any AEM instances.'
+
+        websiteUrl = 'https://github.com/TWCable/grabbit'
+        issueTrackerUrl = 'https://github.com/TWCable/grabbit/issues'
+        vcsUrl = 'https://github.com/TWCable/grabbit.git'
+        licenses = ['Apache-2.0']
+        labels = ['AEM', 'CQ', 'Content Copy', 'Data Migration']
+        attributes = ['plat': ['aem', 'cq']]
+
+        publicDownloadNumbers = true
+
+        //noinspection GroovyAssignabilityCheck
+        version {
+            //noinspection GrReassignedInClosureLocalVar
+            name = project.version.bintrayVersion
+            vcsTag = 'v' + project.version
+        }
+    }
+}
+
+bintrayUpload.dependsOn('createPackage')
+
+// **************************************************************************
+//
+// VERSION CLASS
+//
+// **************************************************************************
+
+class Version {
+    String originalVersion
+    String thisVersion
+    String status
+    Date buildTime
+
+
+    Version(String versionValue) {
+        buildTime = new Date()
+        originalVersion = versionValue
+        if (originalVersion.endsWith('-SNAPSHOT')) {
+            status = 'integration'
+            thisVersion = originalVersion - 'SNAPSHOT' + getTimestamp()
+        }
+        else {
+            status = 'release'
+            thisVersion = versionValue
+        }
+    }
+
+
+    @SuppressWarnings("UnnecessaryQualifiedReference")
+    String getTimestamp() {
+        // Convert local file timestamp to UTC
+        def format = new java.text.SimpleDateFormat('yyyyMMddHHmmss')
+        format.setCalendar(Calendar.getInstance(TimeZone.getTimeZone('UTC')));
+        return format.format(buildTime)
+    }
+
+
+    String toString() {
+        originalVersion
+    }
+
+
+    String getBintrayVersion() {
+        thisVersion
+    }
+
 }
