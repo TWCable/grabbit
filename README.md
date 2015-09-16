@@ -135,7 +135,7 @@ A `json` configuration file of following format is used to configure Grabbit.
 
 #### Optional fields
 
-* __deltaContent__: boolean, where ```false``` has grabbit sync & overwrite all content nodes regardles of date properties, and ```true``` syncs only 'delta' or changed content. Changed content is determined by comparing either of the jcr:lastModified, cq:lastModified, or jcr:created Date with the Date when the path was successfully synced as recorded by the Grabbit Client. Thus, deltaContent will only work with paths that remained the same between two runs. Nodes without any date properties will also be synced, so as not to miss new content of unstructured nodes.
+* __deltaContent__: boolean, where ```false``` has grabbit sync & overwrite all content nodes regardles of date properties, and ```true``` syncs only 'delta' or changed content. Changed content is determined by comparing either of the jcr:lastModified, cq:lastModified, or jcr:created Date with the Date when the path was successfully synced as recorded by the Grabbit Client. Thus, deltaContent will only work with paths that remained the same between two runs. Nodes without any date properties will also be synced, so as not to miss new content of unstructured nodes.  Most common throughput bottlenecks are usually handled by delta sync for cases such as large DAM trees; but if your case warrants a more fine tuned use of delta sync, you may consider adding mix:lastModified to nodes not usually considered for exclusion, such as extrememly large unstructured trees.  
 
 Under "path configurations"
 
