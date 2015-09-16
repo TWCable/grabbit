@@ -32,11 +32,9 @@ Create a https://github.com/TWCable/grabbit/releases/new[new GitHub release], se
 
 == Upload to BinTray
 
-. https://bintray.com/twcable/aem/Grabbit/new/version[Create a new version record] ("`Name`" is the version without the "v". Leave "`Description`" blank)
-. Fill in the "`Version Details`" -- most notably the "`VCS tag`". Everything else will be inherited from the main project metadata.
-. Using your BinTray username and https://bintray.com/profile/edit[your API key], use the following curl command with appropriate substitutions:
-
 [source,bash]
 --
-curl -u ${USER_NAME}:${API_KEY} -T grabbit/build/distributions/grabbit-${VERSION}.zip -X PUT https://bintray.com/api/v1/content/twcable/aem/Grabbit/${VERSION}/grabbit-${VERSION}.zip\?publish\=1
+$ ./gradlew bintrayUpload
 --
+
+If you have not yet set up your credentials, the task will tell you what to do.
