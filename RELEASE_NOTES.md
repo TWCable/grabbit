@@ -1,5 +1,9 @@
 # RELEASE NOTES
 
+## 3.0.4
+
+* Finished implementing "delta copy" functionality
+
 ## 3.0.3
 
 * Adding DEBUG logging for nodes being saved on Client
