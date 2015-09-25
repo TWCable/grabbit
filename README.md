@@ -19,7 +19,7 @@ Moreover, by doing a continuous stream, we avoid the latency issues. Depending o
 Below details AEM version support for the various releases of Grabbit.  
 ```
 v4.0.x - AEM 6.1
-v3.0.x - CQ 5.6
+v3.0.x - CQ 5.6 and AEM 6.0
 v2.0.1 - CQ 5.6
 v2.0.0 - CQ 5.6
 ```
