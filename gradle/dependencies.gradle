@@ -19,7 +19,6 @@ dependencies {
 
     // Apache Sling libraries
     compile "org.apache.sling:org.apache.sling.api:${sling_api_version}"
-    // compile "org.apache.sling:org.apache.sling.jcr.api:${sling_commons_version}"
     compile "org.apache.sling:org.apache.sling.jcr.resource:${sling_jcr_resource_version}"
 
     // Apache Felix libraries
@@ -37,13 +36,8 @@ dependencies {
     compile "org.apache.sling:org.apache.sling.jcr.api:${sling_commons_version}"
 
     // Logging
-    def slf4j_version = "1.7.6"
     compile "org.slf4j:slf4j-api:${slf4j_version}"
     compile "org.slf4j:jcl-over-slf4j:${slf4j_version}"
-    runtime "ch.qos.logback:logback-classic:${logback_version}"
-
-    // StAX library
-    compile "org.codehaus.woodstox:woodstox-core-asl:${woodstox_version}"
 
     // Servlet/JSP libraries
     compile "javax.servlet:servlet-api:${servlet_api_version}"
@@ -100,10 +94,6 @@ dependencies {
     testCompile "org.objenesis:objenesis:${objenesis_version}"
 
 }
-
-// workaround for http://issues.gradle.org/browse/GRADLE-1682
-configurations.runtime.exclude group: 'org.apache.felix', module: 'org.osgi.foundation'
-configurations.runtime.exclude group: 'org.apache.felix', module: 'javax.servlet'
 
 configurations.compile {
     exclude group: 'commons-logging', module: 'commons-logging'
