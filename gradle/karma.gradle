@@ -1,7 +1,0 @@
-task karma_buyflow(type:Exec) {
-    commandLine 'karma start --singleRun true --browsers PhantomJS ../karma.conf.js'.tokenize()
-}
-task karma_responsive(type:Exec) {
-    commandLine 'karma start --singleRun true --browsers PhantomJS src/test/client/responsive/karma.conf'.tokenize()
-}
-task karma(dependsOn: [ karma_buyflow, karma_responsive ]) { }
