@@ -57,18 +57,6 @@ brew link --force --overwrite protobuf241
 
 _For both Windows and Mac : To verify that installation was successful, `protoc --version` should display `2.4.1`_
 
-### Adding AEM dependent libraries (Grabbit version >= 4.0.0 only) ###
-
-For AEM 6.1, some required Adobe dependencies are not available publicly, and must be placed in the Grabbit project
-directory in order for Grabbit to be built from source.  
-
-#### Get workflow-console jar from AEM instance
-
-1. Go to http://localhost:4502/system/console/bundles
-2. Search for workflow-console and expand bundle when found.
-3. Notice `Bundle Location` and copy the path after jcrinstall: (/libs/cq/platform/install/cq-workflow-console-5.8.2.jar)
-4. From the top project directory, simply use the Sling download component to grab the data. For example:
-`curl -u admin:admin -o cq-workflow-console-5.8.2.jar "http://localhost:4502/crx/de/download.jsp?path=/libs/cq/platform/install/cq-workflow-console-5.8.2.jar/jcr:content/jcr:data"`
 
 # Running Grabbit #
 
