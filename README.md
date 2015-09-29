@@ -19,7 +19,7 @@ Moreover, by doing a continuous stream, we avoid the latency issues. Depending o
 Below details AEM version support for the various releases of Grabbit.  
 ```
 v4.0.x - AEM 6.1
-v3.0.0 - CQ 5.6
+v3.0.x - CQ 5.6
 v2.0.1 - CQ 5.6
 v2.0.0 - CQ 5.6
 ```
@@ -135,7 +135,7 @@ A `json` configuration file of following format is used to configure Grabbit.
 
 #### Optional fields
 
-* __deltaContent__: boolean, where ```false``` has grabbit sync & overwrite all content nodes regardles of date properties, and ```true``` syncs only 'delta' or changed content. Changed content is determined by comparing either of the jcr:lastModified, cq:lastModified, or jcr:created Date with the Date when the path was successfully synced as recorded by the Grabbit Client. Thus, deltaContent will only work with paths that remained the same between two runs. Nodes without any date properties will also be synced, so as not to miss new content of unstructured nodes.  Most common throughput bottlenecks are usually handled by delta sync for cases such as large DAM trees; but if your case warrants a more fine tuned use of delta sync, you may consider adding mix:lastModified to nodes not usually considered for exclusion, such as extrememly large unstructured trees.  
+* __deltaContent__: boolean, ```true``` syncs only 'delta' or changed content. Changed content is determined by comparing one of a number of date properties including jcr:lastModified, cq:lastModified, or jcr:created Date with the last successful Grabbit sync date. Nodes without any of previously mentioned date properties will always be synced even with deltaContent on.  Most common throughput bottlenecks are usually handled by delta sync for cases such as large DAM trees; but if your case warrants a more fine tuned use of delta sync, you may consider adding mix:lastModified to nodes not usually considered for exclusion, such as extremely large unstructured trees.  
 
 Under "path configurations"
 
