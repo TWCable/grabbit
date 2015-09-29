@@ -14,8 +14,8 @@ dependencies {
     //For annotations like @Nonnull, etc.
     compile "com.google.code.findbugs:jsr305:${jsr305_version}"
 
-    // Adobe AEM API jar files
-    compile ":cq-workflow-console:${cq_workflow_console_version}" // install into the top-level dir of project
+    // Adobe AEM Libraries
+    compile "com.day.cq.workflow:cq-workflow-console:${cq_workflow_console_version}" 
 
     // Apache Sling libraries
     compile "org.apache.sling:org.apache.sling.api:${sling_api_version}"
