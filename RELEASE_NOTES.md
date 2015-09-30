@@ -1,5 +1,9 @@
 # RELEASE NOTES
 
+## 4.0.6
+
+* Update Grabbit 4.0.x build so that OOTB/Provided dependencies are properly excluded
+
 ## 4.0.5
 
 * Updated README to remove instructions around workflow bundle
