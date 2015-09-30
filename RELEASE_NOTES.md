@@ -1,5 +1,13 @@
 # RELEASE NOTES
 
+## 4.0.5
+
+* Updated README to remove instructions around workflow bundle
+* Use earlier version of AEM workflow so that CI jobs can complete. Issue #63
+* Removed some unnecessary files : karama.gradle, reporting.gradle
+* Clarified versioning and compatibility in README
+* Small changes to README
+
 ## 4.0.4
 
 * Finished implementing "delta copy" functionality
