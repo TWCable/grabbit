@@ -17,9 +17,9 @@
 package com.twcable.grabbit
 
 import com.google.common.collect.ImmutableMap
-import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import org.yaml.snakeyaml.Yaml
 
 import javax.annotation.Nonnull
 import javax.annotation.Nullable
@@ -50,10 +50,15 @@ class GrabbitConfiguration {
     }
 
 
-    public static GrabbitConfiguration create(@Nonnull String configJson) {
-        log.debug "Input: ${configJson}"
+    public static GrabbitConfiguration create(@Nonnull String configString) {
+        log.debug "Input: ${configString}"
 
-        final configMap = new JsonSlurper().parseText(configJson) as Map<String, String>
+        //YAML Specification doesn't support TAB characters in the Config. Technically, if you only have yaml files, then
+        //SnakeYAML library will correctly throw errors if tab characters are used. However, putting this in place to
+        //make it backwards compatible with the existing JSON configs since there were no strict rules to NOT use TAB
+        //characters in the JSON configs
+        configString = configString.replaceAll("\\t", "    ")
+        final configMap = new Yaml().load(configString) as Map<String, String>
 
         def errorBuilder = ConfigurationException.builder()
 

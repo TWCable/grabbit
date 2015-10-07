@@ -315,4 +315,65 @@ class GrabbitConfigurationSpec extends Specification {
                path      : "is missing"]
     }
 
+    def "Validate YAML input"() {
+        when:
+        def input =
+        """
+        clientNodeType : 'author'
+        serverUsername : 'admin'
+        serverPassword : 'admin'
+        serverHost : 'localhost'
+        serverPort : 4502
+        deltaContent : true
+        workflowConfigIds : &configs
+          - '/configA'
+          - '/configB'
+          - '/configC'
+        pathConfigurations :
+          -
+            path : '/a/b'
+            excludePaths :
+              - 'c'
+              - 'd'
+            workflowConfigIds : *configs
+          -
+            path : '/x/y'
+            excludePaths :
+              - 'z'
+            workflowConfigIds : *configs
+        """
+        def output = GrabbitConfiguration.create(input)
+        then:
+        output instanceof GrabbitConfiguration
+        output.pathConfigurations.first().workflowConfigIds.size() > 0
+        output.pathConfigurations.first().excludePaths.size() > 0
+        output.pathConfigurations.first().workflowConfigIds.first() == "/configA"
+        output.pathConfigurations.first().excludePaths.first() == "/a/b/c"
+        output.pathConfigurations.first().deleteBeforeWrite == false
+        output.deltaContent instanceof Boolean
+    }
+
+    def "JSON Files with hard tabs as indentation should work"() {
+        when:
+        def input =
+        """
+        {
+        \t"serverUsername" : "admin",
+        \t"serverPassword" : "admin",
+        \t"serverHost" : "localhost",
+        \t"serverPort" : "4503",
+        \t"deltaContent" : false,
+        \t"pathConfigurations" :  [
+        \t\t{
+        \t\t\t"path" : "/content/a/b",
+        \t\t\t"workflowConfigIds" : []
+        \t\t}
+        \t]
+        }
+        """
+        def output = GrabbitConfiguration.create(input)
+        then:
+        output instanceof GrabbitConfiguration
+        notThrown(Exception)
+    }
 }
