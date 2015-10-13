@@ -1,5 +1,10 @@
 # RELEASE NOTES
 
+## 3.0.5
+
+* Added YAML support. Backwards compatible to existing JSON format
+* Use AuthCache for Apache HttpClient to do preemptive authentication
+
 ## 3.0.4
 
 * Finished implementing "delta copy" functionality
