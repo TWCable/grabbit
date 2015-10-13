@@ -1,5 +1,10 @@
 # RELEASE NOTES
 
+## 4.0.7
+
+* Added YAML support. Backwards compatible to existing JSON format
+* Use AuthCache for Apache HttpClient to do preemptive authentication
+
 ## 4.0.6
 
 * Update Grabbit 4.0.x build so that OOTB/Provided dependencies are properly excluded
