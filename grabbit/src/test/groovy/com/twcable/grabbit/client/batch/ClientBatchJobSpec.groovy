@@ -48,9 +48,8 @@ class ClientBatchJobSpec extends Specification {
         final job = new ClientBatchJob.ServerBuilder(appContext)
             .andServer("host", "port")
             .andCredentials("clientUser", "serverUser", "serverPass")
-            .andDoDeltaContent(doDeltaContent)
             .andClientJobExecutions(jobExecutions)
-            .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, [], [], deleteBeforeWrite))
+            .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, [], [], deleteBeforeWrite, pathDeltaContent))
             .build()
 
         then:
@@ -59,14 +58,14 @@ class ClientBatchJobSpec extends Specification {
         job.jobParameters.get("${ClientBatchJob.PATH}") == path
         job.jobParameters.get("${ClientBatchJob.CONTENT_AFTER_DATE}") == contentAfterDate
         job.jobParameters.get("${ClientBatchJob.DELETE_BEFORE_WRITE}").toBoolean() == deleteBeforeWrite
+        job.jobParameters.get("${ClientBatchJob.PATH_DELTA_CONTENT}").toBoolean() == pathDeltaContent
 
         where:
-        doDeltaContent | path     | contentAfterDate                        | deleteBeforeWrite
-        true           | "/path1" | DateUtil.getISOStringFromDate(dateNow)  | true
-        false          | "/path1" | null                                    | false
-        true           | "/path2" | null                                    | true
-        false          | "/path2" | null                                    | false
-
+        pathDeltaContent | path     | contentAfterDate                        | deleteBeforeWrite
+        true             | "/path1" | DateUtil.getISOStringFromDate(dateNow)  | true
+        false            | "/path1" | null                                    | false
+        true             | "/path2" | null                                    | true
+        false            | "/path2" | null                                    | false
     }
 
 

@@ -315,6 +315,59 @@ class GrabbitConfigurationSpec extends Specification {
                path      : "is missing"]
     }
 
+    @Unroll
+    def "pathDeltaContent should override global deltaContent setting"() {
+        when:
+        def output = GrabbitConfiguration.create(input)
+
+        then:
+        output instanceof GrabbitConfiguration
+        output.pathConfigurations.first().pathDeltaContent == false
+        output.pathConfigurations.last().pathDeltaContent == true
+
+        where:
+        input << [
+                """
+            {
+                "serverUsername" : "admin",
+                "serverPassword" : "admin",
+                "serverHost" : "localhost",
+                "serverPort" : "4503",
+                "deltaContent" : true,
+                "pathConfigurations" :  [
+                    {
+                        "path" : "/content/a/b",
+                        "workflowConfigIds" : [],
+                        "deltaContent" : false
+                    },
+                    {
+                        "path" : "/content/a/c",
+                        "workflowConfigIds" : []
+                    }
+                ]
+            }
+            """,
+                """
+            {
+                "serverUsername" : "admin",
+                "serverPassword" : "admin",
+                "serverHost" : "localhost",
+                "serverPort" : "4503",
+                "pathConfigurations" :  [
+                    {
+                        "path" : "/content/a/b",
+                        "workflowConfigIds" : []
+                    },
+                    {
+                        "path" : "/content/a/c",
+                        "workflowConfigIds" : [],
+                        "deltaContent" : true
+                    }
+                ]
+            }
+            """     //no global deltaContent setting, since without it, it defaults to false
+        ]
+    }
     def "Validate YAML input"() {
         when:
         def input =

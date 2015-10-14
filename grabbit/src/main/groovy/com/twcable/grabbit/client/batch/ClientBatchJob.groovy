@@ -47,6 +47,7 @@ class ClientBatchJob {
     public static final String CLIENT_USERNAME = "clientUsername"
     public static final String CONTENT_AFTER_DATE = "contentAfterDate"
     public static final String DELETE_BEFORE_WRITE = "deleteBeforeWrite"
+    public static final String PATH_DELTA_CONTENT = "pathDeltaContent"
 
     private final Map<String, String> jobParameters
     private final JobOperator jobOperator
@@ -110,38 +111,21 @@ class ClientBatchJob {
         }
 
 
-        DeltaContentBuilder andCredentials(String clientUsername, String serverUsername, String serverPassword) {
+        JobExecutionsBuilder andCredentials(String clientUsername, String serverUsername, String serverPassword) {
             this.clientUsername = clientUsername
             this.serverUsername = serverUsername
             this.serverPassword = serverPassword
-            return new DeltaContentBuilder(this)
-        }
-    }
-
-    @CompileStatic
-    static class DeltaContentBuilder {
-        final CredentialsBuilder parentBuilder
-        boolean doDeltaContent
-
-
-        DeltaContentBuilder(CredentialsBuilder parentBuilder) {
-            this.parentBuilder = parentBuilder
-        }
-
-
-        JobExecutionsBuilder andDoDeltaContent(boolean doDeltaContent) {
-            this.doDeltaContent = doDeltaContent
             return new JobExecutionsBuilder(this)
         }
     }
 
     @CompileStatic
     static class JobExecutionsBuilder {
-        final DeltaContentBuilder parentBuilder
+        final CredentialsBuilder parentBuilder
         List<JobExecution> jobExecutions
 
 
-        JobExecutionsBuilder(DeltaContentBuilder parentBuilder) {
+        JobExecutionsBuilder(CredentialsBuilder parentBuilder) {
             this.parentBuilder = parentBuilder
         }
 
@@ -157,6 +141,7 @@ class ClientBatchJob {
         final JobExecutionsBuilder parentBuilder
         PathConfiguration pathConfiguration
         boolean willDeleteBeforeWrite
+        boolean doPathDeltaContent
 
 
         ConfigurationBuilder(JobExecutionsBuilder parentBuilder) {
@@ -167,6 +152,7 @@ class ClientBatchJob {
         Builder andConfiguration(PathConfiguration config) {
             this.pathConfiguration = config
             this.willDeleteBeforeWrite = pathConfiguration.deleteBeforeWrite
+            this.doPathDeltaContent = pathConfiguration.pathDeltaContent
             return new Builder(this)
         }
     }
@@ -176,7 +162,6 @@ class ClientBatchJob {
         final ConfigurationBuilder configsBuilder
         final PathConfiguration pathConfiguration
         final CredentialsBuilder credentialsBuilder
-        final DeltaContentBuilder deltaContentBuilder
         final JobExecutionsBuilder jobExecutionsBuilder
         final ServerBuilder serverBuilder
 
@@ -185,8 +170,7 @@ class ClientBatchJob {
             this.configsBuilder = parentBuilder
             this.pathConfiguration = configsBuilder.pathConfiguration
             this.jobExecutionsBuilder = configsBuilder.parentBuilder
-            this.deltaContentBuilder = jobExecutionsBuilder.parentBuilder
-            this.credentialsBuilder = deltaContentBuilder.parentBuilder
+            this.credentialsBuilder = jobExecutionsBuilder.parentBuilder
             this.serverBuilder = credentialsBuilder.parentBuilder
         }
 
@@ -202,10 +186,11 @@ class ClientBatchJob {
                 "${SERVER_PASSWORD}"     : credentialsBuilder.serverPassword,
                 "${EXCLUDE_PATHS}"       : pathConfiguration.excludePaths.join("*"),
                 "${WORKFLOW_CONFIGS}"    : pathConfiguration.workflowConfigIds.join("|"),
-                "${DELETE_BEFORE_WRITE}" : "${pathConfiguration.deleteBeforeWrite}"
+                "${DELETE_BEFORE_WRITE}" : "${pathConfiguration.deleteBeforeWrite}",
+                "${PATH_DELTA_CONTENT}"  : "${pathConfiguration.pathDeltaContent}"
             ] as Map<String, String>
 
-            if (deltaContentBuilder.doDeltaContent) {
+            if (pathConfiguration.pathDeltaContent) {
                 final lastSuccessFulJobExecution = jobExecutionsBuilder.jobExecutions?.find {
                     it.jobParameters.getString(PATH) == pathConfiguration.path && (it.status == BatchStatus.COMPLETED)
                 }

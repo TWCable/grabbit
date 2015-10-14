@@ -73,7 +73,9 @@ class GrabbitConfiguration {
             def excludePaths = nonEmptyCollection(config["excludePaths"] as Collection<String>, errorBuilder)
             def workflowConfigIds = config["workflowConfigIds"] as Collection<String> ?: [] as Collection<String>
             def deleteBeforeWrite = boolVal(config, 'deleteBeforeWrite')
-            new PathConfiguration(path, excludePaths, workflowConfigIds, deleteBeforeWrite)
+            // use the global deltaContent setting if a local one doesn't exist
+            boolean pathDeltaContent = config.containsKey('deltaContent') ? config.get('deltaContent') : configMap.get('deltaContent')
+            new PathConfiguration(path, excludePaths, workflowConfigIds, deleteBeforeWrite, pathDeltaContent)
         } ?: [] as Collection<PathConfiguration>
 
         if (pathConfigurations.isEmpty()) errorBuilder.add('pathConfigurations', 'is empty')
@@ -181,6 +183,7 @@ class GrabbitConfiguration {
         Collection<String> excludePaths
         Collection<String> workflowConfigIds
         boolean deleteBeforeWrite
+        boolean pathDeltaContent
 
         void setPath(@Nullable String path) {
             this.path = ( path!=null && path.endsWith("/") ) ? path[0..-2] : path
@@ -193,11 +196,13 @@ class GrabbitConfiguration {
                 return excludePaths
         }
 
-        protected PathConfiguration(@Nonnull String path, @Nonnull Collection<String> excludePaths, @Nonnull Collection<String> workflowConfigIds, boolean deleteBeforeWrite) {
+        protected PathConfiguration(@Nonnull String path, @Nonnull Collection<String> excludePaths,
+                                    @Nonnull Collection<String> workflowConfigIds, boolean deleteBeforeWrite, boolean pathDeltaContent) {
             setPath(path)
             this.excludePaths = getAbsolutePaths(excludePaths)
             this.workflowConfigIds = workflowConfigIds
             this.deleteBeforeWrite = deleteBeforeWrite
+            this.pathDeltaContent = pathDeltaContent
         }
     }
 

@@ -59,19 +59,12 @@ class DefaultClientService implements ClientService {
 
         Collection<Long> jobExecutionIds = []
 
-        //Only fetch ClientJobExecutions if deltaContent is true in the GrabbitConfiguration
-        List<JobExecution> clientJobExecutions = configuration.deltaContent ? fetchAllClientJobExecutions() : Collections.EMPTY_LIST
-
-        //Do DeltaContent IFF there are previous Client JobExecutions AND DeltaContent flag is true in the GrabbitConfiguration
-        final doDeltaContent = clientJobExecutions && configuration.deltaContent
-
         for (PathConfiguration pathConfig : configuration.pathConfigurations) {
             try {
                 final clientBatchJob = new ClientBatchJob.ServerBuilder(configurableApplicationContext)
                     .andServer(configuration.serverHost, configuration.serverPort)
                     .andCredentials(clientUsername, configuration.serverUsername, configuration.serverPassword)
-                    .andDoDeltaContent(doDeltaContent)
-                    .andClientJobExecutions(clientJobExecutions)
+                    .andClientJobExecutions(fetchAllClientJobExecutions())
                     .andConfiguration(pathConfig)
                     .build()
                 final Long currentJobExecutionId = clientBatchJob.start()
