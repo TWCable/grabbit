@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/TWCable/grabbit.svg?branch=master)](https://travis-ci.org/TWCable/grabbit)
+[![Build Status](https://travis-ci.org/TWCable/grabbit.svg?branch=master)](https://travis-ci.org/TWCable/grabbit) [![Stories in Ready](https://badge.waffle.io/TWCable/grabbit.png?label=ready&title=Ready)](https://waffle.io/TWCable/grabbit) 
 
 [ ![Download](https://api.bintray.com/packages/twcable/aem/Grabbit/images/download.svg) ](https://bintray.com/twcable/aem/Grabbit/_latestVersion)
 
