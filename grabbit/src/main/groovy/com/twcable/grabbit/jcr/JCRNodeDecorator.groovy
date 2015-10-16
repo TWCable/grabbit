@@ -60,16 +60,21 @@ class JCRNodeDecorator {
 
 
     void setLastModified() {
-        final lastModified = new DateValue(Calendar.instance)
-        try {
-            //Need to check if jcr:lastModified can be added to the current node via its NodeType definition
-            //as it cannot be added to all the nodes
-            if (innerNode.primaryNodeType.canSetProperty(JCR_LASTMODIFIED, lastModified)) {
-                innerNode.setProperty(JCR_LASTMODIFIED, lastModified)
-            }
+        if(innerNode.getProperty(JCR_LASTMODIFIED)) {
+            log.debug "jcr:lastModified is already set for ${innerNode}. Not setting it again"
         }
-        catch (RepositoryException ex) {
-            log.error "Exception while setting jcr:lastModified on ${innerNode.path}.", ex
+        else {
+            final lastModified = new DateValue(Calendar.instance)
+            try {
+                //Need to check if jcr:lastModified can be added to the current node via its NodeType definition
+                //as it cannot be added to all the nodes
+                if (innerNode.primaryNodeType.canSetProperty(JCR_LASTMODIFIED, lastModified)) {
+                    innerNode.setProperty(JCR_LASTMODIFIED, lastModified)
+                }
+            }
+            catch (RepositoryException ex) {
+                log.error "Exception while setting jcr:lastModified on ${innerNode.path}.", ex
+            }
         }
     }
 

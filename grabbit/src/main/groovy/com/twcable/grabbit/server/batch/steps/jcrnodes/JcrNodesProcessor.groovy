@@ -179,13 +179,6 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
      * @return
      */
     private static boolean isPropertyTransferable(JcrProperty jcrProperty) {
-        //If property is "jcr:lastModified", we don't want to send this property to the client. If we send it, and
-        //the client writes it to JCR, then we can have lastModified date for a node that is older than the creation
-        //date itself
-        if (jcrProperty.name == JCR_LASTMODIFIED) {
-            return false
-        }
-
         if ([JCR_PRIMARYTYPE, JCR_MIXINTYPES].contains(jcrProperty.name)) {
             return true
         }
