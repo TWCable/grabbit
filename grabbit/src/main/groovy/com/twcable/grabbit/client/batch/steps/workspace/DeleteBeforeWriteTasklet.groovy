@@ -1,9 +1,8 @@
 package com.twcable.grabbit.client.batch.steps.workspace
 
-import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import org.apache.sling.jcr.api.SlingRepository
 import org.springframework.batch.core.StepContribution
 import org.springframework.batch.core.scope.context.ChunkContext
 import org.springframework.batch.core.step.tasklet.Tasklet
@@ -50,22 +49,21 @@ class DeleteBeforeWriteTasklet implements Tasklet {
 
     private Collection<String> relativeExcludePaths
 
-    private SlingRepository slingRepository
-
 
     /**
      * @param jobPath the job path to evaluate.  Comes from the job parameters
-     * @param slingRepository comes from bean defined in client-osgi-config.xml
      * @param excludePaths a '*' delimited string containing the paths to exclude.  Comes from the job parameters
      */
-    DeleteBeforeWriteTasklet(@Nonnull final String jobPath, @Nonnull final SlingRepository slingRepository, @Nullable String excludePaths) {
-        this.slingRepository = slingRepository
+    DeleteBeforeWriteTasklet(@Nonnull final String jobPath, @Nullable String excludePaths) {
         //Ensures the job path leads with a '/'
         this.jobPath = cleanJobPath(jobPath)
         //Takes the * delimited paths string, creates a collection of relative paths, and normalizes
         this.relativeExcludePaths = createExcludePaths(this.jobPath, excludePaths)
     }
 
+    private Session theSession() {
+        ClientBatchJobContext.session
+    }
 
     /**
      * @param paths '*' delimited, expected to be driven from job parameters e.g /foo/bar/blah{@literal *}/foo/bar/meh
@@ -116,7 +114,7 @@ class DeleteBeforeWriteTasklet implements Tasklet {
      */
     @Override
     RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        final Session session = JcrUtil.getSession(slingRepository, "admin")
+        final Session session = theSession()
 
         final Node rootNode
         try {

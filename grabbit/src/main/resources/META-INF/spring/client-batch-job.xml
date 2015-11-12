@@ -33,23 +33,34 @@
 
     <import resource="client-batch-job-context.xml"/>
 
+    <import resource="client-validateJob.xml" />
     <import resource="client-namespace-step.xml" />
     <import resource="client-jcrNodes-step.xml" />
     <import resource="client-deleteBeforeWrite-steps.xml" />
+    <import resource="client-batch-http.xml" />
 
     <batch:job id="clientJob" xmlns="http://www.springframework.org/schema/batch" job-repository="clientJobRepository">
+
+        <batch:decision id="validateJob" decider="validJobDecider">
+            <next on="VALID" to="clientWorkflowOff" />
+            <fail on="INVALID" exit-code="VALIDATION_FAILED" />
+        </batch:decision>
 
         <batch:step id="clientWorkflowOff" next="deleteBeforeWriteDecision">
             <batch:tasklet ref="clientWorkflowOffTasklet" transaction-manager="clientTransactionManager"/>
         </batch:step>
 
         <batch:decision id="deleteBeforeWriteDecision" decider="deleteBeforeWriteDecider">
-            <next on="NO" to="clientNamespaceSync"/>
+            <next on="NO" to="startHttpConnection"/>
             <next on="YES" to="deleteBeforeWrite" />
         </batch:decision>
 
-        <batch:step id="deleteBeforeWrite" next="clientNamespaceSync">
+        <batch:step id="deleteBeforeWrite" next="startHttpConnection">
             <batch:tasklet ref="deleteBeforeWriteTasklet" transaction-manager="clientTransactionManager"/>
+        </batch:step>
+
+        <batch:step id="startHttpConnection" next="clientNamespaceSync">
+            <batch:tasklet ref="createHttpConnectionTasklet" transaction-manager="clientTransactionManager"/>
         </batch:step>
 
         <!-- Writes JCR namespaces streamed from the server-->
@@ -62,7 +73,7 @@
                 <batch:chunk reader="clientProtobufNodesReader" writer="clientJcrNodesWriter"
                             commit-interval="100" skip-limit="0"/>
                 <listeners>
-                    <listener ref="jcrNodesStepExecutionListener"/>
+                    <listener ref="loggingStepExecutionListener"/>
                 </listeners>
             </batch:tasklet>
         </batch:step>
@@ -81,6 +92,7 @@
         <property name="slingRepository" ref="slingRepository"/>
     </bean>
 
-    <bean id="jcrNodesStepExecutionListener" class="com.twcable.grabbit.client.batch.steps.jcrnodes.JcrNodesStepExecutionListener" />
+    <!-- Used to log progress each step of the way -->
+    <bean id="loggingStepExecutionListener" class="com.twcable.grabbit.client.batch.steps.jcrnodes.LoggingStepExecutionListener" />
 
 </beans>

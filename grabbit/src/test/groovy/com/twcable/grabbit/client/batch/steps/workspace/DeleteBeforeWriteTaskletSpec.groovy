@@ -1,6 +1,6 @@
 package com.twcable.grabbit.client.batch.steps.workspace
 
-import org.apache.sling.jcr.api.SlingRepository
+import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import org.springframework.batch.core.StepContribution
 import org.springframework.batch.core.scope.context.ChunkContext
 import org.springframework.batch.repeat.RepeatStatus
@@ -32,9 +32,13 @@ import static com.twcable.jackalope.JCRBuilder.repository
 @SuppressWarnings("GroovyAccessibility")
 class DeleteBeforeWriteTaskletSpec extends Specification {
 
+    def cleanup() {
+        ClientBatchJobContext.cleanup()
+    }
+
     def "Exclude paths bean is set correctly"() {
         when:
-        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet("/foo/bar", Mock(SlingRepository), excludePaths)
+        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet("/foo/bar", excludePaths)
 
         then:
         relativeExpectedExcludePaths == deleteBeforeWriteTasklet.relativeExcludePaths
@@ -51,7 +55,7 @@ class DeleteBeforeWriteTaskletSpec extends Specification {
 
     def "Job path bean is set correctly"() {
         when:
-        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet(jobPath, Mock(SlingRepository), null)
+        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet(jobPath, null)
 
         then:
         expectedJobPath == deleteBeforeWriteTasklet.jobPath
@@ -72,14 +76,11 @@ class DeleteBeforeWriteTaskletSpec extends Specification {
             getNode(jobPath) >> Mock(Node) {
                 1 * remove()
             }
-            impersonate(_) >> it
             1 * save()
         }
-        final slingRepository = Mock(SlingRepository) {
-            loginAdministrative(null) >> session
-        }
+        ClientBatchJobContext.setSession(session)
 
-        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet(jobPath, slingRepository, null)
+        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet(jobPath, null)
 
         then:
         RepeatStatus.FINISHED == deleteBeforeWriteTasklet.execute(Mock(StepContribution), Mock(ChunkContext))
@@ -104,14 +105,17 @@ class DeleteBeforeWriteTaskletSpec extends Specification {
                     node("c")
                 )
         ).build()
+        final session = repository.loginAdministrative(null)
 
         final excludePaths = ["/root/a/a/b", "/root/a/a/c", "/root/b"]
-        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet("/root", repository, excludePaths.join('*'))
+        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet("/root", excludePaths.join('*'))
+
+        ClientBatchJobContext.setSession(session)
+
 
         when:
         deleteBeforeWriteTasklet.execute(Mock(StepContribution), Mock(ChunkContext))
 
-        final session = repository.login()
         final excludedPathsNotDeleted = excludePaths.every {
             try {
                 session.getNode(it)
@@ -130,7 +134,10 @@ class DeleteBeforeWriteTaskletSpec extends Specification {
     def "If job path is marked for deletion, but it doesn't exist on client, we fail gracefully"() {
         given:
         final emptyRepository = repository().build()
-        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet("/nonExistentRoot", emptyRepository, null)
+        final session = emptyRepository.loginAdministrative(null)
+        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet("/nonExistentRoot", null)
+
+        ClientBatchJobContext.setSession(session)
 
         when:
         deleteBeforeWriteTasklet.execute(Mock(StepContribution), Mock(ChunkContext))
@@ -152,9 +159,12 @@ class DeleteBeforeWriteTaskletSpec extends Specification {
                         node("c")
                 )
         ).build()
+        final session = repository.loginAdministrative(null)
 
         final excludePaths = ["/root/a", "/root/b/c", "/root/d"]
-        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet("/root", repository, excludePaths.join('*'))
+        final deleteBeforeWriteTasklet = new DeleteBeforeWriteTasklet("/root", excludePaths.join('*'))
+
+        ClientBatchJobContext.setSession(session)
 
         when:
         deleteBeforeWriteTasklet.execute(Mock(StepContribution), Mock(ChunkContext))

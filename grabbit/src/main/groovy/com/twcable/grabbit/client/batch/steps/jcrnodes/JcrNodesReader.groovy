@@ -45,9 +45,8 @@ class JcrNodesReader implements ItemReader<NodeProtos.Node> {
         return nodeProto
     }
 
-
     private InputStream theInputStream() {
-        ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()
-        clientBatchJobContext.inputStream
+        ClientBatchJobContext.inputStream
     }
+
 }

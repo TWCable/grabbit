@@ -55,7 +55,8 @@ class NamespaceSyncTaskletSpec extends Specification {
             new Callable<RepeatStatus>() {
                 @Override
                 RepeatStatus call() throws Exception {
-                    ClientBatchJobContext.THREAD_LOCAL.set(new ClientBatchJobContext(new ByteArrayInputStream(), session))
+                    ClientBatchJobContext.setInputStream(new ByteArrayInputStream())
+                    ClientBatchJobContext.setSession(session)
                     return tasklet.execute(null, null)
                 }
             }

@@ -29,7 +29,7 @@ import org.springframework.batch.core.StepExecutionListener
  */
 @Slf4j
 @CompileStatic
-class JcrNodesStepExecutionListener implements StepExecutionListener {
+class LoggingStepExecutionListener implements StepExecutionListener {
 
     @Override
     void beforeStep(StepExecution stepExecution) {

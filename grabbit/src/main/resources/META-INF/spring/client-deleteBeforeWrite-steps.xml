@@ -17,13 +17,11 @@
 
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:batch="http://www.springframework.org/schema/batch"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
         <bean id="deleteBeforeWriteDecider" class="com.twcable.grabbit.client.batch.steps.workspace.DeleteBeforeWriteDecider" />
         <bean id="deleteBeforeWriteTasklet" class="com.twcable.grabbit.client.batch.steps.workspace.DeleteBeforeWriteTasklet" scope="step">
             <constructor-arg name="jobPath" value="#{jobParameters[path]}" />
             <constructor-arg name="excludePaths" value="#{jobParameters[excludePaths]}" />
-            <constructor-arg name="slingRepository" ref="slingRepository" />
         </bean>
 </beans>

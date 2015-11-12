@@ -17,7 +17,9 @@
 package com.twcable.grabbit.client.batch
 
 import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j
 
+import javax.annotation.Nonnull
 import javax.jcr.Session
 
 /**
@@ -25,17 +27,97 @@ import javax.jcr.Session
  * and {@link Session} in ThreadLocal.
  */
 @CompileStatic
+@Slf4j
 class ClientBatchJobContext {
 
-    static final ThreadLocal<ClientBatchJobContext> THREAD_LOCAL = new ThreadLocal<ClientBatchJobContext>()
+    private static final ThreadLocal<ClientBatchJobContext> _THREAD_LOCAL = new ThreadLocal<ClientBatchJobContext>()
 
-    final InputStream inputStream
-    final Session session
+    private final InputStream inputStream
+    private final Session session
 
-
-    ClientBatchJobContext(InputStream inputStream, Session session) {
+    private ClientBatchJobContext(InputStream inputStream, Session session) {
         this.inputStream = inputStream
         this.session = session
+    }
+
+    /**
+     * @return the job's JCR session, or null if it has not been started/set
+     */
+    static Session getSession() {
+        _THREAD_LOCAL.get()?._getSession()
+    }
+
+    /**
+     * @return the job's HTTP input stream to the server, or null if it has not been opened/set
+     */
+    static InputStream getInputStream() {
+        _THREAD_LOCAL.get()?._getInputStream()
+    }
+
+    /**
+     * Sets the HTTP input stream from the server for this job. Will only accept being set once per job.  Multiple calls to setInputStream in the same job will be ignored
+     * @param inputStream
+     */
+    static void setInputStream(@Nonnull final InputStream inputStream) {
+        final ClientBatchJobContext currentContext = _THREAD_LOCAL.get()
+        if(currentContext?._getInputStream()) {
+            return
+        }
+        _THREAD_LOCAL.set(new ClientBatchJobContext(inputStream, currentContext?._getSession()))
+    }
+
+    /**
+     * Sets the JCR session for the current job. Will only accept being set once per job. Multiple calls to setSession in the same job will be ignored
+     * @param session for this job
+     */
+    static void setSession(@Nonnull final Session session) {
+        final ClientBatchJobContext currentContext = _THREAD_LOCAL.get()
+        if(currentContext?._getSession()) {
+            return
+        }
+        _THREAD_LOCAL.set(new ClientBatchJobContext(currentContext?._getInputStream(), session))
+    }
+
+    /**
+     * Closes the current JCR session for this job
+     */
+    static void closeSession() {
+        final ClientBatchJobContext currentContext = _THREAD_LOCAL.get()
+        final Session thisSession = currentContext?._getSession()
+        if(thisSession?.isLive()) {
+            thisSession.logout()
+        }
+    }
+
+    /**
+     * Close the current input stream associated with this job
+     */
+    static void closeInputStream() {
+        final ClientBatchJobContext currentContext = _THREAD_LOCAL.get()
+        final InputStream inputStream = currentContext?._getInputStream()
+        try {
+            inputStream?.close()
+        } catch(IOException ex) {
+            log.error "${this.class.canonicalName} Attempt to close jobs input stream resulted in an IOException. Either something went wrong closing the stream, or the stream was already closed"
+            log.error ex.toString()
+        }
+    }
+
+    /**
+     * Removes information stored on this job's thread
+     */
+    static void cleanup() {
+        closeSession()
+        closeInputStream()
+        _THREAD_LOCAL.remove()
+    }
+
+    private InputStream _getInputStream() {
+        inputStream
+    }
+
+    private Session _getSession() {
+        session
     }
 
 }

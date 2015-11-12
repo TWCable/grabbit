@@ -99,7 +99,7 @@ class JcrNodesWriter implements ItemWriter<ProtoNode>, ItemWriteListener {
     }
 
     private Session theSession() {
-        ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()
-        clientBatchJobContext.session
+        ClientBatchJobContext.session
     }
+
 }

@@ -35,6 +35,10 @@ import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
 @Subject(JcrNodesWriter)
 class JcrNodesWriterSpec extends Specification {
 
+    def cleanup() {
+        ClientBatchJobContext.cleanup()
+    }
+
     def "Can get a Jcr File Node given a single Protobuf Message Node"() {
         given:
 
@@ -80,7 +84,7 @@ class JcrNodesWriterSpec extends Specification {
         Session session = JcrUtil.getSession(repository().build(), "admin")
 
         when:
-        ClientBatchJobContext.THREAD_LOCAL.set(new ClientBatchJobContext(null, session))
+        ClientBatchJobContext.setSession(session)
         new JcrNodesWriter().write([nodeProto])
 
         then:
@@ -126,7 +130,7 @@ class JcrNodesWriterSpec extends Specification {
         Session session = JcrUtil.getSession(repository().build(), "admin")
 
         when:
-        ClientBatchJobContext.THREAD_LOCAL.set(new ClientBatchJobContext(null, session))
+        ClientBatchJobContext.setSession(session)
         new JcrNodesWriter().write([nodeProto])
 
         then:
@@ -148,7 +152,7 @@ class JcrNodesWriterSpec extends Specification {
         Session session = JcrUtil.getSession(repository().build(), "admin")
 
         when:
-        ClientBatchJobContext.THREAD_LOCAL.set(new ClientBatchJobContext(null, session))
+        ClientBatchJobContext.setSession(session)
         new JcrNodesWriter().write(mockNodeProtos)
 
         then:

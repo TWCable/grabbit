@@ -70,14 +70,12 @@ class NamespaceSyncTasklet implements Tasklet {
 
 
     private InputStream theInputStream() {
-        ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()
-        clientBatchJobContext.inputStream
+       ClientBatchJobContext.inputStream
     }
 
 
     private Session theSession() {
-        ClientBatchJobContext clientBatchJobContext = ClientBatchJobContext.THREAD_LOCAL.get()
-        clientBatchJobContext.session
+        ClientBatchJobContext.session
     }
 
 
