@@ -62,6 +62,11 @@ class GrabbitConfiguration {
 
         def errorBuilder = ConfigurationException.builder()
 
+        if(configMap == null) {
+            errorBuilder.add("config_malformed", "Something went wrong when parsing the supplied Grabbit configuration.  If using curl, be sure to supply the '--data-binary' option so linefeeds are not stripped")
+            throw errorBuilder.build()
+        }
+
         def serverUsername = nonEmpty(configMap, 'serverUsername', errorBuilder)
         def serverPassword = nonEmpty(configMap, 'serverPassword', errorBuilder)
         def serverHost = nonEmpty(configMap, 'serverHost', errorBuilder)

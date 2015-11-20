@@ -18,6 +18,7 @@ package com.twcable.grabbit.servlets
 
 import com.twcable.grabbit.ClientJobStatus
 import com.twcable.grabbit.GrabbitConfiguration
+import com.twcable.grabbit.GrabbitConfiguration.ConfigurationException
 import com.twcable.grabbit.client.services.ClientService
 import com.twcable.grabbit.resources.JobResource
 import com.twcable.grabbit.server.services.ServerService
@@ -104,7 +105,16 @@ class GrabbitServlet extends SlingAllMethodsServlet {
         //This user will be used to connect to JCR
         //If the User is null, 'anonymous' will be used to connect to JCR
         final clientUsername = request.remoteUser
-        final GrabbitConfiguration configuration = GrabbitConfiguration.create(input)
+        final GrabbitConfiguration configuration
+        try {
+            configuration = GrabbitConfiguration.create(input)
+        } catch(ConfigurationException ex) {
+            log.warn "Bad configuration for request. ${ex.errors.values().join(',')}"
+            response.status = HttpServletResponse.SC_BAD_REQUEST
+            response.contentType = "application/json"
+            response.writer.write(new JsonBuilder(ex.errors).toString())
+            return
+        }
         Collection<Long> jobExecutionIds = clientService.initiateGrab(configuration, clientUsername)
         log.info "Jobs started : ${jobExecutionIds}"
         response.status = HttpServletResponse.SC_OK

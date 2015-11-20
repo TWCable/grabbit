@@ -26,7 +26,7 @@ read configpath
 
 # Kick off Grabbit jobs
 clear
-`curl -v -X PUT -H "Content-Type: application/json" -d "@$configpath" -u $username:$password $client$GRABBIT_URL`
+`curl -s -X PUT --data-binary "@$configpath" -u $username:$password $client$GRABBIT_URL`
 echo "~~~~~~~~~~~Jobs kicked off ~~~~~~~~~~~~~"
 echo
 echo "~~~~~Client configuration : $client $username $password Config: $configpath~~~~~"
@@ -38,7 +38,7 @@ while true; do
 	if [ "$id" == "q" ]; then
 		exit 0;
 	fi
-	statusJson=`curl -u $username:$password --request GET $client$GRABBIT_URL"/"$id.json`
+	statusJson=`curl -s -u $username:$password --request GET $client$GRABBIT_URL"/"$id.json`
 	echo
 	echo "Status for JobId [$id] is :"
 	echo "$statusJson" | python -m json.tool 
