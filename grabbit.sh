@@ -1,4 +1,11 @@
 #!/bin/bash
+set -o pipefail
+
+SET_NO_COLOR=$(tput sgr0)
+SET_BLUE=$(tput setaf 4)
+SET_GREEN=$(tput setaf 2)
+SET_YELLOW=$(tput setaf 3)
+SET_RED=$(tput setaf 1)
 
 # Simple Script to initialize one or more Sync or Grab jobs for one or more paths
 # Sample usage :
@@ -10,31 +17,54 @@
 
 GRABBIT_URL="/grabbit/job"
 
+clear
+echo $SET_BLUE
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~GRABBIT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+echo $SET_NO_COLOR
+
 echo "Enter Client [http(s)://server:port] to initiate Grabbit request "
 read client
 
 echo
 echo "Client Username :"
-read username
+read -s username 
 echo
 echo "Client Password :"
-read password
+read -s password 
 
 echo
 echo "Enter path to your Grabbit Configuration file"
 read configpath
 
+rm -f /tmp/grabbit
 # Kick off Grabbit jobs
 clear
-`curl -s -X PUT --data-binary "@$configpath" -u $username:$password $client$GRABBIT_URL`
+echo $SET_YELLOW
+echo "Processing....."
+echo $SET_NO_COLOR
+curl -s -f -X PUT --data-binary "@$configpath" -u $username:$password $client$GRABBIT_URL > /tmp/grabbit
+if [ $? -eq 22 ]; then
+    clear
+    echo $SET_RED
+    echo "~~~~~~~~~Failure~~~~~~~~~~~~~"
+    echo   
+    echo "Something went wrong when processing the given config. Please check the client log for more details."
+    echo    
+    exit 1
+fi
+clear
 echo "~~~~~~~~~~~Jobs kicked off ~~~~~~~~~~~~~"
-echo
-echo "~~~~~Client configuration : $client $username $password Config: $configpath~~~~~"
+echo 
+echo "Job IDs: ${SET_GREEN}$(cat /tmp/grabbit |  sed -e 's/\]//' -e 's/\[//' -e 's/,/  /')${SET_NO_COLOR}"
+echo 
+echo "~~~~~Client configuration : Client : $client Config: $configpath ~~~~~"
 # Monitor Job Status
 while true; do
 	echo	
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-	read -p "Enter Job Id or \"all\" to get job status or enter 'q' to quit: " id
+	read -p "Enter Job ID or \"all\" to get job status or enter 'q' to quit: " id
 	if [ "$id" == "q" ]; then
 		exit 0;
 	fi
