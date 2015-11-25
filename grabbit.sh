@@ -57,7 +57,7 @@ fi
 clear
 echo "~~~~~~~~~~~Jobs kicked off ~~~~~~~~~~~~~"
 echo 
-echo "Job IDs: ${SET_GREEN}$(cat /tmp/grabbit |  sed -e 's/\]//' -e 's/\[//' -e 's/,/  /')${SET_NO_COLOR}"
+echo "Job IDs: ${SET_GREEN}$(cat /tmp/grabbit |  sed -e 's/\]//' -e 's/\[//' -e 's/,/  /g')${SET_NO_COLOR}"
 echo 
 echo "~~~~~Client configuration : Client : $client Config: $configpath ~~~~~"
 # Monitor Job Status
