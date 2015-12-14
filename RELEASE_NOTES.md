@@ -1,5 +1,12 @@
 # RELEASE NOTES
 
+## 4.1.0
+
+* Job paths are now validated as to not write 'dirty data'
+* Small performance improvements
+* Improved shell
+* Small fixes
+
 ## 4.0.7
 
 * Added YAML support. Backwards compatible to existing JSON format
