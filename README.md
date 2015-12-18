@@ -234,7 +234,7 @@ A job status is has the following format :
 ```
 
 Couple of points worth noting here:
-`"exitCode"` : This can have 3 states - `UNKNOWN`, `COMPLETED`, `FAILED` 
+`"exitCode"` : This can have 3 states - `UNKNOWN`, `COMPLETED`, `FAILED`, `VALIDATION_FAILED` 
     - `UNKNOWN` : Job is still running
     - `COMPLETED` : Job was completed successfully
     - `FAILED` : Job Failed
