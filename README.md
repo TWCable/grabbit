@@ -238,6 +238,7 @@ Couple of points worth noting here:
     - `UNKNOWN` : Job is still running
     - `COMPLETED` : Job was completed successfully
     - `FAILED` : Job Failed
+    - `VALIDATION_FAILED` : Job was aborted due to client configuration
 `"jcrNodesWritten"` : This indicates how many nodes are currently written (increments by 1000)
 `"timeTaken"` : This will indicate the total time taken to complete content grab for `currentPath`
 
