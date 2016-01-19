@@ -1,5 +1,10 @@
 # RELEASE NOTES
 
+## 4.1.1
+
+* Fixed concurrency issues with the Workflow Manager. Miscellaneous Workflow Manager refactoring
+* Trivial README updates
+
 ## 4.1.0
 
 * Job paths are now validated as to not write 'dirty data'
