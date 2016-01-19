@@ -70,8 +70,8 @@ _For both Windows and Mac : To verify that installation was successful, `protoc 
 3. Enter the full address for the client instance including port (details for the server instance should be in the config fil you create in step 1)
 4. Enter Username for the client instance
 5. Enter the Password for the client instance
-6. Enter the path to the Grabbit config you created in step. Screenshot of how it will look like : ![alt text](assets/GrabbitConfig.jpg)
-7. Once the Grabbit content sync is kicked off, you will get a confirmation of the kicked off jobs like : ![alt text](assets/GrabbitComplete.jpg)
+6. Enter the path to the Grabbit config you created in step. Screenshot of how it will look like : !["Grabbit configuration enter example"](assets/GrabbitConfig.png)
+7. Once the Grabbit content sync is kicked off, you will get a confirmation of the kicked off jobs like : !["Grabbit confirmation example"](assets/GrabbitComplete.png)
 
 
 ### Config Format
