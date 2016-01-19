@@ -70,7 +70,7 @@ _For both Windows and Mac : To verify that installation was successful, `protoc 
 3. Enter the full address for the client instance including port (details for the server instance should be in the config fil you create in step 1)
 4. Enter Username for the client instance
 5. Enter the Password for the client instance
-6. Enter the path to the Grabbit config you created in step. Screenshot of how it will look like : !["Grabbit configuration enter example"](assets/GrabbitConfig.png)
+6. Enter the path to the Grabbit config you created in step. Example of how it will look : !["Grabbit configuration enter example"](assets/GrabbitConfig.png)
 7. Once the Grabbit content sync is kicked off, you will get a confirmation of the kicked off jobs like : !["Grabbit confirmation example"](assets/GrabbitComplete.png)
 
 
@@ -234,11 +234,7 @@ A job status is has the following format :
 ```
 
 Couple of points worth noting here:
-`"exitCode"` : This can have 3 states - `UNKNOWN`, `COMPLETED`, `FAILED`, `VALIDATION_FAILED` 
-    - `UNKNOWN` : Job is still running
-    - `COMPLETED` : Job was completed successfully
-    - `FAILED` : Job Failed
-    - `VALIDATION_FAILED` : Job was aborted due to client configuration
+`"exitCode"` can have 4 states - `UNKNOWN`, `COMPLETED`, `FAILED`, or `VALIDATION_FAILED`. `UNKNOWN` means the job is still running. `COMPLETED` means that the job was completed successfully. `FAILED` means the job failed. `VALIDATION_FAILED` means the job was aborted due to client configuration; This could mean that although the configuration was valid, Grabbit refused to perform some work due to imminent introduction of unintended consequences.  
 `"jcrNodesWritten"` : This indicates how many nodes are currently written (increments by 1000)
 `"timeTaken"` : This will indicate the total time taken to complete content grab for `currentPath`
 
