@@ -165,11 +165,13 @@ class GrabbitConfigurationSpec extends Specification {
     @Unroll
     def "Should create configuration from json input"() {
         when:
-        def output = GrabbitConfiguration.create(input)
+        final configuration = GrabbitConfiguration.create(input)
 
         then:
-        output instanceof GrabbitConfiguration
-        output.deltaContent == false
+        configuration instanceof GrabbitConfiguration
+        !configuration.deltaContent
+        configuration.transactionID != null
+
 
         where:
         input << [

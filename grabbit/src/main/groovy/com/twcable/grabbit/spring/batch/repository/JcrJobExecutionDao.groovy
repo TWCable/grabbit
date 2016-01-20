@@ -17,26 +17,18 @@
 package com.twcable.grabbit.spring.batch.repository
 
 import com.twcable.grabbit.DateUtil
+import com.twcable.grabbit.client.batch.ClientBatchJob
 import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.util.CryptoUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.commons.lang3.StringUtils
-import org.apache.sling.api.resource.ModifiableValueMap
-import org.apache.sling.api.resource.Resource
-import org.apache.sling.api.resource.ResourceResolver
-import org.apache.sling.api.resource.ResourceResolverFactory
-import org.apache.sling.api.resource.ValueMap
-import org.springframework.batch.core.BatchStatus
-import org.springframework.batch.core.ExitStatus
-import org.springframework.batch.core.JobExecution
-import org.springframework.batch.core.JobInstance
-import org.springframework.batch.core.JobParameter
-import org.springframework.batch.core.JobParameters
+import org.apache.sling.api.resource.*
+import org.springframework.batch.core.*
 import org.springframework.batch.core.repository.dao.JobExecutionDao
 
 import javax.annotation.Nonnull
 
-import static AbstractJcrDao.generateNextId
 import static JcrJobInstanceDao.JOB_INSTANCE_ROOT
 import static org.apache.jackrabbit.JcrConstants.NT_UNSTRUCTURED
 import static org.apache.sling.api.resource.ResourceUtil.getOrCreateResource
@@ -52,6 +44,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
     public static final String JOB_EXECUTION_ROOT = "${ROOT_RESOURCE_NAME}/jobExecutions"
 
     public static final String EXECUTION_ID = "executionId"
+    public static final String TRANSACTION_ID = "transactionId"
     public static final String INSTANCE_ID = "instanceId"
     public static final String START_TIME = "startTime"
     public static final String END_TIME = "endTime"
@@ -83,7 +76,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
         //Create a new resource for the jobExecution (with the id)
         jobExecution.incrementVersion()
         JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
-            final id = generateNextId()
+            final id = CryptoUtil.generateNextId()
             jobExecution.id = id
             Resource rootResource = getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
             final properties = getJobExecutionProperties(jobExecution) << ([
@@ -107,6 +100,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
         execution.with {
             [
                 (EXECUTION_ID): id,
+                (TRANSACTION_ID): execution.getJobParameters().getString(ClientBatchJob.TRANSACTION_ID),
                 (INSTANCE_ID) : jobId,
                 //Map implementation sets StartTime/EndTime to null .. but looks like I can't store nulls in JCR
                 (START_TIME)  : startTime ? DateUtil.getISOStringFromDate(startTime) : "NULL",
@@ -323,15 +317,15 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
 
         final id = properties[EXECUTION_ID] as Long
 
-        JobExecution jobExecution
+        GrabbitJobExecution jobExecution
         if (!jobInstance) {
             final JobInstance instance = new JobInstance(properties[INSTANCE_ID] as Long, properties[JOB_NAME] as String)
             final jobParameters = getJobParameters(resolver, properties[INSTANCE_ID] as Long)
-            jobExecution = new JobExecution(instance, id, jobParameters)
+            jobExecution = new GrabbitJobExecution(instance, id, jobParameters)
         }
         else {
             final jobParameters = getJobParameters(resolver, jobInstance.id)
-            jobExecution = new JobExecution(jobInstance, id, jobParameters)
+            jobExecution = new GrabbitJobExecution(jobInstance, id, jobParameters)
         }
 
         jobExecution.startTime = getDate(properties[START_TIME] as String)
@@ -341,6 +335,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
         jobExecution.createTime = getDate(properties[CREATE_TIME] as String)
         jobExecution.lastUpdated = getDate(properties[LAST_UPDATED] as String)
         jobExecution.version = properties[VERSION] as Integer ?: 0
+        jobExecution.transactionID = properties[TRANSACTION_ID] as Long ?: 0L
 
         jobExecution
     }

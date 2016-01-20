@@ -17,6 +17,7 @@
 package com.twcable.grabbit
 
 import com.google.common.collect.ImmutableMap
+import com.twcable.grabbit.util.CryptoUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.yaml.snakeyaml.Yaml
@@ -25,16 +26,21 @@ import javax.annotation.Nonnull
 import javax.annotation.Nullable
 import java.util.regex.Pattern
 
+/**
+ * Represents a Grabbit configuration file sent from a client
+ */
 @CompileStatic
 @Slf4j
 class GrabbitConfiguration {
 
-    String serverUsername
-    String serverPassword
-    String serverHost
-    String serverPort
-    boolean deltaContent
-    Collection<PathConfiguration> pathConfigurations
+    final String serverUsername
+    final String serverPassword
+    final String serverHost
+    final String serverPort
+    final boolean deltaContent
+    final Collection<PathConfiguration> pathConfigurations
+
+    final long transactionID
 
 
     private GrabbitConfiguration(@Nonnull String user, @Nonnull String pass, @Nonnull String host,
@@ -47,10 +53,17 @@ class GrabbitConfiguration {
         this.serverPort = port
         this.deltaContent = deltaContent
         this.pathConfigurations = pathConfigs
+        this.transactionID = CryptoUtil.generateNextId()
     }
 
-
-    public static GrabbitConfiguration create(@Nonnull String configString) {
+    /**
+     * Used to create a new {@Link GrabbitConfiguration} object
+     * @param configString Takes a JSON/YAML string with configuration key/value pairs as described in the README
+     * @throws {@link ConfigurationException} If required keys are missing, or if the configuration string is malformed
+     * @return Returns a {@link GrabbitConfiguration} object if everything goes well. Will ignore extraneous keys
+     * within the configuration string.
+     */
+    public static GrabbitConfiguration create(@Nonnull String configString) throws ConfigurationException {
         log.debug "Input: ${configString}"
 
         //YAML Specification doesn't support TAB characters in the Config. Technically, if you only have yaml files, then
@@ -93,7 +106,7 @@ class GrabbitConfiguration {
             serverHost,
             serverPort,
             deltaContent,
-            pathConfigurations
+            pathConfigurations.asImmutable()
         )
     }
 

@@ -44,6 +44,7 @@ class ClientBatchJob {
     public static final String PORT = "port"
     public static final String SERVER_USERNAME = "serverUsername"
     public static final String SERVER_PASSWORD = "serverPassword"
+    public static final String TRANSACTION_ID = "transactionID"
     public static final String CLIENT_USERNAME = "clientUsername"
     public static final String CONTENT_AFTER_DATE = "contentAfterDate"
     public static final String DELETE_BEFORE_WRITE = "deleteBeforeWrite"
@@ -142,6 +143,7 @@ class ClientBatchJob {
         PathConfiguration pathConfiguration
         boolean willDeleteBeforeWrite
         boolean doPathDeltaContent
+        long transactionID
 
 
         ConfigurationBuilder(JobExecutionsBuilder parentBuilder) {
@@ -154,6 +156,12 @@ class ClientBatchJob {
             this.willDeleteBeforeWrite = pathConfiguration.deleteBeforeWrite
             this.doPathDeltaContent = pathConfiguration.pathDeltaContent
             return new Builder(this)
+        }
+
+
+        ConfigurationBuilder withTransactionID(long transactionID) {
+            this.transactionID = transactionID
+            return this
         }
     }
 
@@ -178,16 +186,17 @@ class ClientBatchJob {
         ClientBatchJob build() {
             final jobParameters = [
                 "timestamp"              : System.currentTimeMillis() as String,
-                "${PATH}"                : pathConfiguration.path,
-                "${HOST}"                : serverBuilder.host,
-                "${PORT}"                : serverBuilder.port,
-                "${CLIENT_USERNAME}"     : credentialsBuilder.clientUsername,
-                "${SERVER_USERNAME}"     : credentialsBuilder.serverUsername,
-                "${SERVER_PASSWORD}"     : credentialsBuilder.serverPassword,
-                "${EXCLUDE_PATHS}"       : pathConfiguration.excludePaths.join("*"),
-                "${WORKFLOW_CONFIGS}"    : pathConfiguration.workflowConfigIds.join("|"),
-                "${DELETE_BEFORE_WRITE}" : "${pathConfiguration.deleteBeforeWrite}",
-                "${PATH_DELTA_CONTENT}"  : "${pathConfiguration.pathDeltaContent}"
+                (PATH)                : pathConfiguration.path,
+                (HOST)                : serverBuilder.host,
+                (PORT)                : serverBuilder.port,
+                (CLIENT_USERNAME)     : credentialsBuilder.clientUsername,
+                (SERVER_USERNAME)     : credentialsBuilder.serverUsername,
+                (SERVER_PASSWORD)     : credentialsBuilder.serverPassword,
+                (TRANSACTION_ID)      : String.valueOf(configsBuilder.transactionID),
+                (EXCLUDE_PATHS)       : pathConfiguration.excludePaths.join("*"),
+                (WORKFLOW_CONFIGS)    : pathConfiguration.workflowConfigIds.join("|"),
+                (DELETE_BEFORE_WRITE) : String.valueOf(pathConfiguration.deleteBeforeWrite),
+                (PATH_DELTA_CONTENT)  : String.valueOf(pathConfiguration.pathDeltaContent)
             ] as Map<String, String>
 
             if (pathConfiguration.pathDeltaContent) {
@@ -198,7 +207,7 @@ class ClientBatchJob {
                     final contentAfterDate = DateUtil.getISOStringFromDate(lastSuccessFulJobExecution.endTime)
                     log.info "Last Successful run for ${pathConfiguration.path} was on $contentAfterDate"
                     return new ClientBatchJob(
-                        jobParameters + (["${CONTENT_AFTER_DATE}": contentAfterDate] as Map<String, String>),
+                        jobParameters + ([(CONTENT_AFTER_DATE): contentAfterDate] as Map<String, String>),
                         serverBuilder.configAppContext.getBean("clientJobOperator", JobOperator)
                     )
                 }

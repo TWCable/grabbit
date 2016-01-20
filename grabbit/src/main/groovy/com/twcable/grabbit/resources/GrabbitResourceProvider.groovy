@@ -23,20 +23,14 @@ import org.apache.felix.scr.annotations.Component
 import org.apache.felix.scr.annotations.Property
 import org.apache.felix.scr.annotations.Service
 import org.apache.sling.api.resource.Resource
-import org.apache.sling.api.resource.ResourceMetadata
 import org.apache.sling.api.resource.ResourceProvider
 import org.apache.sling.api.resource.ResourceResolver
 import org.osgi.service.component.ComponentContext
 
 import javax.servlet.http.HttpServletRequest
-import java.util.regex.Matcher
 
 /**
- * A custom resource provider that provides a {@link JobResource} for paths like
- * /grabbit/job : Initiate a new request
- * /grabbit/job/all.(html|json) : Status of All Jobs
- * /grabbit/job/<id>.(html|json) : Status of A Job
- * @see com.twcable.grabbit.servlets.GrabbitServlet
+ * A custom resource provider that provides various Grabbit Sling resources.
  */
 @Slf4j
 @CompileStatic
@@ -47,71 +41,55 @@ import java.util.regex.Matcher
 class GrabbitResourceProvider implements ResourceProvider {
 
     @Property(label = "Provider Roots", description = "Path roots of what this handles", value = ['/grabbit'])
-    public static final String PROVIDER_ROOTS = 'provider.roots'
+    public static final String PROVIDER_ROOTS_KEY = 'provider.roots'
     private List<String> providerRoots
-
-    public static final String GRABBIT_ROOT = "/grabbit"
-
-    public static final String GRABBIT_JOB = "${GRABBIT_ROOT}/job"
-    public static final String GRABBIT_JOB_RESOURCE_TYPE = "twcable:grabbit/job"
 
 
     @Activate
     void activate(ComponentContext context) {
-        def roots = context.properties.get(PROVIDER_ROOTS)
+        def roots = context.properties.get(PROVIDER_ROOTS_KEY)
         providerRoots = ((roots instanceof String) ? [roots] : roots) as List<String>
     }
 
-
+    /**
+     * @param resourceResolver The resource resolver to resolve this request. Passed in via Sling.
+     * @param httpServletRequest The request for a resource. Passed in via Sling.
+     * @param path The path for this request. This path will be interrogated in order to provide the correct resource.
+     * @return The appropriate Grabbit {@link Resource}, or null if the request doesn't match any known Grabbit resource.
+     */
     @Override
     Resource getResource(ResourceResolver resourceResolver, HttpServletRequest httpServletRequest, String path) {
         getResource(resourceResolver, path)
     }
 
-
+    /**
+     * @param resourceResolver The resource resolver to resolve this request. Passed in via Sling.
+     * @param path The path for this request. This path will be interrogated in order to provide the correct resource.
+     * @return The appropriate Grabbit {@link Resource}, or null if the request doesn't match any known Grabbit resource.
+     */
     @Override
     Resource getResource(ResourceResolver resolver, String path) {
         switch (path) {
-            case ~/^${GRABBIT_JOB}$/:
-                log.debug "Called for path : ${path}"
-                return getJobResource(resolver, path, GRABBIT_JOB_RESOURCE_TYPE)
-            case ~/^${GRABBIT_JOB}\/(.+).(html|json)$/:
-                log.debug "Called for path : ${path}"
-                return getJobResource(resolver, path, GRABBIT_JOB_RESOURCE_TYPE)
+            case ~/^\/grabbit\/job(\/.*)?$/:
+                log.debug "Resolving ${path} to JobResource"
+                return new JobResource(resolver, path)
+            case ~/^\/grabbit\/transaction(\/.*)?$/:
+                log.debug "Resolving ${path} to TransactionResource"
+                return new TransactionResource(resolver, path)
+            case ~/^\/grabbit\/content(\/)?$/:
+                log.debug "Resolving ${path} to ContentResource"
+                return new ContentResource(resolver, path)
             default:
-                log.warn "Unable to find resource for path: ${path}."
+                //Should provide a root resource for /grabbit, along with HATEOS style for this link, and other links. https://github.com/TWCable/grabbit/issues/22
                 return null
         }
     }
 
-
+    /**
+     * @throws UnsupportedOperationException
+     */
     @Override
     Iterator<Resource> listChildren(Resource resource) {
-        log.debug "List Children called for ${resource}"
-        return null
-    }
-
-
-    private static Resource getJobResource(ResourceResolver resourceResolver, String path, String resourceType) {
-        final metadata = new ResourceMetadata(resolutionPath: path)
-
-        final jobId = getJobIdFromPath(path)
-        if (jobId) {
-            metadata.put(JobResource.JOB_EXECUTION_ID, jobId)
-        }
-
-        new JobResource(resourceResolver, metadata, resourceType)
-    }
-
-
-    protected static String getJobIdFromPath(String path) {
-        Matcher m = path =~ /\/job\/(.+).(html|json)$/
-        if (m.size() > 0) {
-            final matchedList = m[0] as List<String>
-            return matchedList[1]
-        }
-        else {
-            return null
-        }
+        throw new UnsupportedOperationException()
     }
 }

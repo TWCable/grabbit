@@ -250,7 +250,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
 
     /**
      * Gets next Id to be assigned to JobInstanceId. This looks for Children under {@link #JOB_INSTANCE_ROOT}
-     * This is different from {@link #generateNextId()} and is only used for JobInstanceId
+     * This is different from {@link com.twcable.grabbit.util.CryptoUtil#generateNextId()} and is only used for JobInstanceId
      * @param resolver
      */
     private static Long getNextJobInstanceId(@Nonnull ResourceResolver resolver) {

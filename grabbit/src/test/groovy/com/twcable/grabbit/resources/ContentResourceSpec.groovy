@@ -1,3 +1,10 @@
+package com.twcable.grabbit.resources
+
+import org.apache.sling.api.resource.ResourceResolver
+import spock.lang.Specification
+
+import static com.twcable.grabbit.resources.ContentResource.CONTENT_RESOURCE_TYPE
+
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -14,19 +21,14 @@
  * limitations under the License.
  */
 
-package com.twcable.grabbit.spring.batch.repository
+class ContentResourceSpec extends Specification {
 
-import groovy.transform.CompileStatic
-import groovy.util.logging.Slf4j
+    def "ContentResource is created as expected"() {
+        given:
+        final ContentResource contentResource = new ContentResource(Mock(ResourceResolver), "/resolution/path")
 
-/**
- * A simple base class that is extended by all the DAOs
- */
-@CompileStatic
-@Slf4j
-abstract class AbstractJcrDao {
-
-    public static final String ROOT_RESOURCE_NAME = "/var/grabbit/job/repository"
-
-    protected abstract void ensureRootResource()
+        expect:
+        contentResource.getPath() == "/resolution/path"
+        contentResource.getResourceType() == CONTENT_RESOURCE_TYPE
+    }
 }

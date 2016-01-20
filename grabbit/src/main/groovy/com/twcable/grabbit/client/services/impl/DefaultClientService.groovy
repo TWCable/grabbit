@@ -65,6 +65,7 @@ class DefaultClientService implements ClientService {
                     .andServer(configuration.serverHost, configuration.serverPort)
                     .andCredentials(clientUsername, configuration.serverUsername, configuration.serverPassword)
                     .andClientJobExecutions(fetchAllClientJobExecutions())
+                    .withTransactionID(configuration.transactionID)
                     .andConfiguration(pathConfig)
                     .build()
                 final Long currentJobExecutionId = clientBatchJob.start()

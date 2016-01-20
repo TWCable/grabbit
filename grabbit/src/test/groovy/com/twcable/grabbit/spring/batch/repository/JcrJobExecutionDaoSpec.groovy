@@ -33,6 +33,7 @@ import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.EXI
 import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.INSTANCE_ID
 import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.JOB_NAME
 import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.STATUS
+import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.TRANSACTION_ID
 import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.VERSION
 import static com.twcable.jackalope.JCRBuilder.node
 import static com.twcable.jackalope.JCRBuilder.property
@@ -55,6 +56,7 @@ class JcrJobExecutionDaoSpec extends Specification {
                                 node("1",
                                     property(INSTANCE_ID, 1),
                                     property(EXECUTION_ID, 1),
+                                    property(TRANSACTION_ID, 5),
                                     property(STATUS, "COMPLETED"),
                                     property(EXIT_CODE, "code"),
                                     property(EXIT_MESSAGE, "message"),
@@ -66,6 +68,7 @@ class JcrJobExecutionDaoSpec extends Specification {
                                 node("2",
                                     property(INSTANCE_ID, 1),
                                     property(EXECUTION_ID, 2),
+                                    property(TRANSACTION_ID, 5),
                                     property(STATUS, "STARTED"),
                                     property(EXIT_CODE, "code"),
                                     property(EXIT_MESSAGE, "message"),
@@ -76,6 +79,7 @@ class JcrJobExecutionDaoSpec extends Specification {
                                 node("3",
                                     property(INSTANCE_ID, 2),
                                     property(EXECUTION_ID, 3),
+                                    property(TRANSACTION_ID, 5),
                                     property(STATUS, "STARTED"),
                                     property(EXIT_CODE, "code"),
                                     property(EXIT_MESSAGE, "message"),
@@ -151,6 +155,16 @@ class JcrJobExecutionDaoSpec extends Specification {
         result.jobId == 1
         result.id == 2
         result.status == BatchStatus.valueOf("STARTED")
+    }
+
+
+    def "Get a transaction ID for a given job execution"() {
+        when:
+        final jobExecutionDao = new JcrJobExecutionDao(mockFactory)
+        final jobExecution = jobExecutionDao.getJobExecution(2) as GrabbitJobExecution
+
+        then:
+        jobExecution.transactionID == 5
     }
 
 

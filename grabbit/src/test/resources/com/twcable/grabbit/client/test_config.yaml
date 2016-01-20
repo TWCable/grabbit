@@ -1,0 +1,9 @@
+serverUsername: "username"
+serverPassword: "password"
+serverHost: "host"
+serverPort: 4502
+deltaContent: true
+pathConfigurations:
+    - path: "/content/testpath"
+      workflowConfigIds:
+        - '/etc/workflow/launcher/config/update_asset_mod' 

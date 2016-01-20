@@ -1,3 +1,8 @@
+package com.twcable.grabbit
+
+import groovy.transform.CompileStatic
+import groovy.transform.InheritConstructors
+
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -14,19 +19,10 @@
  * limitations under the License.
  */
 
-package com.twcable.grabbit.spring.batch.repository
-
-import groovy.transform.CompileStatic
-import groovy.util.logging.Slf4j
-
 /**
- * A simple base class that is extended by all the DAOs
+ * Exception representing a fault in retrieving a non-existent job from a job explorer.
+ * See {@link ClientJobStatus} for usage.
  */
 @CompileStatic
-@Slf4j
-abstract class AbstractJcrDao {
-
-    public static final String ROOT_RESOURCE_NAME = "/var/grabbit/job/repository"
-
-    protected abstract void ensureRootResource()
-}
+@InheritConstructors
+class NonExistentJobException extends RuntimeException {}

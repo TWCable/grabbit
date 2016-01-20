@@ -25,7 +25,7 @@ v2.x - CQ 5.6
 
 Active development is on the "master" branch, which is currently the 4.x version line. Security patches and the like are sometimes back-ported to prior versions.
 
-Of course pull-requests are happily accepted for those that would like to submit things like support for AEM 6.0, back-porting features for AEM 5.6, etc.
+Of course pull-requests are happily accepted for those that would like to submit things like back-porting features for AEM 5.6, etc.
 
 # Runtime Dependencies
 
@@ -63,18 +63,38 @@ _For both Windows and Mac : To verify that installation was successful, `protoc 
 
 # Running Grabbit #
 
-[This] (grabbit.sh) shell script can be used to initiate grabbit jobs for a given Grabbit configuration and to check the status of those jobs.
+[This] (grabbit.sh) shell script can be used to initiate new Grabbit jobs, or monitor existing jobs. 
 
-1. Create a configuration file with the path(s) you wish to copy (see "Config Format" section below, you'll also set the server side URL and credentials in this step)
-2. Execute the grabbit.sh script (which comes with the codebase, by default lives in the root of the project)
-3. Enter the full address for the client instance including port (details for the server instance should be in the config fil you create in step 1)
-4. Enter Username for the client instance
-5. Enter the Password for the client instance
-6. Enter the path to the Grabbit config you created in step. Example of how it will look : !["Grabbit configuration enter example"](assets/GrabbitConfig.png)
-7. Once the Grabbit content sync is kicked off, you will get a confirmation of the kicked off jobs like : !["Grabbit confirmation example"](assets/GrabbitComplete.png)
+##Getting Started With grabbit.sh
 
+- Run grabbit.sh
+- Enter connection details to your Grabbit "client" server (The server you wish to pull content into)
+ 
+ !["Grabbit connection example"](assets/grabbitConnection.png)
+ 
+##Creating a New Job Request
 
-### Config Format
+From the main screen, enter "n" for a new request. Enter an absolute path (from the machine you are running grabbit.sh) to the Grabbit configuration file you wish to use for creating a new request.
+See the "Configuration" section for details on how to create these configuration files. 
+
+ !["New Job"](assets/newJob.png)
+ 
+After the job request is sent, and started you should see a confirmation screen with the job IDs of all the jobs started, as well as their transaction ID
+
+ !["Job Confirmation"](assets/jobKickedOff.png)
+ 
+##Monitoring
+
+From the main screen, enter "m" to monitor an existing job, or jobs. You will be prompted. If you would like to monitor a group of jobs by their transaction, enter "t". If you would like to monitor a specific jobs, enter "j".
+ 
+ !["Monitor Jobs"](assets/monitor.png)
+ 
+See "Monitoring / Validating the Content Sync" for information on evaluating the returned information.
+ 
+
+### Configuration
+
+Configuration can be developed in both YAML, and JSON formats.
 
 A `JSON` configuration file of following format is used to configure Grabbit.
 
@@ -115,7 +135,7 @@ A `JSON` configuration file of following format is used to configure Grabbit.
     ]
 }
 ```
-You can also use `YAML` file format to configure Grabbit. The corresponding YAML configuration for the JSON above will look something like -
+The corresponding YAML configuration for the JSON above will look something like:
 ```yaml
 # Client Type: author
 
@@ -142,7 +162,7 @@ pathConfigurations :
     path : /content/someContent
   -
     path : /content/someOtherContent
-    excludePaths: [ someOtherContent/someExcludeContent ]
+    excludePaths: [ someExcludeContent ]
   -
     path : /content/dam/someDamContent
     excludePaths :
@@ -209,11 +229,10 @@ Invalid:
 
 # Monitoring / Validating the Content Sync #
 
-You can validate / monitor sync by going to the following URI for each job on your Grabbit Client: 
+You may choose to use grabbit.sh to monitor your sync, or you can validate/monitor your sync by going to the following URIs: 
 
-`/grabbit/job/<jobId>.json`
-
-This will give you the status of a particular job. It has the following format -
+`/grabbit/job/<jobId>`
+`/grabbit/job/<transactionId>`
 
 A job status is has the following format : 
 
@@ -229,7 +248,8 @@ A job status is has the following format :
        "jobExecutionId": "JobExecutionId",
        "path": "currentPath",
        "startTime": "TimeStamp",
-       "timeTaken": "TimeInMilliSeconds"
+       "timeTaken": "TimeInMilliSeconds",
+       "transactionId": "transactionId"
    }
 ```
 
@@ -240,9 +260,10 @@ Couple of points worth noting here:
 
 If `exitCode` returns as `UNKNOWN`, that means the job is still running and you should check for its status again.
 
+
 __Sample of a real Grabbit Job status__
 
-![alt text](assets/ExampleGrabbitStatus.jpg)
+![alt text](assets/jobStatus.png)
 
 Two loggers are predefined for Grabbit. One for Grabbit Server and the other for Grabbit Client. 
 They are [batch-server.log](grabbit/src/main/content/SLING-INF/content/apps/grabbit/config/org.apache.sling.commons.log.LogManager.factory.config-com.twcable.grabbit.server.batch.xml) and [batch-client.log](grabbit/src/main/content/SLING-INF/content/apps/grabbit/config/org.apache.sling.commons.log.LogManager.factory.config-com.twcable.grabbit.client.batch.xml) respectively.

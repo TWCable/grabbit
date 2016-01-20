@@ -18,6 +18,7 @@ package com.twcable.grabbit.spring.batch.repository
 
 import com.twcable.grabbit.DateUtil
 import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.util.CryptoUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.sling.api.resource.ModifiableValueMap
@@ -82,7 +83,7 @@ public class JcrStepExecutionDao extends AbstractJcrDao implements StepExecution
         if (!stepExecution) throw new IllegalArgumentException("stepExecution == null")
         if (stepExecution.id != null) throw new IllegalStateException("stepExecution.id must be null")
 
-        final id = generateNextId()
+        final id = CryptoUtil.generateNextId()
         stepExecution.id = id
         saveOrUpdate("${id}", stepExecution)
     }

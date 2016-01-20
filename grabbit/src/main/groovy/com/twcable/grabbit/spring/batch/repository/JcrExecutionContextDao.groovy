@@ -17,6 +17,7 @@
 package com.twcable.grabbit.spring.batch.repository
 
 import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.util.CryptoUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.sling.api.resource.ModifiableValueMap
@@ -176,7 +177,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
      * Saves or Updates given ExecutionContext for the executionId under the rootResourceName
      *
      * Checks if A resource under either {@link #STEP_EXECUTION_CONTEXT_ROOT} or {@link #JOB_EXECUTION_CONTEXT_ROOT} exists
-     * which has the "executionId" property. If not present, creates a new resource with {@link #generateNextId()}.
+     * which has the "executionId" property. If not present, creates a new resource with {@link com.twcable.grabbit.util.CryptoUtil#generateNextId()}.
      * Else, updates existing resource
      *
      * @see #saveExecutionContext(JobExecution)
@@ -205,7 +206,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
             if (!existingResource) {
                 //Resource doesn't exist. Creating it
                 log.debug "Resource for $executionId doesn't exist. Creating it..."
-                final createdResource = resolver.create(rootResource, "${generateNextId()}", properties)
+                final createdResource = resolver.create(rootResource, "${CryptoUtil.generateNextId()}", properties)
                 resolver.commit()
                 log.debug "Resource Created : ${createdResource}"
             }

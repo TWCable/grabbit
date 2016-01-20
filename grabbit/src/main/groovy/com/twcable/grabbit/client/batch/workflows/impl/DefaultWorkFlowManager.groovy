@@ -100,7 +100,7 @@ class DefaultWorkFlowManager implements WorkflowManager {
             return
         }
         if (configEntry.enabled == enable) {
-            log.error "Was expecting to change status of ${configId} to enabled=${enable}, but config entry was already of status enabled=${configEntry.enabled}"
+            log.info "Was expecting to change status of ${configId} to enabled=${enable}, but config entry was already of status enabled=${configEntry.enabled}"
             return
         }
         log.info "Updating workflow configuration for id '${configId}' to enabled=${enable}"

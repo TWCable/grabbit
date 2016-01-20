@@ -51,6 +51,18 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
 
     private ExecutionContextSerializer executionContextSerializer
 
+    /**
+     * Create a new instance with a {@link org.springframework.batch.support.transaction.ResourcelessTransactionManager}.
+     */
+    public JcrJobRepositoryFactoryBean() {
+        this(new ResourcelessTransactionManager())
+    }
+
+
+    public JcrJobRepositoryFactoryBean(PlatformTransactionManager transactionManager) {
+        setTransactionManager(transactionManager)
+    }
+
 
     void setResourceResolverFactory(ResourceResolverFactory resourceResolverFactory) {
         log.info "Setting RRF : ${resourceResolverFactory}"
@@ -81,18 +93,6 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
 
     ExecutionContextDao getExecutionContextDao() {
         executionContextDao
-    }
-
-    /**
-     * Create a new instance with a {@link org.springframework.batch.support.transaction.ResourcelessTransactionManager}.
-     */
-    public JcrJobRepositoryFactoryBean() {
-        this(new ResourcelessTransactionManager())
-    }
-
-
-    public JcrJobRepositoryFactoryBean(PlatformTransactionManager transactionManager) {
-        setTransactionManager(transactionManager)
     }
 
 

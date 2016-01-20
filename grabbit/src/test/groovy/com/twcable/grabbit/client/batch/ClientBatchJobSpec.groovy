@@ -55,10 +55,10 @@ class ClientBatchJobSpec extends Specification {
         then:
         job != null
         job.jobParameters != null
-        job.jobParameters.get("${ClientBatchJob.PATH}") == path
-        job.jobParameters.get("${ClientBatchJob.CONTENT_AFTER_DATE}") == contentAfterDate
-        job.jobParameters.get("${ClientBatchJob.DELETE_BEFORE_WRITE}").toBoolean() == deleteBeforeWrite
-        job.jobParameters.get("${ClientBatchJob.PATH_DELTA_CONTENT}").toBoolean() == pathDeltaContent
+        job.jobParameters.get(ClientBatchJob.PATH) == path
+        job.jobParameters.get(ClientBatchJob.CONTENT_AFTER_DATE) == contentAfterDate
+        job.jobParameters.get(ClientBatchJob.DELETE_BEFORE_WRITE).toBoolean() == deleteBeforeWrite
+        job.jobParameters.get(ClientBatchJob.PATH_DELTA_CONTENT).toBoolean() == pathDeltaContent
 
         where:
         pathDeltaContent | path     | contentAfterDate                        | deleteBeforeWrite

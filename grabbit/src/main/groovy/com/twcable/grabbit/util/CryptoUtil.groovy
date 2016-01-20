@@ -1,3 +1,7 @@
+package com.twcable.grabbit.util
+
+import groovy.transform.CompileStatic
+
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -14,19 +18,17 @@
  * limitations under the License.
  */
 
-package com.twcable.grabbit.spring.batch.repository
-
-import groovy.transform.CompileStatic
-import groovy.util.logging.Slf4j
-
-/**
- * A simple base class that is extended by all the DAOs
- */
 @CompileStatic
-@Slf4j
-abstract class AbstractJcrDao {
+class CryptoUtil {
 
-    public static final String ROOT_RESOURCE_NAME = "/var/grabbit/job/repository"
-
-    protected abstract void ensureRootResource()
+    /**
+     * @return a unique positive UUID (Long)
+     */
+    public static Long generateNextId() {
+        final uuid = UUID.randomUUID()
+        long nextId = uuid.mostSignificantBits ^ uuid.leastSignificantBits
+        //Making sure that the nextId is not negative.
+        nextId >>>= 1
+        return Long.valueOf(nextId)
+    }
 }

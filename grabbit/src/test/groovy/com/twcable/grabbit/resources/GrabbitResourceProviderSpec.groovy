@@ -25,23 +25,64 @@ import spock.lang.Unroll
 class GrabbitResourceProviderSpec extends Specification {
 
     @Unroll
-    def "Resourceprovider returns #resourceType for #path"() {
+    def "Can provide a job resource from path #path"() {
         given:
-        def provider = new GrabbitResourceProvider()
+        GrabbitResourceProvider provider = new GrabbitResourceProvider()
 
         when:
         final resource = provider.getResource(Mock(ResourceResolver), path)
 
         then:
-        resource.path == path
-        resource.resourceType == resourceType
-        resource.resourceMetadata[JobResource.JOB_EXECUTION_ID] == jobExecutionId
+        resource instanceof JobResource
 
         where:
-        path                    | resourceType                                      | jobExecutionId
-        '/grabbit/job'          | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE | null
-        '/grabbit/job/all.json' | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE | "all"
-        '/grabbit/job/1.json'   | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE | "1"
-        '/grabbit/job/1.html'   | GrabbitResourceProvider.GRABBIT_JOB_RESOURCE_TYPE | "1"
+        path << [
+            '/grabbit/job/all.json',
+            '/grabbit/job/1.json',
+            '/grabbit/job/1.html',
+            '/grabbit/job/1',
+            '/grabbit/job',
+            '/grabbit/job/'
+        ]
+    }
+
+
+    @Unroll
+    def "Can provide a transaction resource from path #path"() {
+        given:
+        GrabbitResourceProvider provider = new GrabbitResourceProvider()
+
+        when:
+        final resource = provider.getResource(Mock(ResourceResolver), path)
+
+        then:
+        resource instanceof TransactionResource
+
+        where:
+        path << [
+                '/grabbit/transaction/123.json',
+                '/grabbit/transaction/123.html',
+                '/grabbit/transaction/123',
+                '/grabbit/transaction',
+                '/grabbit/transaction/'
+        ]
+    }
+
+
+    def "Can provide a content resource from path #path"() {
+        given:
+        GrabbitResourceProvider provider = new GrabbitResourceProvider()
+
+        when:
+        final resource = provider.getResource(Mock(ResourceResolver), path)
+
+        then:
+        resource instanceof ContentResource
+
+        where:
+        path << [
+            '/grabbit/content',
+            '/grabbit/content/'
+        ]
     }
 }
