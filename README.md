@@ -97,7 +97,7 @@ See "Monitoring / Validating the Content Sync" for information on evaluating the
 
 Configuration can be developed in both YAML, and JSON formats.
 
-A `JSON` configuration file of following format is used to configure Grabbit.
+Here is an example `JSON` configuration file that could be used for configuring Grabbit:
 
 ```json
 {
@@ -233,7 +233,7 @@ Invalid:
 You may choose to use grabbit.sh to monitor your sync, or you can validate/monitor your sync by going to the following URIs: 
 
 `/grabbit/job/<jobId>`
-`/grabbit/job/<transactionId>`
+`/grabbit/transaction/<transactionId>`
 
 A job status is has the following format : 
 
