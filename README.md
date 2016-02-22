@@ -18,12 +18,13 @@ Moreover, by doing a continuous stream, we avoid the latency issues. Depending o
 
 Below details AEM version support for the various releases of Grabbit.  
 ```
+v5.x - AEM 6.1
 v4.x - AEM 6.1
 v3.x - CQ 5.6 and AEM 6.0
 v2.x - CQ 5.6
 ```
 
-Active development is on the "master" branch, which is currently the 4.x version line. Security patches and the like are sometimes back-ported to prior versions.
+Active development is on the "master" branch, which is currently the 5.x version line. Security patches and the like are sometimes back-ported to prior versions.
 
 Of course pull-requests are happily accepted for those that would like to submit things like back-porting features for AEM 5.6, etc.
 
