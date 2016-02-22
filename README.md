@@ -235,7 +235,7 @@ You may choose to use grabbit.sh to monitor your sync, or you can validate/monit
 `/grabbit/job/<jobId>`
 `/grabbit/transaction/<transactionId>`
 
-A job status is has the following format : 
+A job status has the following format : 
 
 ```json
  {
@@ -274,10 +274,10 @@ If you want to see what nodes are being written on the Grabbit Client, change th
 
 # General Layout
 
-There are two primary components to Grabbit: a client and a server that run in the two CQ instances that you want to copy to and from (respectively). The server has a GET Servlet to handle requests to grab data, and the client has a POST Servlet to manage starting jobs. Normally the client Servlet is used via a form, but can be called with "curl" or the like for scripted remote management.
+There are two primary components to Grabbit: a client and a server that run in the two CQ instances that you want to copy to and from (respectively). 
 
-A recommended systems layout style is to have all content from a production publisher copied down to a staging "data warehouse" (DW) server to which all lower environments (beta, continuous integration, developer workstations, etc.) will connect. That way minimal load is placed on Production, and additional DW machines can be added to scale out if needed, each of which can grab from the "main" DW.
-The client sends an HTTP GET request with a content path and "last grab time" to the server and receives a ProtoBuf stream of all the content below it that has changed. The client's BasicAuth credentials are used to create the JCR Session, so the client can never see content they don't have explicit access to. There are a number of ways to tune how the client works, including specifying multiple focused paths, parallel or serial execution, JCR Session batch size (the number of nodes to cache before flushing to disk), etc.
+A recommended systems layout style is to have all content from a production publisher copied down to a staging "data warehouse" (DW) server to which all lower environments (beta, continuous integration, developer workstations, etc.) will connect. This way minimal load is placed on Production, and additional DW machines can be added to scale out if needed, each of which can grab from the "main" DW.
+The client sends an HTTP GET request with a content path and "last grab time" to the server and receives a protobuf stream of all the content below it that has changed. The client's BasicAuth credentials are used to create the JCR Session, so the client can never see content they don't have explicit access to. There are a number of ways to tune how the client works, including specifying multiple focused paths, parallel or serial execution, JCR Session batch size (the number of nodes to cache before flushing to disk), etc.
 
 # Releasing
 
