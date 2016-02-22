@@ -1,4 +1,10 @@
 # RELEASE NOTES
+## 5.0.0
+
+* Added transaction support
+* New resource modeling, with new RESTful endpoints
+* Some misc refactoring
+* Additional specifications for missing code coverage
 
 ## 4.1.1
 
