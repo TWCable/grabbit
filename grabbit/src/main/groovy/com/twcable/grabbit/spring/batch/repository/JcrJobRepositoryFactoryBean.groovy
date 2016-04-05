@@ -39,13 +39,13 @@ import org.springframework.transaction.PlatformTransactionManager
 @Slf4j
 class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
 
-    private JcrJobExecutionDao jobExecutionDao
+    private JcrGrabbitJobExecutionDao jobExecutionDao
 
-    private JcrJobInstanceDao jobInstanceDao
+    private JcrGrabbitJobInstanceDao jobInstanceDao
 
-    private JcrStepExecutionDao stepExecutionDao
+    private JcrGrabbitStepExecutionDao stepExecutionDao
 
-    private JcrExecutionContextDao executionContextDao
+    private JcrGrabbitExecutionContextDao executionContextDao
 
     private ResourceResolverFactory resourceResolverFactory
 
@@ -76,22 +76,22 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
     }
 
 
-    JobExecutionDao getJobExecutionDao() {
+    GrabbitJobExecutionDao getJobExecutionDao() {
         jobExecutionDao
     }
 
 
-    JobInstanceDao getJobInstanceDao() {
+    GrabbitJobInstanceDao getJobInstanceDao() {
         jobInstanceDao
     }
 
 
-    StepExecutionDao getStepExecutionDao() {
+    GrabbitStepExecutionDao getStepExecutionDao() {
         stepExecutionDao
     }
 
 
-    ExecutionContextDao getExecutionContextDao() {
+    GrabbitExecutionContextDao getExecutionContextDao() {
         executionContextDao
     }
 
@@ -99,7 +99,7 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
     @Override
     protected JobInstanceDao createJobInstanceDao() throws Exception {
         log.info "Create JobInstance"
-        jobInstanceDao = new JcrJobInstanceDao(resourceResolverFactory)
+        jobInstanceDao = new JcrGrabbitJobInstanceDao(resourceResolverFactory)
         jobInstanceDao.ensureRootResource()
         jobInstanceDao
     }
@@ -108,7 +108,7 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
     @Override
     protected JobExecutionDao createJobExecutionDao() throws Exception {
         log.info "Create JobExecution"
-        jobExecutionDao = new JcrJobExecutionDao(resourceResolverFactory)
+        jobExecutionDao = new JcrGrabbitJobExecutionDao(resourceResolverFactory)
         jobExecutionDao.ensureRootResource()
         jobExecutionDao
     }
@@ -117,7 +117,7 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
     @Override
     protected StepExecutionDao createStepExecutionDao() throws Exception {
         log.info "Create StepExecution"
-        stepExecutionDao = new JcrStepExecutionDao(resourceResolverFactory)
+        stepExecutionDao = new JcrGrabbitStepExecutionDao(resourceResolverFactory)
         stepExecutionDao.ensureRootResource()
         stepExecutionDao
     }
@@ -126,7 +126,7 @@ class JcrJobRepositoryFactoryBean extends AbstractJobRepositoryFactoryBean {
     @Override
     protected ExecutionContextDao createExecutionContextDao() throws Exception {
         log.info "Create ExecutionContext"
-        executionContextDao = new JcrExecutionContextDao(resourceResolverFactory, executionContextSerializer)
+        executionContextDao = new JcrGrabbitExecutionContextDao(resourceResolverFactory, executionContextSerializer)
         executionContextDao.ensureRootResource()
         executionContextDao
     }

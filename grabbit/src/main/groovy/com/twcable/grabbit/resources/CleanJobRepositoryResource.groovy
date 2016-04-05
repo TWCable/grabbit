@@ -23,22 +23,22 @@ import org.apache.sling.api.resource.SyntheticResource
 import javax.annotation.Nonnull
 
 /**
- * A resource representing some content to be streamed from a Grabbit instance.
+ * A resource representing what needs to be deleted from Grabbit's JobRepository.
  * provided by {@link GrabbitResourceProvider}.
- * Queried from {@link com.twcable.grabbit.server.GrabbitContentPullServlet}.
+ * Queried from {@link com.twcable.grabbit.spring.batch.repository.servlets.GrabbitCleanJobRepositoryServlet}.
  */
 @CompileStatic
-class ContentResource extends SyntheticResource {
+class CleanJobRepositoryResource extends SyntheticResource {
 
-    public static final String CONTENT_RESOURCE_TYPE = "twcable:grabbit/content"
+    public static final String CLEAN_JOBREPOSITORY_RESOURCE_TYPE = "twcable:grabbit/jobrepository/clean"
 
-    ContentResource(@Nonnull final ResourceResolver resourceResolver, @Nonnull final String resolutionPath) {
-        super(resourceResolver, resolutionPath, CONTENT_RESOURCE_TYPE)
+    CleanJobRepositoryResource(@Nonnull final ResourceResolver resourceResolver, @Nonnull final String resolutionPath) {
+        super(resourceResolver, resolutionPath, CLEAN_JOBREPOSITORY_RESOURCE_TYPE)
     }
 
 
     @Override
     String getResourceType() {
-        return CONTENT_RESOURCE_TYPE
+        return CLEAN_JOBREPOSITORY_RESOURCE_TYPE
     }
 }

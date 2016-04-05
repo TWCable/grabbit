@@ -69,7 +69,7 @@
         <property name="corePoolSize" value="10"/>
     </bean>
 
-    <!-- A Bean that provides ExecutionContextSerializer for JcrExecutionContextDao -->
+    <!-- A Bean that provides ExecutionContextSerializer for JcrGrabbitExecutionContextDao -->
     <bean id="executionContextSerializer"
           class="org.springframework.batch.core.repository.dao.DefaultExecutionContextSerializer" />
 

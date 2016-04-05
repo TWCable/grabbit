@@ -25,22 +25,11 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
 
-import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.CREATE_TIME
-import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.END_TIME
-import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.EXECUTION_ID
-import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.EXIT_CODE
-import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.EXIT_MESSAGE
-import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.INSTANCE_ID
-import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.JOB_NAME
-import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.STATUS
-import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.TRANSACTION_ID
-import static com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao.VERSION
-import static com.twcable.jackalope.JCRBuilder.node
-import static com.twcable.jackalope.JCRBuilder.property
-import static com.twcable.jackalope.JCRBuilder.repository
+import static JcrGrabbitJobExecutionDao.*
+import static com.twcable.jackalope.JCRBuilder.*
 
-@Subject(JcrJobExecutionDao)
-class JcrJobExecutionDaoSpec extends Specification {
+@Subject(JcrGrabbitJobExecutionDao)
+class JcrGrabbitJobExecutionDaoSpec extends Specification {
 
     @Shared
     ResourceResolverFactory mockFactory
@@ -86,7 +75,20 @@ class JcrJobExecutionDaoSpec extends Specification {
                                     property(CREATE_TIME, "2014-12-29T16:59:18.669-05:00"),
                                     property(END_TIME, "NULL"),
                                     property(JOB_NAME, "someOtherJob")
-                                )
+                                ),
+                                node("4",
+                                    property(INSTANCE_ID, 1),
+                                    property(EXECUTION_ID, 1),
+                                    property(TRANSACTION_ID, 5),
+                                    property(STATUS, "FAILED"),
+                                    property(EXIT_CODE, "code"),
+                                    property(EXIT_MESSAGE, "message"),
+                                    property(CREATE_TIME, "2014-12-27T16:59:18.669-05:00"),
+                                    property(END_TIME, "2015-12-29T16:59:18.669-05:00"),
+                                    property(JOB_NAME, "someJob"),
+                                    property(VERSION, 1)
+
+                                ),
                             ),
                             node("jobInstances",
                                 node("1"))
@@ -98,9 +100,9 @@ class JcrJobExecutionDaoSpec extends Specification {
     }
 
 
-    def "EnsureRootResource for JcrJobExecutionDao"() {
+    def "EnsureRootResource for JcrGrabbitJobExecutionDao"() {
         when:
-        final jobExecutionDao = new JcrJobExecutionDao(mockFactory)
+        final jobExecutionDao = new JcrGrabbitJobExecutionDao(mockFactory)
         jobExecutionDao.ensureRootResource()
 
         then:
@@ -111,19 +113,19 @@ class JcrJobExecutionDaoSpec extends Specification {
 
     def "FindJobExecutions for given JobInstance"() {
         when:
-        final jobExecutionDao = new JcrJobExecutionDao(mockFactory)
+        final jobExecutionDao = new JcrGrabbitJobExecutionDao(mockFactory)
         final result = jobExecutionDao.findJobExecutions(new JobInstance(1, "someJob"))
 
         then:
         result != null
-        result.size() == 2
+        result.size() == 3
         result.first().id == 2
     }
 
 
     def "GetLastJobExecution for given JobInstance"() {
         when:
-        final jobExecutionDao = new JcrJobExecutionDao(mockFactory)
+        final jobExecutionDao = new JcrGrabbitJobExecutionDao(mockFactory)
         final result = jobExecutionDao.getLastJobExecution(new JobInstance(1, "someJob"))
 
         then:
@@ -135,7 +137,7 @@ class JcrJobExecutionDaoSpec extends Specification {
 
     def "FindRunningJobExecutions for given Job Name"() {
         when:
-        final jobExecutionDao = new JcrJobExecutionDao(mockFactory)
+        final jobExecutionDao = new JcrGrabbitJobExecutionDao(mockFactory)
         final result = jobExecutionDao.findRunningJobExecutions("someJob")
 
         then:
@@ -147,7 +149,7 @@ class JcrJobExecutionDaoSpec extends Specification {
 
     def "GetJobExecution for given JobExecution id"() {
         when:
-        final jobExecutionDao = new JcrJobExecutionDao(mockFactory)
+        final jobExecutionDao = new JcrGrabbitJobExecutionDao(mockFactory)
         final result = jobExecutionDao.getJobExecution(2)
 
         then:
@@ -160,7 +162,7 @@ class JcrJobExecutionDaoSpec extends Specification {
 
     def "Get a transaction ID for a given job execution"() {
         when:
-        final jobExecutionDao = new JcrJobExecutionDao(mockFactory)
+        final jobExecutionDao = new JcrGrabbitJobExecutionDao(mockFactory)
         final jobExecution = jobExecutionDao.getJobExecution(2) as GrabbitJobExecution
 
         then:
@@ -170,7 +172,7 @@ class JcrJobExecutionDaoSpec extends Specification {
 
     def "SynchronizeStatus for a given JobExecution"() {
         when:
-        final jobExecutionDao = new JcrJobExecutionDao(mockFactory)
+        final jobExecutionDao = new JcrGrabbitJobExecutionDao(mockFactory)
         def unsyncronized = new JobExecution(1)
         unsyncronized.setVersion(0)
         unsyncronized.setStatus(BatchStatus.STARTED)
@@ -178,6 +180,21 @@ class JcrJobExecutionDaoSpec extends Specification {
 
         then:
         unsyncronized.version == 1
-        unsyncronized.status == BatchStatus.COMPLETED
+        unsyncronized.status == BatchStatus.FAILED
     }
+
+    def "GetJobExecutions for hours and jobExecutions"() {
+        when:
+        final jobExecutionDao = new JcrGrabbitJobExecutionDao(mockFactory)
+        final jobExecutionPaths = [
+                "/var/grabbit/job/repository/jobExecutions/1",
+                "/var/grabbit/job/repository/jobExecutions/4"
+        ]
+        final result = jobExecutionDao.getJobExecutions(1, jobExecutionPaths)
+
+        then:
+        result != null
+        result.size() == 2
+    }
+
 }

@@ -29,7 +29,7 @@ import org.springframework.batch.core.repository.dao.JobExecutionDao
 
 import javax.annotation.Nonnull
 
-import static JcrJobInstanceDao.JOB_INSTANCE_ROOT
+import static JcrGrabbitJobInstanceDao.JOB_INSTANCE_ROOT
 import static org.apache.jackrabbit.JcrConstants.NT_UNSTRUCTURED
 import static org.apache.sling.api.resource.ResourceUtil.getOrCreateResource
 
@@ -39,7 +39,7 @@ import static org.apache.sling.api.resource.ResourceUtil.getOrCreateResource
  */
 @CompileStatic
 @Slf4j
-class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
+class JcrGrabbitJobExecutionDao extends AbstractJcrDao implements GrabbitJobExecutionDao {
 
     public static final String JOB_EXECUTION_ROOT = "${ROOT_RESOURCE_NAME}/jobExecutions"
 
@@ -59,7 +59,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
     private ResourceResolverFactory resourceResolverFactory
 
 
-    JcrJobExecutionDao(ResourceResolverFactory rrf) {
+    JcrGrabbitJobExecutionDao(ResourceResolverFactory rrf) {
         this.resourceResolverFactory = rrf
     }
 
@@ -184,7 +184,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
     }
 
     /**
-     * Returns JobParameters using the given instanceId from {@link JcrJobInstanceDao#JOB_INSTANCE_ROOT}
+     * Returns JobParameters using the given instanceId from {@link JcrGrabbitJobInstanceDao#JOB_INSTANCE_ROOT}
      *
      * @see #mapJobExecution(ResourceResolver, ValueMap, JobInstance)
      */
@@ -193,7 +193,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
         final instanceResource = resolver.getResource(jobInstanceRoot, "${instanceId}")
 
         final properties = instanceResource.adaptTo(ValueMap)
-        final params = properties[JcrJobInstanceDao.PARAMETERS] as String[]
+        final params = properties[JcrGrabbitJobInstanceDao.PARAMETERS] as String[]
 
         final paramsMap = params?.collectEntries { String entry ->
             final pair = entry.split("=")
@@ -365,7 +365,7 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
     }
 
     /**
-     * Must be called when a new instance of JcrJobExecutionDao is created.
+     * Must be called when a new instance of JcrGrabbitJobExecutionDao is created.
      * Ensures that {@link #JOB_EXECUTION_ROOT} exists on initialization
      */
     @Override
@@ -380,5 +380,45 @@ class JcrJobExecutionDao extends AbstractJcrDao implements JobExecutionDao {
                 throw new IllegalStateException("Cannot get or create RootResource for : ${JOB_INSTANCE_ROOT}")
             }
         }
+    }
+
+    @Override
+    Collection<String> getJobExecutions(Collection<BatchStatus> batchStatuses) {
+        String statusPredicate = batchStatuses.collect { "s.status = '${it}'" }.join(' or ')
+        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+            String jobExecutionsQuery = "select * from [nt:unstructured] as s where " +
+                    "ISDESCENDANTNODE(s,'${JOB_EXECUTION_ROOT}') AND ( ${statusPredicate} )"
+            Collection<String> jobExecutions = resolver.findResources(jobExecutionsQuery, "JCR-SQL2")
+                    .toList()
+                    .collect { it.path }
+                    .unique() as Collection<String>
+            log.debug "JobExecutions: $jobExecutions, size: ${jobExecutions.size()}"
+            return jobExecutions
+        }
+
+    }
+
+    @Override
+    Collection<String> getJobExecutions(int hours, Collection<String> jobExecutions) {
+        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+            //Create a Date object that is "hours" ago from now
+            Calendar olderThanHours = Calendar.getInstance()
+            log.info "Current time: ${olderThanHours.time}"
+            olderThanHours.add(Calendar.HOUR, -hours)
+            log.info "Hours ${hours} .. OlderThanHours Time: ${olderThanHours.time}"
+
+            //Find all resources that are older than "olderThanHours" Date
+            Collection<String> olderResourcePaths = jobExecutions.findAll { String resourcePath ->
+                Resource resource = resolver.getResource(resourcePath)
+                ValueMap props = resource.adaptTo(ValueMap)
+                String dateInIsoString = props[END_TIME] as String
+                Date endTimeDate = DateUtil.getDateFromISOString(dateInIsoString)
+                olderThanHours.time.compareTo(endTimeDate) > 0
+            } as Collection<String>
+            log.debug "JobExecutionsOlder than ${hours} hours: $olderResourcePaths , length: ${olderResourcePaths.size()}"
+            return olderResourcePaths
+
+        }
+
     }
 }

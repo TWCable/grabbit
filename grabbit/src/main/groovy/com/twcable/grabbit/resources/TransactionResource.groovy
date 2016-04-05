@@ -1,12 +1,3 @@
-package com.twcable.grabbit.resources
-
-import groovy.transform.CompileStatic
-import org.apache.sling.api.resource.ResourceResolver
-import org.apache.sling.api.resource.SyntheticResource
-
-import javax.annotation.Nonnull
-import java.util.regex.Matcher
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -22,6 +13,15 @@ import java.util.regex.Matcher
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package com.twcable.grabbit.resources
+
+import groovy.transform.CompileStatic
+import org.apache.sling.api.resource.ResourceResolver
+import org.apache.sling.api.resource.SyntheticResource
+
+import javax.annotation.Nonnull
+import java.util.regex.Matcher
 
 /**
  * {@link TransactionResource} represents a a logical group of jobs by configuration run.

@@ -20,11 +20,8 @@ import com.twcable.grabbit.jcr.JcrUtil
 import com.twcable.grabbit.util.CryptoUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import org.apache.sling.api.resource.ModifiableValueMap
-import org.apache.sling.api.resource.Resource
-import org.apache.sling.api.resource.ResourceResolver
-import org.apache.sling.api.resource.ResourceResolverFactory
-import org.apache.sling.api.resource.ValueMap
+import org.apache.sling.api.SlingException
+import org.apache.sling.api.resource.*
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.repository.ExecutionContextSerializer
@@ -33,6 +30,7 @@ import org.springframework.batch.item.ExecutionContext
 
 import javax.annotation.Nonnull
 
+import static JcrGrabbitStepExecutionDao.ID
 import static org.apache.jackrabbit.JcrConstants.NT_UNSTRUCTURED
 import static org.apache.sling.api.resource.ResourceUtil.getOrCreateResource
 
@@ -42,7 +40,7 @@ import static org.apache.sling.api.resource.ResourceUtil.getOrCreateResource
  */
 @CompileStatic
 @Slf4j
-class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextDao {
+class JcrGrabbitExecutionContextDao extends AbstractJcrDao implements GrabbitExecutionContextDao {
 
     public static final String EXECUTION_CONTEXT_ROOT = "${ROOT_RESOURCE_NAME}/executionContexts"
     public static final String JOB_EXECUTION_CONTEXT_ROOT = "${EXECUTION_CONTEXT_ROOT}/job"
@@ -55,7 +53,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
     private ExecutionContextSerializer contextSerializer
 
 
-    JcrExecutionContextDao(
+    JcrGrabbitExecutionContextDao(
         @Nonnull final ResourceResolverFactory rrf, @Nonnull final ExecutionContextSerializer serializer) {
         this.resourceResolverFactory = rrf
         this.contextSerializer = serializer
@@ -156,7 +154,7 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
     }
 
     /**
-     * Must be called when a new instance of JcrExecutionContextDao is created.
+     * Must be called when a new instance of JcrGrabbitExecutionContextDao is created.
      * Ensures that {@link #STEP_EXECUTION_CONTEXT_ROOT} and {@link #JOB_EXECUTION_CONTEXT_ROOT} exist on initialization
      */
     @Override
@@ -305,5 +303,56 @@ class JcrExecutionContextDao extends AbstractJcrDao implements ExecutionContextD
         ExecutionContext context = new ExecutionContext()
         contextAsMap.each { key, value -> context.put(key, value) }
         context
+    }
+
+    @Override
+    Collection<String> getJobExecutionContextPaths(Collection<String> jobExecutionResourcePaths) {
+        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+            Collection<String> jobExecutionContextPathsToRemove = []
+            jobExecutionResourcePaths.each { String jobExecutionResourcePath ->
+                Resource jobExecutionResource = resolver.getResource(jobExecutionResourcePath)
+                ValueMap props = jobExecutionResource.adaptTo(ValueMap)
+                Long jobExecutionId = props[JcrGrabbitJobExecutionDao.EXECUTION_ID] as Long
+                String query = "select * from [nt:unstructured] as s " +
+                        "where ISDESCENDANTNODE(s,'${JOB_EXECUTION_CONTEXT_ROOT}') AND ( s.${EXECUTION_ID} = ${jobExecutionId})"
+                try {
+                    List<String> jobExecutionContextPaths = resolver.findResources(query, "JCR-SQL2").toList().collect { it.path }
+                    jobExecutionContextPathsToRemove.addAll(jobExecutionContextPaths)
+                }
+                catch(SlingException | IllegalStateException e) {
+                    log.error "Exception when executing Query: ${query}. \nException - ", e
+                }
+            }
+            //There are 2 versions of Resources returned back by findResources
+            //One for JcrNodeResource and one for SocialResourceWrapper
+            //Hence, duplicates need to be removed
+            return jobExecutionContextPathsToRemove.unique() as Collection<String>
+        }
+    }
+
+    @Override
+    Collection<String> getStepExecutionContextPaths(Collection<String> stepExecutionResourcePaths) {
+        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+            Collection<String> stepExecutionContextPathsToRemove = []
+            stepExecutionResourcePaths.each { String stepExecutionResourcePath ->
+                Resource stepExecutionResource = resolver.getResource(stepExecutionResourcePath)
+                ValueMap props = stepExecutionResource.adaptTo(ValueMap)
+                Long stepExecutionId = props[ID] as Long
+                String query = "select * from [nt:unstructured] as s " +
+                        "where ISDESCENDANTNODE(s,'${STEP_EXECUTION_CONTEXT_ROOT}') AND ( s.${EXECUTION_ID} = ${stepExecutionId})"
+                try {
+                    List<String> stepExecutionContextPaths = resolver.findResources(query, "JCR-SQL2").toList().collect { it.path }
+                    stepExecutionContextPathsToRemove.addAll(stepExecutionContextPaths)
+                } catch (SlingException | IllegalStateException e) {
+                    log.error "Exception when executing Query: ${query}. \nException - ", e
+                }
+            }
+            //There are 2 versions of Resources returned back by findResources
+            //One for JcrNodeResource and one for SocialResourceWrapper
+            //Hence, duplicates need to be removed
+            return stepExecutionContextPathsToRemove.unique() as Collection<String>
+
+        }
+
     }
 }

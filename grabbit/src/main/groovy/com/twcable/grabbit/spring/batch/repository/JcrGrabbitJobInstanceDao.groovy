@@ -41,7 +41,7 @@ import static org.apache.sling.api.resource.ResourceUtil.getOrCreateResource
  */
 @CompileStatic
 @Slf4j
-class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
+class JcrGrabbitJobInstanceDao extends AbstractJcrDao implements GrabbitJobInstanceDao {
 
     public static final String JOB_INSTANCE_ROOT = "${ROOT_RESOURCE_NAME}/jobInstances"
 
@@ -54,7 +54,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
     private ResourceResolverFactory resourceResolverFactory
 
 
-    JcrJobInstanceDao(ResourceResolverFactory rrf) {
+    JcrGrabbitJobInstanceDao(ResourceResolverFactory rrf) {
         this.resourceResolverFactory = rrf
     }
 
@@ -235,7 +235,7 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
     }
 
     /**
-     * Must be called when a new instance of JcrJobInstanceDao is created.
+     * Must be called when a new instance of JcrGrabbitJobInstanceDao is created.
      * Ensures that {@link #JOB_INSTANCE_ROOT} exists on initialization
      */
     @Override
@@ -260,6 +260,29 @@ class JcrJobInstanceDao extends AbstractJcrDao implements JobInstanceDao {
         final nextId = (rootResource.children.asList().size() + 1) as Long
         log.debug "Next JobInstance Id : $nextId"
         nextId
+
+    }
+
+    @Override
+    Collection<String> getJobInstancePaths(Collection<String> jobExecutionResourcePaths) {
+        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+            Collection<String> jobInstancesToRemove = []
+            jobExecutionResourcePaths.each { String jobExecutionResourcePath ->
+                Resource jobExecutionResource = resolver.getResource(jobExecutionResourcePath)
+                ValueMap props = jobExecutionResource.adaptTo(ValueMap)
+                Long instanceId = props[JcrGrabbitJobExecutionDao.INSTANCE_ID] as Long
+                String jobInstanceToRemoveResourcePath = "${JOB_INSTANCE_ROOT}/${instanceId}".toString()
+                Resource jobInstanceToRemove = resolver.getResource(jobInstanceToRemoveResourcePath)
+                if (!jobInstanceToRemove) {
+                    log.info "JobInstance with id : ${instanceId} is already removed"
+                } else {
+                    jobInstancesToRemove.add(jobInstanceToRemoveResourcePath)
+                }
+            }
+            return jobInstancesToRemove
+
+
+        }
 
     }
 }

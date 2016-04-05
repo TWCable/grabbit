@@ -21,6 +21,7 @@ import com.twcable.grabbit.jcr.JcrUtil
 import com.twcable.grabbit.util.CryptoUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import org.apache.sling.api.SlingException
 import org.apache.sling.api.resource.ModifiableValueMap
 import org.apache.sling.api.resource.Resource
 import org.apache.sling.api.resource.ResourceResolver
@@ -34,6 +35,7 @@ import org.springframework.batch.core.repository.dao.StepExecutionDao
 
 import javax.annotation.Nonnull
 
+import static JcrGrabbitJobExecutionDao.EXECUTION_ID
 import static org.apache.jackrabbit.JcrConstants.NT_UNSTRUCTURED
 import static org.apache.sling.api.resource.ResourceUtil.getOrCreateResource
 
@@ -43,7 +45,7 @@ import static org.apache.sling.api.resource.ResourceUtil.getOrCreateResource
  */
 @CompileStatic
 @Slf4j
-public class JcrStepExecutionDao extends AbstractJcrDao implements StepExecutionDao {
+public class JcrGrabbitStepExecutionDao extends AbstractJcrDao implements GrabbitStepExecutionDao {
 
     public static final String STEP_EXECUTION_ROOT = "${ROOT_RESOURCE_NAME}/stepExecutions"
 
@@ -69,7 +71,7 @@ public class JcrStepExecutionDao extends AbstractJcrDao implements StepExecution
     private ResourceResolverFactory resourceResolverFactory
 
 
-    JcrStepExecutionDao(ResourceResolverFactory rrf) {
+    JcrGrabbitStepExecutionDao(ResourceResolverFactory rrf) {
         this.resourceResolverFactory = rrf
     }
 
@@ -279,7 +281,7 @@ public class JcrStepExecutionDao extends AbstractJcrDao implements StepExecution
     }
 
     /**
-     * Must be called when a new instance of JcrStepExecutionDao is created.
+     * Must be called when a new instance of JcrGrabbitStepExecutionDao is created.
      * Ensures that {@link #STEP_EXECUTION_ROOT} exists on initialization
      */
     @Override
@@ -290,10 +292,34 @@ public class JcrStepExecutionDao extends AbstractJcrDao implements StepExecution
                 //create the Root Resource
                 throw new IllegalStateException("Cannot get or create RootResource for : ${STEP_EXECUTION_ROOT}")
             }
-            if (!getOrCreateResource(resolver, JcrJobExecutionDao.JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
+            if (!getOrCreateResource(resolver, JcrGrabbitJobExecutionDao.JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
-                throw new IllegalStateException("Cannot get or create RootResource for : ${JcrJobExecutionDao.JOB_EXECUTION_ROOT}")
+                throw new IllegalStateException("Cannot get or create RootResource for : ${JcrGrabbitJobExecutionDao.JOB_EXECUTION_ROOT}")
             }
+        }
+    }
+
+    @Override
+    Collection<String> getStepExecutionPaths(Collection<String> jobExecutionResourcePaths) {
+        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+            Collection<String> stepExecutionsToRemove = []
+            jobExecutionResourcePaths.each { String jobExecutionResourcePath ->
+                Resource jobExecutionResource = resolver.getResource(jobExecutionResourcePath)
+                ValueMap props = jobExecutionResource.adaptTo(ValueMap)
+                Long jobExecutionId = props[EXECUTION_ID] as Long
+                String query = "select * from [nt:unstructured] as s " +
+                        "where ISDESCENDANTNODE(s,'${STEP_EXECUTION_ROOT}') AND ( s.${JOB_EXECUTION_ID} = ${jobExecutionId})"
+                try {
+                    List<String> stepExecutions = resolver.findResources(query, "JCR-SQL2").toList().collect { it.path }
+                    stepExecutionsToRemove.addAll(stepExecutions)
+                } catch (SlingException | IllegalStateException e) {
+                    log.error "Exception when executing Query: ${query}. \nException - ", e
+                }
+            }
+            //There are 2 versions of Resources returned back by findResources
+            //One for JcrNodeResource and one for SocialResourceWrapper
+            //Hence, duplicates need to be removed
+            return stepExecutionsToRemove.unique() as Collection<String>
         }
     }
 }

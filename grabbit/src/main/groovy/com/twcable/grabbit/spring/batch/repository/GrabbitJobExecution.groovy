@@ -30,7 +30,7 @@ import org.springframework.batch.core.JobExecution
  * be grouped/referenced by their common transactionID.
  * </p>
  *
- * @see {@link com.twcable.grabbit.spring.batch.repository.JcrJobExecutionDao} for a good handle on how we
+ * @see {@link JcrGrabbitJobExecutionDao} for a good handle on how we
  * serve up this JobExecution during the Spring Batch lifecycle.
  */
 @CompileStatic
