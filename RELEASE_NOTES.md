@@ -1,4 +1,9 @@
 # RELEASE NOTES
+## 5.0.1
+
+* Adds feature that provides a way to delete JcrJobRepository that is older than X hours from "now"
+* The API is : POST /grabbit/jobrepository/clean --data hours=X
+
 ## 5.0.0
 
 * Added transaction support
