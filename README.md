@@ -272,6 +272,23 @@ These log files are for anything logged in **com.twcable.grabbit.server.batch** 
 
 If you want to see what nodes are being written on the Grabbit Client, change the logging for `batch-client.log` above to `DEBUG` or `TRACE`.
 
+# Cleaning Grabbit Job Repository
+
+Over time, the [Grabbit Job Repository](grabbit/src/main/groovy/com/twcable/grabbit/spring/batch/repository) which is stored under `/var/grabbit` grows and without pruning the data that it is storing, the performance of the Grabbit Status API degrades slowly.
+In order to manage that, there is a `Clean Repository` API available that allows you to delete any Grabbit job history that is older than `X` hours from the time the API was hit.
+
+The usage is :
+
+```
+POST /grabbit/jobrepository/clean
+Parameter: hours=X
+
+where X is the number of hours.
+```
+
+This API will delete all the [JobInstances](grabbit/src/main/groovy/com/twcable/grabbit/spring/batch/repository/GrabbitJobInstanceDao.groovy), [JobExecutions](grabbit/src/main/groovy/com/twcable/grabbit/spring/batch/repository/GrabbitJobExecutionDao.groovy), [StepExecutions](grabbit/src/main/groovy/com/twcable/grabbit/spring/batch/repository/GrabbitStepExecutionDao.groovy) and [ExecutionContexts](grabbit/src/main/groovy/com/twcable/grabbit/spring/batch/repository/GrabbitExecutionContextDao.groovy) that were either `COMPLETED` or `FAILED` X hours ago from `now`. 
+
+
 # General Layout
 
 There are two primary components to Grabbit: a client and a server that run in the two CQ instances that you want to copy to and from (respectively). 
