@@ -1,0 +1,4 @@
+== Building From Source
+
+Once you have cloned the project, run following command(from project root directory) to build and upload the Grabbit to your AEM instance
+`gradlew clean build install refreshAllBundles`

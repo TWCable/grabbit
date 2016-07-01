@@ -1,0 +1,44 @@
+== Monitoring/Validation Content Sync
+
+You may choose to use grabbit.sh to monitor your sync, or you can validate/monitor your sync by going to the following URIs:
+
+`/grabbit/job/<jobId>`
+`/grabbit/transaction/<transactionId>`
+
+A job status has the following format :
+
+```json
+ {
+       "endTime": "Timestamp",
+       "exitStatus": {
+           "exitCode": "Code",
+           "exitDescription": "",
+           "running": "true/false"
+       },
+       "jcrNodesWritten": "#OfNodes",
+       "jobExecutionId": "JobExecutionId",
+       "path": "currentPath",
+       "startTime": "TimeStamp",
+       "timeTaken": "TimeInMilliSeconds",
+       "transactionId": "transactionId"
+   }
+```
+
+Couple of points worth noting here:
+`"exitCode"` can have 4 states - `UNKNOWN`, `COMPLETED`, `FAILED`, or `VALIDATION_FAILED`. `UNKNOWN` means the job is still running. `COMPLETED` means that the job was completed successfully. `FAILED` means the job failed. `VALIDATION_FAILED` means the job was aborted due to client configuration; This could mean that although the configuration was valid, Grabbit refused to perform some work due to imminent introduction of unintended consequences.
+`"jcrNodesWritten"` : This indicates how many nodes are currently written (increments by 1000)
+`"timeTaken"` : This will indicate the total time taken to complete content grab for `currentPath`
+
+If `exitCode` returns as `UNKNOWN`, that means the job is still running and you should check for its status again.
+
+
+__Sample of a real Grabbit Job status__
+
+image::../assets/jobStatus.png[Job Status]
+
+Two loggers are predefined for Grabbit. One for Grabbit Server and the other for Grabbit Client.
+They are link:grabbit/src/main/content/SLING-INF/content/apps/grabbit/config/org.apache.sling.commons.log.LogManager.factory.config-com.twcable.grabbit.server.batch.xml[batch-server.log] and link:grabbit/src/main/content/SLING-INF/content/apps/grabbit/config/org.apache.sling.commons.log.LogManager.factory.config-com.twcable.grabbit.client.batch.xml[batch-client.log] respectively.
+These log files are for anything logged in **com.twcable.grabbit.server.batch** and **com.twcable.grabbit.client.batch** packages.
+
+If you want to see what nodes are being written on the Grabbit Client, change the logging for `batch-client.log` above to `DEBUG` or `TRACE`.
+

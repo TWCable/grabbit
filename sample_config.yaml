@@ -1,0 +1,32 @@
+# Client Type: author
+
+   # Information for connecting to the source content
+   serverUsername : '<username>'
+   serverPassword : '<password>'
+   serverHost : some.other.server
+   serverPort : 4502
+
+   deltaContent : true # default for all the paths
+
+   # A reference to the standard set of workflow configuration ids that
+   # we want to turn off when working with DAM assets.
+   &damWorkflows:
+     - /etc/workflow/launcher/config/update_asset_mod
+     - /etc/workflow/launcher/config/update_asset_create
+     - /etc/workflow/launcher/config/dam_xmp_nested_writeback
+     - /etc/workflow/launcher/config/dam_xmp_writeback
+
+
+   # Each of the paths to include in the copy
+   pathConfigurations :
+     -
+       path : /content/someContent
+     -
+       path : /content/someOtherContent
+       excludePaths: [ someExcludeContent ]
+     -
+       path : /content/dam/someDamContent
+       excludePaths :
+         - someContent/someExcludeContent
+         - someContent/someOtherExcludeContent
+       workflowConfigIds : *damWorkflows

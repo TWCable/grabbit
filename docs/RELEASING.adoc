@@ -1,20 +1,19 @@
+== Releasing A New Version
 
-= Releasing A New Version
-
-== Update Files
+=== Update Files
 
 . Update the `version` property in link:../gradle.properties[`gradle.properties`]. We follow http://semver.org/spec/v2.0.0.html[Semantic Versioning 2.0.0], so increment accordingly
 
 . Update link:../RELEASE_NOTES.md[RELEASE_NOTES.md] with what has changed. Assuming the commit messages have been written well, it will generally be the subject lines of the commits since the last release, but edit (including adding) as appropriate for a human to easily understand what has changed
 
-== Create A Clean Build
+=== Create A Clean Build
 
 [source,bash]
 --
 $ ./gradlew clean check integrationTestReport createPackage
 --
 
-== Commit and Push
+=== Commit and Push
 
 [source,bash]
 --
@@ -30,7 +29,7 @@ Create a https://github.com/TWCable/grabbit/releases/new[new GitHub release], se
 *NOTE*: If you are back-porting a release or the like, GitHub's "`release`" feature is extremely simplistic and always labels most recently create "release" record as being the "`Latest release`".
 
 
-== Upload to BinTray
+=== Upload to BinTray
 
 [source,bash]
 --

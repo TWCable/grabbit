@@ -1,0 +1,45 @@
+= Grabbit
+
+:docsDir: docs
+
+image:https://travis-ci.org/TWCable/grabbit.svg?branch=master[title = "Build Status", link = "https://travis-ci.org/TWCable/grabbit"] image:https://badge.waffle.io/TWCable/grabbit.png?label=ready&title=Ready[title = "Stories in Ready", link = "https://waffle.io/TWCable/grabbit"]
+
+image:https://api.bintray.com/packages/twcable/aem/Grabbit/images/download.svg[title = "Download", link = "https://bintray.com/twcable/aem/Grabbit/_latestVersion"]
+
+
+== Project Purpose
+
+The purpose of Grabbit is to provide a fast and reliable way of copying content from one Sling (specifically Adobe CQ/AEM) instance to another.
+
+Existing solutions have been tried and found insufficient for very large data sets (GB-TB), especially over a network. CQ's .zip packages are extremely space inefficient, causing a lot of extra I/O. http://jackrabbit.apache.org/filevault/usage.html[`vlt rcp`] and Mark Adamcin's http://adamcin.net/net.adamcin.recap/[`recap`] use essentially the same mechanism: WebDAV using XML, doing an HTTP handshake for every node and many sets of properties, which means that any latency whatsoever on the network hurts performance enormously.
+
+Grabbit creates a stream of data using https://developers.google.com/protocol-buffers/[Google's Protocol Buffers] aka "ProtoBuf". Protocol Buffers are an extremely efficient (in terms of CPU, memory and wire size) binary protocol that includes compression.
+
+Moreover, by doing a continuous stream, we avoid the latency issues. Depending on the size and nature of the data, as well as network latency, we have so far seen speed improvements ranging from 2 to 10 times that of Recap/vlt.
+
+*__"Grabbit"__ obviously refers to this "grabbing" content from one CQ instance and copying it to another. However it also refers to "Jackrabbit," the reference JCR implementation that the content is being copied to and from.*
+
+
+== Table of Contents
+
+* General Information
+
+** link:{docsDir}/RELEASE_NOTES.md[Releases]
+** link:{docsDir}/AEMSupport.adoc[Dependencies & Version Support]
+
+* Using Grabbit
+
+** link:{docsDir}/GeneralLayout.adoc[General Layout]
+** link:{docsDir}/Running.adoc[Running]
+** link:{docsDir}/Monitoring.adoc[Monitoring / Validating the Content Sync]
+** link:{docsDir}/Cleaning.adoc[Cleaning Grabbit Job Repository]
+
+* Grabbit Development
+
+** link:{docsDir}/Prerequisites.adoc[Prerequisites]
+** link:{docsDir}/Building.adoc[Building from Source]
+** link:{docsDir}/RELEASING.adoc[Releasing A New Version]
+
+* link:{docsDir}/LibraryAttribution.adoc[Library Attribution]
+
+* link:{docsDir}/LicenseInfo.adoc[License]

@@ -1,0 +1,38 @@
+{
+  "serverUsername" : "<username>",
+  "serverPassword" : "<password>",
+  "serverHost" : "some.other.server",
+  "serverPort" : "4502",
+  "batchSize" : 150,
+  "deltaContent" : true,
+  "pathConfigurations" :  [
+    {
+      "path" : "/content/someContent",
+      "batchSize" : 50
+    },
+    {
+      "path" : "/content/someContent",
+      "batchSize" : 200,
+      "excludePaths" :
+      [
+        "someOtherContent/someExcludeContent"
+      ]
+    },
+    {
+      "path" : "/content/dam/someDamContent",
+      "excludePaths":
+      [
+        "someContent/someExcludeContent",
+        "someContent/someOtherExcludeContent"
+      ],
+      "workflowConfigIds" :
+      [
+        "/etc/workflow/launcher/config/update_asset_mod",
+        "/etc/workflow/launcher/config/update_asset_create",
+        "/etc/workflow/launcher/config/dam_xmp_nested_writeback",
+        "/etc/workflow/launcher/config/dam_xmp_writeback"
+      ],
+      "deltaContent" : false
+    }
+  ]
+}

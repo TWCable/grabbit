@@ -1,0 +1,8 @@
+== Library Attribution
+
+* http://groovy.codehaus.org/Download[Groovy v2.3.6]
+* https://code.google.com/p/protobuf/downloads/list[Google Protocol Buffers v2.4.1] - The compiler and runtime library is used for Serialization and De-serialization of Data
+* http://docs.spring.io/spring-batch/2.2.x/downloads.html[Spring Batch v2.2.7.RELEASE] - It is used on the server and client to read/write, marshal/unmarshall and send/receive the data to client in a controlled manner.
+* https://bintray.com/twcable/aem/jackalope/2.0.0/view[] - Jackalope is used for testing
+* https://bintray.com/twcable/aem/cq-gradle-plugins/2.0.1/view[CQ Gradle Plugins v2.0.1] : They provide Gradle build support.
+* http://search.maven.org/#artifactdetails%7Cws.antonov.gradle.plugins%7Cgradle-plugin-protobuf%7C0.9.1%7Cjar[Gradle Protocol Buffers Plugin v0.9.1] - It provides easy integration of the ProtoBuf compiler with Gradle.
