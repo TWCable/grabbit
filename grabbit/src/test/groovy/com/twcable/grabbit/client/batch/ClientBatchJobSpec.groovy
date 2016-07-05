@@ -49,7 +49,7 @@ class ClientBatchJobSpec extends Specification {
             .andServer("host", "port")
             .andCredentials("clientUser", "serverUser", "serverPass")
             .andClientJobExecutions(jobExecutions)
-            .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, [], [], deleteBeforeWrite, pathDeltaContent))
+            .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, [], [], deleteBeforeWrite, pathDeltaContent, 100))
             .build()
 
         then:

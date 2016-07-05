@@ -71,7 +71,7 @@
         <batch:step id="clientJcrNodes" next="clientWorkflowOn">
             <batch:tasklet transaction-manager="clientTransactionManager">
                 <batch:chunk reader="clientProtobufNodesReader" writer="clientJcrNodesWriter"
-                            commit-interval="100" skip-limit="0"/>
+                            commit-interval="#{jobParameters[batchSize]}" skip-limit="0"/>
                 <listeners>
                     <listener ref="loggingStepExecutionListener"/>
                 </listeners>

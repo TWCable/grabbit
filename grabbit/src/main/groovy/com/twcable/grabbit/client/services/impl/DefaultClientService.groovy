@@ -39,8 +39,6 @@ import org.springframework.context.ConfigurableApplicationContext
 @SuppressWarnings(['GroovyUnusedDeclaration', 'GrMethodMayBeStatic'])
 class DefaultClientService implements ClientService {
 
-    public static final int BATCH_SIZE = 1000
-
     @Reference(bind = 'setSlingRepository')
     SlingRepository slingRepository
 

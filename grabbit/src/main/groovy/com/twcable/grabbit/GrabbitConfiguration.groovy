@@ -42,6 +42,8 @@ class GrabbitConfiguration {
 
     final long transactionID
 
+    final static int DEFAULT_BATCH_SIZE = 100
+
 
     private GrabbitConfiguration(@Nonnull String user, @Nonnull String pass, @Nonnull String host,
                                  @Nonnull String port, boolean deltaContent,
@@ -85,15 +87,19 @@ class GrabbitConfiguration {
         def serverHost = nonEmpty(configMap, 'serverHost', errorBuilder)
         def serverPort = nonEmpty(configMap, 'serverPort', errorBuilder)
         def deltaContent = boolVal(configMap, 'deltaContent')
+        def transactionLevelBatchSizeFromConfig = integerValue(configMap, 'batchSize')
+        def transactionLevelBatchSize = transactionLevelBatchSizeFromConfig > 0 ? transactionLevelBatchSizeFromConfig :  DEFAULT_BATCH_SIZE
 
         final Collection<PathConfiguration> pathConfigurations = configMap["pathConfigurations"]?.collect { Map config ->
             def path = nonEmpty(config, 'path', errorBuilder)
             def excludePaths = nonEmptyCollection(config["excludePaths"] as Collection<String>, errorBuilder)
             def workflowConfigIds = config["workflowConfigIds"] as Collection<String> ?: [] as Collection<String>
             def deleteBeforeWrite = boolVal(config, 'deleteBeforeWrite')
+            def jobLevelBatchSizeFromConfig = integerValue(config, 'batchSize')
+            def jobLevelBatchSize = jobLevelBatchSizeFromConfig > 0 ? jobLevelBatchSizeFromConfig : transactionLevelBatchSize
             // use the global deltaContent setting if a local one doesn't exist
             boolean pathDeltaContent = config.containsKey('deltaContent') ? config.get('deltaContent') : configMap.get('deltaContent')
-            new PathConfiguration(path, excludePaths, workflowConfigIds, deleteBeforeWrite, pathDeltaContent)
+            new PathConfiguration(path, excludePaths, workflowConfigIds, deleteBeforeWrite, pathDeltaContent, jobLevelBatchSize)
         } ?: [] as Collection<PathConfiguration>
 
         if (pathConfigurations.isEmpty()) errorBuilder.add('pathConfigurations', 'is empty')
@@ -152,6 +158,19 @@ class GrabbitConfiguration {
         return boolVal
     }
 
+    private static Integer integerValue(Map<String, String> configMap, String key) {
+        if (!configMap.containsKey(key)) {
+            log.debug "Input doesn't contain ${key} for a boolean value. Will default to null"
+        }
+        Integer integerValue = 0
+        try {
+            integerValue = configMap.get(key) as Integer
+        }
+        catch (NumberFormatException numberFormatException){
+            log.debug "${configMap.get(key)} is not a number"
+        }
+        return integerValue
+    }
 
     @CompileStatic
     static class ConfigurationException extends RuntimeException {
@@ -202,6 +221,7 @@ class GrabbitConfiguration {
         Collection<String> workflowConfigIds
         boolean deleteBeforeWrite
         boolean pathDeltaContent
+        int batchSize
 
         void setPath(@Nullable String path) {
             this.path = ( path!=null && path.endsWith("/") ) ? path[0..-2] : path
@@ -215,12 +235,13 @@ class GrabbitConfiguration {
         }
 
         protected PathConfiguration(@Nonnull String path, @Nonnull Collection<String> excludePaths,
-                                    @Nonnull Collection<String> workflowConfigIds, boolean deleteBeforeWrite, boolean pathDeltaContent) {
+                                    @Nonnull Collection<String> workflowConfigIds, boolean deleteBeforeWrite, boolean pathDeltaContent, int batchSize) {
             setPath(path)
             this.excludePaths = getAbsolutePaths(excludePaths)
             this.workflowConfigIds = workflowConfigIds
             this.deleteBeforeWrite = deleteBeforeWrite
             this.pathDeltaContent = pathDeltaContent
+            this.batchSize = batchSize
         }
     }
 

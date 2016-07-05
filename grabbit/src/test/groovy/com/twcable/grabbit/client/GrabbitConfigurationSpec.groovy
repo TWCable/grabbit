@@ -51,6 +51,7 @@ class GrabbitConfigurationSpec extends Specification {
         then:
         actualOutput instanceof GrabbitConfiguration
         actualOutput.pathConfigurations.first().excludePaths == expectedOutput
+        actualOutput.pathConfigurations.first().batchSize == 100
     }
 
     @Unroll
@@ -430,5 +431,47 @@ class GrabbitConfigurationSpec extends Specification {
         then:
         output instanceof GrabbitConfiguration
         notThrown(Exception)
+    }
+
+    def "Calculate batch size for job"() {
+        given:
+        def input  = """
+        {
+            "serverUsername" : "admin",
+            "serverPassword" : "admin",
+            "serverHost" : "localhost",
+            "serverPort" : "4503",
+            "deltaContent" : false,
+            "batchSize"  : 50,
+            "pathConfigurations" :  [
+                {
+                    "path" : "/content/a/b",
+                    "batchSize"  : 150,
+                },
+                {
+                    "path" : "/content/dam/d/images",
+                },
+                {
+                    "path" : "/content/x/y/z",
+                    "batchSize" : "a"
+                },
+                {
+                    "path" : "/content/x/y/z",
+                    "batchSize" : -10
+                }
+            ]
+        }
+        """
+
+        when:
+        def output = GrabbitConfiguration.create(input)
+
+        then:
+        output instanceof GrabbitConfiguration
+        output.pathConfigurations.first().batchSize == 150
+        output.pathConfigurations[1].batchSize == 50
+        output.pathConfigurations[2].batchSize == 50
+        output.pathConfigurations.last().batchSize == 50
+
     }
 }
