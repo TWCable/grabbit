@@ -89,12 +89,13 @@ class GrabbitConfiguration {
         def deltaContent = boolVal(configMap, 'deltaContent')
         def transactionLevelBatchSizeFromConfig = integerValue(configMap, 'batchSize')
         def transactionLevelBatchSize = transactionLevelBatchSizeFromConfig > 0 ? transactionLevelBatchSizeFromConfig :  DEFAULT_BATCH_SIZE
+        def transactionLevelDeleteBeforeWriteFlag = boolVal(configMap, 'deleteBeforeWrite')
 
         final Collection<PathConfiguration> pathConfigurations = configMap["pathConfigurations"]?.collect { Map config ->
             def path = nonEmpty(config, 'path', errorBuilder)
             def excludePaths = nonEmptyCollection(config["excludePaths"] as Collection<String>, errorBuilder)
             def workflowConfigIds = config["workflowConfigIds"] as Collection<String> ?: [] as Collection<String>
-            def deleteBeforeWrite = boolVal(config, 'deleteBeforeWrite')
+            def deleteBeforeWrite = config.containsKey("deleteBeforeWrite") ? boolVal(config, 'deleteBeforeWrite') : transactionLevelDeleteBeforeWriteFlag
             def jobLevelBatchSizeFromConfig = integerValue(config, 'batchSize')
             def jobLevelBatchSize = jobLevelBatchSizeFromConfig > 0 ? jobLevelBatchSizeFromConfig : transactionLevelBatchSize
             // use the global deltaContent setting if a local one doesn't exist

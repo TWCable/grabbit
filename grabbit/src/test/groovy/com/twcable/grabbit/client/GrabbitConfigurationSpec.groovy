@@ -381,6 +381,7 @@ class GrabbitConfigurationSpec extends Specification {
         serverHost : 'localhost'
         serverPort : 4502
         deltaContent : true
+        deleteBeforeWrite : true
         workflowConfigIds : &configs
           - '/configA'
           - '/configB'
@@ -397,6 +398,7 @@ class GrabbitConfigurationSpec extends Specification {
             excludePaths :
               - 'z'
             workflowConfigIds : *configs
+            deleteBeforeWrite : false
         """
         def output = GrabbitConfiguration.create(input)
         then:
@@ -405,7 +407,8 @@ class GrabbitConfigurationSpec extends Specification {
         output.pathConfigurations.first().excludePaths.size() > 0
         output.pathConfigurations.first().workflowConfigIds.first() == "/configA"
         output.pathConfigurations.first().excludePaths.first() == "/a/b/c"
-        output.pathConfigurations.first().deleteBeforeWrite == false
+        output.pathConfigurations.first().deleteBeforeWrite == true
+        output.pathConfigurations.last().deleteBeforeWrite == false
         output.deltaContent instanceof Boolean
     }
 
