@@ -18,8 +18,10 @@ buildscript {
     }
 }
 
+plugins {
+    id "com.jfrog.bintray" version "1.3.1"
+}
 
-allprojects {
     apply plugin: 'idea'
     apply plugin: 'eclipse'
     apply plugin: 'maven'
@@ -41,14 +43,12 @@ allprojects {
         // without running afoul of licensing restrictions
         flatDir { dirs rootProject.projectDir }
     }
-}
 
 ext.vendor = 'Time Warner Cable - Converged Technology Group - CMS Team'
 ext.organization = "Time Warner Cable"
 ext.providerUrl = "https://www.timewarnercable.com"
 ext.providerLink = "https://github.com/TWCable/grabbit"
 
-configure(excludeProjects()) {
     apply plugin: 'groovy'
     apply from: "${rootProject.projectDir}/gradle/dependencies.gradle"
     apply from: "${rootProject.projectDir}/testutils/gradle/testing.gradle"
@@ -60,10 +60,8 @@ configure(excludeProjects()) {
         attributes 'Implementation-Version': project.version
         attributes 'Implementation-Vendor': project.vendor
     }
-}
 
-subprojects {
-    afterEvaluate { project ->
+    afterEvaluate {
         if (project.hasProperty('sourceCompatibility')) {
             project.sourceCompatibility = 1.7
         }
@@ -92,11 +90,6 @@ subprojects {
             }
         }
     }
-}
-
-def excludeProjects() {
-    subprojects.findAll { project -> (project.name != 'proto' && project.name != 'osgi-wrappers')}
-}
 
 idea.project.ipr {
     withXml { provider ->
@@ -161,3 +154,67 @@ idea.project.ipr {
         }
     }
 }
+
+apply from: "${rootProject.projectDir}/gradle/verifyComponentConfig.gradle"
+apply from: "${rootProject.projectDir}/gradle/utils.gradle"
+
+apply plugin: 'osgi'
+apply plugin: 'scr'
+apply plugin: 'sling-bundle'
+apply plugin: 'protobuf'
+
+// remove "mvn install" since it's not needed and causes a conflict
+def installTask = tasks.findByPath('install')
+if (installTask != null) tasks.remove(installTask)
+
+apply from: "${rootProject.projectDir}/gradle/bundle.gradle"
+apply from: "${rootProject.projectDir}/gradle/packageExclusions.gradle"
+apply from: "${rootProject.projectDir}/gradle/idea.gradle"
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(bintrayUpload)) {
+        if (!project.hasProperty('bintray.user') || !project.hasProperty('bintray.key')) {
+            throw new IllegalArgumentException((String)"Please define 'bintray.user' and " +
+                    "'bintray.key' properties. (Such as in ~/.gradle/gradle.properties)")
+        }
+    }
+}
+
+version = new com.twcable.grabbit.Version(version as String)
+
+bintray {
+    user = project.properties['bintray.user']
+    key = project.properties['bintray.key']
+    filesSpec {
+        from tasks.getByPath('createPackage').archivePath
+        into '.'
+    }
+
+    publish = version.status == 'release'
+
+    pkg {
+        userOrg = 'twcable'
+        repo = 'aem'
+        name = 'Grabbit'
+
+        desc = 'The purpose of this project is to provide a reliable and fast solution for copying content from a Source to Destination. Source and destination can be any AEM instances.'
+
+        websiteUrl = 'https://github.com/TWCable/grabbit'
+        issueTrackerUrl = 'https://github.com/TWCable/grabbit/issues'
+        vcsUrl = 'https://github.com/TWCable/grabbit.git'
+        licenses = ['Apache-2.0']
+        labels = ['AEM', 'CQ', 'Content Copy', 'Data Migration']
+        attributes = ['plat': ['aem', 'cq']]
+
+        publicDownloadNumbers = true
+
+        //noinspection GroovyAssignabilityCheck
+        version {
+            //noinspection GrReassignedInClosureLocalVar
+            name = project.version.bintrayVersion
+            vcsTag = 'v' + project.version
+        }
+    }
+}
+
+bintrayUpload.dependsOn('createPackage')

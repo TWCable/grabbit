@@ -1,0 +1,16 @@
+idea {
+    module {
+        // The whole build dir is excluded by default, but we need build/generated-sources,
+        // which contains the generated proto classes.
+        excludeDirs = [
+                file("$buildDir/classes"),
+                file("$buildDir/docs"),
+                file("$buildDir/dependency-cache"),
+                file("$buildDir/libs"),
+                file("$buildDir/reports"),
+                file("$buildDir/resources"),
+                file("$buildDir/test-results"),
+                file("$buildDir/tmp"),
+        ]
+    }
+}

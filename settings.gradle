@@ -1,2 +1,1 @@
-include ':grabbit'
-project(':grabbit').name = "Grabbit"
+rootProject.name = "Grabbit"

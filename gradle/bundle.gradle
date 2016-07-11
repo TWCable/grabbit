@@ -1,0 +1,61 @@
+apply plugin: 'cqpackage'
+
+ext.packageName = project.name
+ext.bundleName = project.name
+ext.bundleDescription = 'Grabbit'
+ext.symbolicName = "com.twcable.grabbit"
+jar.baseName = 'grabbit'
+
+createPackage.bundleInstallRoot = '/apps/grabbit/install'
+
+bundle.installPath = '/apps/grabbit/install'
+
+jar {
+    from('src/main/content/SLING-INF/content', {
+        into 'SLING-INF/content'
+    })
+}
+
+verifyBundles.dependsOn 'jar'
+
+jar.manifest {
+
+    attributes 'Sling-Initial-Content': project.configFolders.collect {
+        "SLING-INF/content/apps/grabbit/${it}; overwrite:=true; uninstall:=true; path:=/apps/grabbit/${it}"
+    }.join(', ')
+
+    attributes 'Bundle-Name': project.bundleName
+    attributes 'Bundle-SymbolicName': project.symbolicName
+    attributes 'Bundle-Description': project.bundleDescription
+    instruction 'Import-Package', 'groovy.json; version="[2.3,3.0)"'
+    instruction 'Import-Package', 'groovy.json.internal; version="[2.3,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.scope; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.item.file.transform; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.item.file; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.item.support; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.configuration.xml; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.configuration.support; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.explore.support; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.repository.support; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.repository; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.launch.support; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.job.flow.support; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.job.flow.support.state; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.core.repository.dao; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.batch.support.transaction; version="[2.2,3.0)"'
+    instruction 'Import-Package', 'org.springframework.beans.factory.config; version="[3.1,4.0)"'
+    instruction 'Import-Package', 'org.springframework.core.io; version="[3.1,4.0)"'
+    instruction 'Import-Package', 'org.springframework.core.task; version="[3.1,4.0)"'
+    instruction 'Import-Package', 'org.springframework.aop; version="[3.1,4.0)"'
+    instruction 'Import-Package', 'org.springframework.aop.framework; version="[3.1,4.0)"'
+    instruction 'Import-Package', 'org.springframework.aop.scope; version="[3.1,4.0)"'
+    instruction 'Import-Package', 'org.springframework.scheduling.concurrent; version="[3.1,4.0)"'
+    instruction 'Import-Package', "org.aopalliance.aop;version=1.0.0"
+    instruction 'Import-Package', "sun.misc"
+    instruction 'Import-Package', '*'
+
+    // export everything to OSGi except *.impl packages
+    instruction 'Export-Package', "!*.impl, *;-noimport:=false;version=${version}"
+}
+
+bundle.installPath = '/apps/grabbit/install/${nativeStartLevel}'

@@ -1,0 +1,45 @@
+apply plugin: 'cqpackage'
+// exclude bundles provided by CQ
+configurations.cq_package {
+    exclude group: 'javax.servlet', module: 'servlet-api'
+    exclude group: 'commons-logging', module: 'commons-logging'
+    exclude group: 'commons-httpclient', module: 'commons-httpclient'
+    exclude group: 'com.sun.xml.bind'
+    exclude group: 'aopalliance', module: 'aopalliance'
+    exclude group: 'javax.xml.stream'
+    exclude group: 'javax.jcr', module: 'jcr'
+
+    // use AEM's logging, not logback
+    exclude group: 'ch.qos.logback', module: 'logback-classic'
+    exclude group: 'ch.qos.logback', module: 'logback-core'
+
+    // Slf4j is provided by AEM
+    exclude group: 'org.slf4j', module: 'slf4j-api'
+    exclude group: 'org.slf4j', module: 'jcl-over-slf4j'
+
+    // excluding Joda Time too as AEM provides its own in com.day.commons.osgi.wrapper.joda-time
+    exclude group: 'joda-time', module: 'joda-time'
+
+    exclude group: 'com.google.code.findbugs', module: 'jsr305'
+
+    exclude group: 'com.day.cq.workflow', module: 'cq-workflow-console'
+
+    exclude group: 'org.apache.felix', module: 'org.apache.felix.scr.annotations'
+    exclude group: 'org.apache.felix', module: 'org.osgi.core'
+    exclude group: 'org.apache.felix', module: 'org.osgi.compendium'
+
+    exclude group: 'org.apache.commons', module: 'commons-lang3'
+    exclude group: 'org.apache.jackrabbit', module:'jackrabbit-jcr-commons'
+    exclude group: 'commons-io', module: 'commons-io'
+
+    //Exclude Apache Sling Libraries
+    exclude group: 'org.apache.sling', module: 'org.apache.sling.api'
+    exclude group: 'org.apache.sling', module:'org.apache.sling.jcr.resource'
+    exclude group: 'org.apache.sling', module: 'org.apache.sling.jcr.api'
+
+    // 6.x exclude bundles
+    exclude group: 'com.google.guava', module: 'guava'
+    exclude group: 'org.apache.httpcomponents', module: 'httpclient-osgi'
+    exclude group: 'org.apache.httpcomponents', module: 'httpcore-osgi'
+    exclude module: 'cq-workflow-console'
+}

@@ -1,0 +1,11 @@
+apply plugin: 'groovy'
+
+dependencies {
+    testCompile('org.spockframework:spock-core:1.0-groovy-2.3') {
+        exclude module: 'groovy-all'
+    }
+}
+
+repositories {
+    mavenCentral()
+}
