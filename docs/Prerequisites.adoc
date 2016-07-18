@@ -1,21 +1,16 @@
 == Prerequisites
 
 === Installing Protocol Buffers Compiler
+
 ==== For Windows
 Install the binary from https://github.com/google/protobuf/releases/download/v2.4.1/protoc-2.4.1-win32.zip and then set the `/path/to/protoc/parent` on your PATH variable.
 
 ==== For Macs
 
 ```
-
-brew tap homebrew/versions
-
-brew install protobuf241
+brew install https://raw.githubusercontent.com/Homebrew/homebrew-versions/7f5eb0d/protobuf241.rb
 
 brew link --force --overwrite protobuf241
-
 ```
 
 _For both Windows and Mac : To verify that installation was successful, `protoc --version` should display `2.4.1`_
-
-
