@@ -14,3 +14,5 @@ v2.x - CQ 5.6
 Active development is on the "master" branch, which is currently the 5.x version line. Security patches and the like are sometimes back-ported to prior versions.
 
 Of course pull-requests are happily accepted for those that would like to submit things like back-porting features for AEM 5.6, etc.
+
+image:https://api.bintray.com/packages/twcable/aem/Grabbit/images/download.svg[title = "Download", link = "https://bintray.com/twcable/aem/Grabbit/_latestVersion"]

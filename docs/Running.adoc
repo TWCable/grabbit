@@ -1,6 +1,6 @@
 == Running
 
-Make sure Grabbit Package is installed on both client and server. You can download the package from link:https://bintray.com/twcable/aem/Grabbit/_latestVersion#files[here]
+Make sure Grabbit Package is installed on both client and server. You can download the package from image:https://api.bintray.com/packages/twcable/aem/Grabbit/images/download.svg[title = "Download", link = "https://bintray.com/twcable/aem/Grabbit/_latestVersion"]
 
 Once that is done, you need just 2 files to sync content between the servers:
 

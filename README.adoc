@@ -1,5 +1,4 @@
 = Grabbit
-
 :docsDir: docs
 
 image:https://travis-ci.org/TWCable/grabbit.svg?branch=master[title = "Build Status", link = "https://travis-ci.org/TWCable/grabbit"] image:https://badge.waffle.io/TWCable/grabbit.png?label=ready&title=Ready[title = "Stories in Ready", link = "https://waffle.io/TWCable/grabbit"]
@@ -17,7 +16,9 @@ Grabbit creates a stream of data using https://developers.google.com/protocol-bu
 
 Moreover, by doing a continuous stream, we avoid the latency issues. Depending on the size and nature of the data, as well as network latency, we have so far seen speed improvements ranging from 2 to 10 times that of Recap/vlt.
 
-*__"Grabbit"__ obviously refers to this "grabbing" content from one CQ instance and copying it to another. However it also refers to "Jackrabbit," the reference JCR implementation that the content is being copied to and from.*
+NOTE: "Grabbit" obviously refers to this "grabbing" content from one CQ/AEM instance and copying it to another. However it also refers to "Jackrabbit," the reference JCR implementation that the content is being copied to and from.
+
+image:https://api.bintray.com/packages/twcable/aem/Grabbit/images/download.svg[title = "Download", link = "https://bintray.com/twcable/aem/Grabbit/_latestVersion"]
 
 
 == Table of Contents

@@ -1,4 +1,7 @@
 # RELEASE NOTES
+
+[ ![Download](https://api.bintray.com/packages/twcable/aem/Grabbit/images/download.svg) ](https://bintray.com/twcable/aem/Grabbit/_latestVersion)
+
 ## 5.0.1
 
 * Adds feature that provides a way to delete JcrJobRepository that is older than X hours from "now"
