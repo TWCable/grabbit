@@ -10,7 +10,7 @@
 
    # A reference to the standard set of workflow configuration ids that
    # we want to turn off when working with DAM assets.
-   &damWorkflows:
+   damWorkflows: &ourDamWorkflows
      - /etc/workflow/launcher/config/update_asset_mod
      - /etc/workflow/launcher/config/update_asset_create
      - /etc/workflow/launcher/config/dam_xmp_nested_writeback
@@ -29,4 +29,4 @@
        excludePaths :
          - someContent/someExcludeContent
          - someContent/someOtherExcludeContent
-       workflowConfigIds : *damWorkflows
+       workflowConfigIds : *ourDamWorkflows
