@@ -19,7 +19,6 @@ package com.twcable.grabbit.client.batch.steps.namespace
 import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import com.twcable.grabbit.proto.NamespaceProtos.NamespaceEntry
 import com.twcable.grabbit.proto.NamespaceProtos.NamespaceRegistry
-import com.twcable.grabbit.proto.NamespaceProtos.Namespaces
 import groovy.transform.CompileStatic
 import groovy.transform.WithWriteLock
 import groovy.util.logging.Slf4j
@@ -34,7 +33,7 @@ import javax.jcr.RepositoryException
 import javax.jcr.Session
 
 /**
- * A Custom Tasklet that will read a {@link NamespaceProtos.Namespaces} object from {@link NamespaceSyncTasklet#theInputStream()}  and it to the {@link NamespaceSyncTasklet#theSession()}
+ * A Custom Tasklet that will read a {@link NamespaceRegistry} object from {@link NamespaceSyncTasklet#theInputStream()}  and it to the {@link NamespaceSyncTasklet#theSession()}
  *  See client-batch-job.xml for how this is used.
  */
 @Slf4j
@@ -52,17 +51,17 @@ class NamespaceSyncTasklet implements Tasklet {
     @Override
     RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         log.info "Start writing namespaces."
-        Namespaces namespaces = Namespaces.parseDelimitedFrom(theInputStream())
+        NamespaceRegistry namespaceRegistry = NamespaceRegistry.parseDelimitedFrom(theInputStream())
 
-        if (!namespaces) {
+        if (!namespaceRegistry) {
             log.warn "No namespaces received from server"
             log.info "Finished writing namespaces."
             return RepeatStatus.FINISHED
         }
 
-        log.trace "Received namespaces : ${namespaces}"
+        log.trace "Received namespaces : ${namespaceRegistry}"
 
-        writeToJcr(namespaces, theSession())
+        writeToJcr(namespaceRegistry, theSession())
         theSession().save()
         log.info "Finished writing namespaces."
         return RepeatStatus.FINISHED
@@ -79,11 +78,10 @@ class NamespaceSyncTasklet implements Tasklet {
     }
 
 
-    private static void writeToJcr(Namespaces namespaces, Session session) {
+    private static void writeToJcr(NamespaceRegistry namespaceRegistry, Session session) {
         try {
             final NamespaceHelper namespaceHelper = new NamespaceHelper(session)
-            NamespaceRegistry namespaceRegistryProto = namespaces.namespaceRegistry
-            namespaceRegistryProto.entryList.each { NamespaceEntry namespaceEntry ->
+            namespaceRegistry.entryList.each { NamespaceEntry namespaceEntry ->
                 try {
                     namespaceHelper.registerNamespace(namespaceEntry.prefix, namespaceEntry.uri)
                 }
@@ -100,7 +98,7 @@ class NamespaceSyncTasklet implements Tasklet {
             session.save()
         }
         catch (RepositoryException e) {
-            log.error "Exception while unmarshalling Namespaces: ${namespaces}", e
+            log.error "Exception while unmarshalling Namespaces: ${namespaceRegistry}", e
         }
     }
 }

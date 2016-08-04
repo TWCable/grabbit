@@ -42,7 +42,7 @@ class ProtoNodeDecorator {
     ProtoNodeDecorator(@Nonnull ProtoNode node) {
         if(!node) throw new IllegalArgumentException("node must not be null!")
         this.innerProtoNode = node
-        this.protoProperties = node.properties.propertyList.collect { new ProtoPropertyDecorator(it) }
+        this.protoProperties = node.propertiesList.collect { new ProtoPropertyDecorator(it) }
     }
 
 
@@ -92,7 +92,7 @@ class ProtoNodeDecorator {
      * @param node
      */
     private static void addMixins(ProtoPropertyDecorator property, JCRNode node) {
-        property.values.valueList.each { ProtoValue value ->
+        property.valuesList.each { ProtoValue value ->
             if (node.canAddMixin(value.stringValue)) {
                 node.addMixin(value.stringValue)
                 log.debug "Added mixin ${value.stringValue} for : ${node.name}."

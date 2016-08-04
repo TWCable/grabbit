@@ -1,5 +1,8 @@
 package com.twcable.grabbit.jcr
 
+import com.day.cq.commons.jcr.JcrConstants
+import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
+
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -15,10 +18,9 @@ package com.twcable.grabbit.jcr
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import com.day.cq.commons.jcr.JcrConstants
-import com.twcable.grabbit.proto.NodeProtos
-import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
+import com.twcable.grabbit.proto.NodeProtos.Node.Builder as ProtoNodeBuilder
+import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
+import com.twcable.grabbit.proto.NodeProtos.Value as ProtoValue
 import spock.lang.Specification
 
 import javax.jcr.Node
@@ -35,43 +37,39 @@ class ProtoNodeDecoratorSpec extends Specification {
 
 
     def setup() {
-        NodeProtos.Node.Builder nodeBuilder = NodeProtos.Node.newBuilder()
+        ProtoNodeBuilder nodeBuilder = ProtoNode.newBuilder()
         nodeBuilder.setName("somenode")
 
-        NodeProtos.Properties.Builder propertiesBuilder = NodeProtos.Properties.newBuilder()
-
-        NodeProtos.Property primaryTypeProperty = NodeProtos.Property
+        ProtoProperty primaryTypeProperty = ProtoProperty
                 .newBuilder()
                 .setName(JCR_PRIMARYTYPE)
                 .setType(STRING)
-                .setValue(NodeProtos.Value.newBuilder().setStringValue(JcrConstants.NT_UNSTRUCTURED))
+                .addValues(ProtoValue.newBuilder().setStringValue(JcrConstants.NT_UNSTRUCTURED))
                 .build()
-        propertiesBuilder.addProperty(primaryTypeProperty)
+        nodeBuilder.addProperties(primaryTypeProperty)
 
-        NodeProtos.Property mixinTypeProperty = NodeProtos.Property
+        ProtoProperty mixinTypeProperty = ProtoProperty
                 .newBuilder()
                 .setName(JCR_MIXINTYPES)
                 .setType(STRING)
-                .setValues(
-                NodeProtos.Values.newBuilder().addAllValue(
+                .addAllValues(
                     [
-                        NodeProtos.Value.newBuilder().setStringValue("somemixintype").build(),
-                        NodeProtos.Value.newBuilder().setStringValue("unwritablemixin").build()
+                        ProtoValue.newBuilder().setStringValue("somemixintype").build(),
+                        ProtoValue.newBuilder().setStringValue("unwritablemixin").build()
                     ]
-                ))
+                )
                 .build()
-        propertiesBuilder.addProperty(mixinTypeProperty)
+        nodeBuilder.addProperties(mixinTypeProperty)
 
 
-        NodeProtos.Property someOtherProperty = NodeProtos.Property
+        ProtoProperty someOtherProperty = ProtoProperty
                 .newBuilder()
                 .setName("someproperty")
                 .setType(STRING)
-                .setValue(NodeProtos.Value.newBuilder().setStringValue("somevalue"))
+                .addValues(ProtoValue.newBuilder().setStringValue("somevalue"))
                 .build()
-        propertiesBuilder.addProperty(someOtherProperty)
+        nodeBuilder.addProperties(someOtherProperty)
 
-        nodeBuilder.setProperties(propertiesBuilder.build())
         decoratedProtoNode = nodeBuilder.build()
     }
 
@@ -102,7 +100,7 @@ class ProtoNodeDecoratorSpec extends Specification {
         final property = protoNodeDecorator.getMixinProperty()
 
         then:
-        property.values.valueCount == 2
+        property.valuesCount == 2
         property.name == JCR_MIXINTYPES
     }
 

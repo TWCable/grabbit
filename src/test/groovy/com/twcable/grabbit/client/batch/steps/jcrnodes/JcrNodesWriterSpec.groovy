@@ -19,6 +19,11 @@ package com.twcable.grabbit.client.batch.steps.jcrnodes
 import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import com.twcable.grabbit.jcr.JcrUtil
 import com.twcable.grabbit.proto.NodeProtos
+import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
+import com.twcable.grabbit.proto.NodeProtos.Node.Builder as ProtoNodeBuilder
+import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
+import com.twcable.grabbit.proto.NodeProtos.Property.Builder as ProtoPropertyBuilder
+import com.twcable.grabbit.proto.NodeProtos.Value as ProtoValue
 import org.apache.jackrabbit.JcrConstants
 import spock.lang.Specification
 import spock.lang.Subject
@@ -27,6 +32,7 @@ import javax.jcr.Node as JcrNode
 import javax.jcr.PathNotFoundException
 import javax.jcr.Session
 
+import static com.day.cq.commons.jcr.JcrConstants.*
 import static com.twcable.jackalope.JCRBuilder.repository
 import static javax.jcr.PropertyType.LONG
 import static javax.jcr.PropertyType.STRING
@@ -42,39 +48,37 @@ class JcrNodesWriterSpec extends Specification {
     def "Can get a Jcr File Node given a single Protobuf Message Node"() {
         given:
 
-        NodeProtos.Node.Builder nodeBuilder = NodeProtos.Node.newBuilder()
+        ProtoNodeBuilder nodeBuilder = ProtoNode.newBuilder()
         nodeBuilder.setName("/default.groovy")
-        NodeProtos.Properties.Builder propertiesBuilder = NodeProtos.Properties.newBuilder()
-        NodeProtos.Property aProperty = NodeProtos.Property
+
+        ProtoProperty propertyOne = ProtoProperty
             .newBuilder()
-            .setName(JcrConstants.JCR_PRIMARYTYPE)
+            .setName(JCR_PRIMARYTYPE)
             .setType(STRING)
-            .setValue(NodeProtos.Value.newBuilder().setStringValue(JcrConstants.NT_FILE))
+            .addValues(ProtoValue.newBuilder().setStringValue(NT_FILE))
             .build()
 
-        propertiesBuilder.addProperty(aProperty)
-        aProperty = NodeProtos.Property
+        ProtoProperty propertyTwo = ProtoProperty
             .newBuilder()
-            .setName(JcrConstants.JCR_LASTMODIFIED)
+            .setName(JCR_LASTMODIFIED)
             .setType(STRING)
-            .setValue(NodeProtos.Value.newBuilder().setStringValue("Date"))
+            .addValues(NodeProtos.Value.newBuilder().setStringValue("Date"))
             .build()
-        propertiesBuilder.addProperty(aProperty)
-        nodeBuilder.setProperties(propertiesBuilder.build())
+
+        nodeBuilder.addAllProperties([propertyOne, propertyTwo])
 
         // Child Node jcr:content
-        NodeProtos.Node.Builder childNodeBuilder = NodeProtos.Node.newBuilder()
+        ProtoNodeBuilder childNodeBuilder = ProtoNode.newBuilder()
         childNodeBuilder.setName("/default.groovy/$JcrConstants.JCR_CONTENT")
-        NodeProtos.Properties.Builder childPropertiesBuilder = NodeProtos.Properties.newBuilder()
-        NodeProtos.Property childProperty = NodeProtos.Property
-                .newBuilder()
-                .setName(JcrConstants.JCR_PRIMARYTYPE)
-                .setType(STRING)
-                .setValue(NodeProtos.Value.newBuilder().setStringValue(JcrConstants.NT_RESOURCE))
-                .build()
-        childPropertiesBuilder.addProperty(childProperty)
 
-        childNodeBuilder.setProperties(childPropertiesBuilder.build())
+        ProtoProperty childProperty = NodeProtos.Property
+                .newBuilder()
+                .setName(JCR_PRIMARYTYPE)
+                .setType(STRING)
+                .addValues(NodeProtos.Value.newBuilder().setStringValue(NT_RESOURCE))
+                .build()
+
+        childNodeBuilder.addProperties(childProperty)
 
         // Adding Child Node
         nodeBuilder.addMandatoryChildNode(childNodeBuilder.build())
@@ -98,40 +102,37 @@ class JcrNodesWriterSpec extends Specification {
 
 
     def "Can get a Jcr Unstructured Node given a single Protobuf Message Node"() {
-        NodeProtos.Node.Builder nodeBuilder = NodeProtos.Node.newBuilder()
+        ProtoNodeBuilder nodeBuilder = ProtoNode.newBuilder()
         nodeBuilder.setName("/default")
-        NodeProtos.Properties.Builder propertiesBuilder = NodeProtos.Properties.newBuilder()
-        NodeProtos.Property aProperty = NodeProtos.Property
+
+        ProtoProperty propertyOne = NodeProtos.Property
             .newBuilder()
             .setName("jcr:primaryType")
             .setType(STRING)
-            .setValue(NodeProtos.Value.newBuilder().setStringValue("nt:unstructured"))
+            .addValues(NodeProtos.Value.newBuilder().setStringValue("nt:unstructured"))
             .build()
 
-        propertiesBuilder.addProperty(aProperty)
-
-        aProperty = NodeProtos.Property
+        ProtoProperty propertyTwo = NodeProtos.Property
             .newBuilder()
             .setName("multiValuedLong")
             .setType(LONG)
-            .setValues(
-            NodeProtos.Values.newBuilder().addAllValue(
+            .addAllValues(
                 [
-                    NodeProtos.Value.newBuilder().setStringValue("12345").build(),
-                    NodeProtos.Value.newBuilder().setStringValue("54321").build()
+                    ProtoValue.newBuilder().setStringValue("12345").build(),
+                    ProtoValue.newBuilder().setStringValue("54321").build()
                 ]
             )
-        )
             .build()
-        propertiesBuilder.addProperty(aProperty)
-        nodeBuilder.setProperties(propertiesBuilder.build())
-        NodeProtos.Node nodeProto = nodeBuilder.build()
+
+        nodeBuilder.addAllProperties([propertyOne, propertyTwo])
+
+        ProtoNode protoNode = nodeBuilder.build()
 
         Session session = JcrUtil.getSession(repository().build(), "admin")
 
         when:
         ClientBatchJobContext.setSession(session)
-        new JcrNodesWriter().write([nodeProto])
+        new JcrNodesWriter().write([protoNode])
 
         then:
         JcrNode jcrNode = session.getNode("/default")
@@ -163,17 +164,15 @@ class JcrNodesWriterSpec extends Specification {
     }
 
     def getNodeProto(String name, String primaryTypeName, String primaryTypeValue) {
-        NodeProtos.Node.Builder nodeBuilder = NodeProtos.Node.newBuilder()
-        NodeProtos.Property.Builder propertyBuilder =
-                NodeProtos.Property.newBuilder()
+        ProtoNodeBuilder nodeBuilder = ProtoNode.newBuilder()
+        nodeBuilder.setName(name)
+
+        ProtoPropertyBuilder propertyBuilder = ProtoProperty.newBuilder()
                 .setName(primaryTypeName)
                 .setType(STRING)
-                .setValue(NodeProtos.Value.newBuilder().setStringValue(primaryTypeValue))
-        nodeBuilder.setName(name)
-        nodeBuilder.properties =
-                NodeProtos.Properties.newBuilder()
-                .addProperty(propertyBuilder.build())
-                .build()
+                .addValues(ProtoValue.newBuilder().setStringValue(primaryTypeValue))
+
+        nodeBuilder.addProperties(propertyBuilder.build())
         nodeBuilder.build()
     }
 

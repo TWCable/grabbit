@@ -18,7 +18,7 @@ package com.twcable.grabbit.server.batch.steps.namespace
 
 import com.twcable.grabbit.proto.NamespaceProtos.NamespaceEntry
 import com.twcable.grabbit.proto.NamespaceProtos.NamespaceRegistry
-import com.twcable.grabbit.proto.NamespaceProtos.Namespaces
+import com.twcable.grabbit.proto.NamespaceProtos.NamespaceRegistry.Builder as NameSpaceRegistryBuilder
 import com.twcable.grabbit.server.batch.ServerBatchJobContext
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -42,15 +42,11 @@ class NamespaceWriter implements ItemWriter<NamespaceEntry>, ItemWriteListener {
         ServletOutputStream servletOutputStream = theServletOutputStream()
         if (servletOutputStream == null) throw new IllegalStateException("servletOutputStream must be set.")
 
-        NamespaceRegistry.Builder namespaceRegistryBuilder = NamespaceRegistry.newBuilder()
-        namespaceRegistryBuilder.addAllEntry(namespaceEntries)
+        NameSpaceRegistryBuilder namespaceRegistryBuilder = NamespaceRegistry.newBuilder()
+        NamespaceRegistry namespaceRegistry = namespaceRegistryBuilder.addAllEntry(namespaceEntries).build()
 
-        Namespaces nameSpaces = Namespaces.newBuilder()
-            .setNamespaceRegistry(namespaceRegistryBuilder.build())
-            .build()
-
-        log.debug "Writing Namespace Proto message : ${nameSpaces}"
-        nameSpaces.writeDelimitedTo(servletOutputStream)
+        log.debug "Writing Namespace Registry : ${NamespaceRegistry}"
+        namespaceRegistry.writeDelimitedTo(servletOutputStream)
     }
 
 

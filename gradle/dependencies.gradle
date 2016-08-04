@@ -91,7 +91,7 @@ dependencies {
 
     compile "org.yaml:snakeyaml:${snakeyaml_version}"
 
-    compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.protobuf-java:${servicemix_protobuf_java_version}"
+    compile "com.twc.osgi:protobuf-java:${protobuf_version}"
     //For cleaner mocking
     testCompile "org.objenesis:objenesis:${objenesis_version}"
 

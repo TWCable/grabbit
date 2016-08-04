@@ -18,41 +18,32 @@ package com.twcable.grabbit.server.batch.steps.jcrnodes
 
 import com.google.protobuf.ByteString
 import com.twcable.grabbit.DateUtil
-import com.twcable.grabbit.proto.NodeProtos
-import com.twcable.grabbit.proto.NodeProtos.Node
-import com.twcable.grabbit.proto.NodeProtos.Properties
-import com.twcable.grabbit.proto.NodeProtos.Property
+import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
+import com.twcable.grabbit.proto.NodeProtos.Node.Builder as ProtoNodeBuilder
+import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
+import com.twcable.grabbit.proto.NodeProtos.Property.Builder as ProtoPropertyBuilder
+import com.twcable.grabbit.proto.NodeProtos.Value as ProtoValue
+import com.twcable.grabbit.proto.NodeProtos.Value.Builder as ProtoValueBuilder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.springframework.batch.item.ItemProcessor
+
+import javax.annotation.Nonnull
+import javax.annotation.Nullable
 import javax.jcr.Node as JcrNode
 import javax.jcr.Property as JcrProperty
-import javax.jcr.PropertyType
 import javax.jcr.Value
 import javax.jcr.nodetype.ItemDefinition
 
 import static javax.jcr.PropertyType.BINARY
-import static javax.jcr.PropertyType.BOOLEAN
-import static javax.jcr.PropertyType.DATE
-import static javax.jcr.PropertyType.DECIMAL
-import static javax.jcr.PropertyType.DOUBLE
-import static javax.jcr.PropertyType.LONG
-import static javax.jcr.PropertyType.NAME
-import static javax.jcr.PropertyType.PATH
-import static javax.jcr.PropertyType.REFERENCE
-import static javax.jcr.PropertyType.STRING
-import static javax.jcr.PropertyType.WEAKREFERENCE
-import static org.apache.jackrabbit.JcrConstants.JCR_CREATED
-import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
-import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
-import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
+import static org.apache.jackrabbit.JcrConstants.*
 
 /**
- * A Custom ItemProcessor that effectively acts as a Marshaller for a Jcr Node.
+ * This ItemProcessor takes javax.jcr.Node references from JcrNodesReader, and converts them into ProtoNode objects
  */
 @Slf4j
 @CompileStatic
-class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
+class JcrNodesProcessor implements ItemProcessor<JcrNode, ProtoNode> {
 
     private String contentAfterDate
 
@@ -61,11 +52,12 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
     }
 
     /**
-     * Converts a JCR Node to Protocol Buffer Message {@link NodeProtos.Node} object.
-     * Returns a null if current Node's processing needs to be ignored like for "rep:policy" nodes
+     * Converts a JCR Node to a {@link ProtoNode} object.
+     * Returns null if current Node's processing needs to be ignored like for "rep:policy" nodes
      */
     @Override
-    Node process(JcrNode jcrNode) throws Exception {
+    @Nullable
+    ProtoNode process(JcrNode jcrNode) throws Exception {
 
         //TODO: Access Control Lists nodes are not supported right now.
         if (!jcrNode || jcrNode.path.contains("rep:policy")) {
@@ -84,81 +76,80 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
         }
 
         // Skip this node because it has already been processed by its parent
-        if(isRequiredNode(jcrNode)) {
+        if(isMandatoryNode(jcrNode)) {
             return null;
         } else {
             // Build parent node
-            return buildNode(jcrNode, getRequiredChildNodes(jcrNode))
+            return buildNode(jcrNode, getMandatoryChildNodes(jcrNode))
         }
     }
 
     /**
      * Build node and "only" mandatory child nodes
-     * @param JCR Node
-     * @param Mandatory childNodes
-     * @return Node Proto node
+     * @param jcrNode
+     * @param mandatoryChildNodes
      */
-    private Node buildNode(JcrNode jcrNode, Collection<JcrNode> childNodes) {
-        final Node.Builder nodeBuilder = Node.newBuilder()
-        nodeBuilder.setName(jcrNode.path)
-        nodeBuilder.setProperties(buildProperties(jcrNode))
-        childNodes?.each {
-            nodeBuilder.addMandatoryChildNode(buildNode(it, getRequiredChildNodes(it)))
+    @Nonnull
+    private ProtoNode buildNode(JcrNode jcrNode, Collection<JcrNode> mandatoryChildNodes) {
+        final ProtoNodeBuilder protoNodeBuilder = ProtoNode.newBuilder()
+        protoNodeBuilder.setName(jcrNode.path)
+        protoNodeBuilder.addAllProperties(getProtoPropertiesFrom(jcrNode))
+        mandatoryChildNodes?.each {
+            protoNodeBuilder.addMandatoryChildNode(buildNode(it, getMandatoryChildNodes(it)))
         }
-        return nodeBuilder.build()
+        return protoNodeBuilder.build()
     }
 
     /**
      * Identify all required child nodes
-     * @param JCR Node
-     * @return list of required child nodes
+     * @param jcrNode
+     * @return Collection of required child nodes or null if jcrNode has none
      */
-    private static Collection<JcrNode> getRequiredChildNodes(JcrNode jcrNode) {
-        return hasMandatoryChildNodes(jcrNode) ? jcrNode.getNodes().findAll{JcrNode childJcrNode -> isRequiredNode(childJcrNode)} : null
+    @Nullable
+    private static Collection<JcrNode> getMandatoryChildNodes(JcrNode jcrNode) {
+        return hasMandatoryChildNodes(jcrNode) ? jcrNode.getNodes().findAll{JcrNode childJcrNode -> isMandatoryNode(childJcrNode)} : null
     }
 
     /**
-     * Checks for mandatory child nodes
-     * @param JCR Node
-     * @return boolean flag for mandatory child node
+     * Determines if a JCR Node has mandatory child nodes
+     * @param jcrNode
      */
     private static boolean hasMandatoryChildNodes(JcrNode jcrNode) {
         return jcrNode.primaryNodeType.childNodeDefinitions.any { ((ItemDefinition)it).mandatory }
     }
 
     /**
-     * Checks required node
-     * @param JCR node
-     * @return boolean flag for mandatory node
+     * Checks to see if a JCR Node is a mandatory node
+     * @param node to check
      */
-    private static boolean isRequiredNode(JcrNode node) {
+    private static boolean isMandatoryNode(JcrNode node) {
         return node.definition.isMandatory()
     }
 
     /**
-     * Build Proto Property object from JCR node
-     * @param jcrNode for Proto properties
-     * @return Proto Property object
+     * Build a collection of Proto Properties from JCR node
+     * @param jcrNode to gather properties from
+     * @return resulting collection of transferable proto properties collected from jcrNode
      */
-    private static NodeProtos.Properties buildProperties(JcrNode jcrNode) {
+    @Nonnull
+    private static Collection<ProtoProperty> getProtoPropertiesFrom(JcrNode jcrNode) {
         final List<JcrProperty> properties = jcrNode.properties.toList()
-        Properties.Builder propertiesBuilder = Properties.newBuilder()
-        properties.each { JcrProperty jcrProperty ->
+        final transferableProperties = properties.findAll { JcrProperty jcrProperty ->
             //Before adding a property to the Current Node Proto message, check if the property
             //is Valid and if it should be actually sent to the client
-            if (isPropertyTransferable(jcrProperty)) {
-                Property property = toProperty(jcrProperty)
-                propertiesBuilder.addProperty(property)
-            }
+            isPropertyTransferable(jcrProperty)
         }
-        propertiesBuilder.build()
+        return transferableProperties.collect { JcrProperty jcrProperty ->
+            toProperty(jcrProperty)
+        }
     }
     /**
      * Returns the "jcr:created", "jcr:lastModified" or "cq:lastModified" date property
      * for current Jcr Node
-     * Returns null of none of the 3 are found
-     * @return
+     * @param jcrNode
+     * @return null if none of the 3 are found
      */
+    @Nullable
     private static Date getDate(JcrNode jcrNode) {
         final String CQ_LAST_MODIFIED = "cq:lastModified"
         if (jcrNode.hasProperty(JCR_LASTMODIFIED)) {
@@ -174,9 +165,9 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
     }
 
     /**
-     * Checks if current Jcr Property is valid to be written out to the client or not
+     * Determines if JCR Property object can be "rewritten" to the JCR. For example, we can not rewrite a node's
+     * primary type; That is forbidden by the JCR spec.
      * @param jcrProperty
-     * @return
      */
     private static boolean isPropertyTransferable(JcrProperty jcrProperty) {
         //If property is "jcr:lastModified", we don't want to send this property to the client. If we send it, and
@@ -194,168 +185,25 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, Node> {
     }
 
     /**
-     * Accepts a Jcr Property and marshals it to a NodeProtos.Property message object
+     * Accepts a Jcr Property and marshalls it to a ProtoProperty
      * @param jcrProperty
-     * @return
      */
-    //TODO : This method needs a refactor
-    private static Property toProperty(JcrProperty jcrProperty) {
-        Property.Builder propertyBuilder = Property.newBuilder()
+    @Nonnull
+    private static ProtoProperty toProperty(JcrProperty jcrProperty) {
+        ProtoPropertyBuilder propertyBuilder = ProtoProperty.newBuilder()
+        ProtoValueBuilder valueBuilder = ProtoValue.newBuilder()
         propertyBuilder.setName(jcrProperty.name)
 
-        final int type = jcrProperty.type
-
-        switch (type) {
-            case STRING:
-                if (!jcrProperty.multiple) {
-                    Value value = jcrProperty.value
-                    propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.string))
-                }
-                else {
-                    Value[] values = jcrProperty.values
-                    Collection<NodeProtos.Value> protoValues = values.collect { Value value ->
-                        NodeProtos.Value.newBuilder().setStringValue(value.string).build()
-                    }
-                    propertyBuilder.setValues(
-                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
-                    )
-                }
-                break
-            case BINARY:
-                //no multiple values
-                if (!jcrProperty.multiple) {
-                    Value value = jcrProperty.value
-                    propertyBuilder.setValue(NodeProtos.Value.newBuilder().setBytesValue(ByteString.copyFrom(value.binary.stream.bytes)))
-                }
-                break
-            case BOOLEAN:
-                if (!jcrProperty.multiple) {
-                    Value value = jcrProperty.value
-                    propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.boolean.toString()))
-                }
-                else {
-                    Value[] values = jcrProperty.values
-                    Collection<NodeProtos.Value> protoValues = values.collect { Value value ->
-                        NodeProtos.Value.newBuilder().setStringValue(value.boolean.toString()).build()
-                    }
-                    propertyBuilder.setValues(
-                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
-                    )
-                }
-                break
-            case DATE:
-                if (!jcrProperty.multiple) {
-                    Value value = jcrProperty.value
-                    propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(DateUtil.getISOStringFromCalendar(value.date)))
-                }
-                else {
-                    Value[] values = jcrProperty.values
-                    Collection<NodeProtos.Value> protoValues = values.collect { Value value ->
-                        NodeProtos.Value.newBuilder().setStringValue(DateUtil.getISOStringFromCalendar(value.date)).build()
-                    }
-                    propertyBuilder.setValues(
-                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
-                    )
-                }
-                break
-            case DECIMAL:
-                if (!jcrProperty.multiple) {
-                    Value value = jcrProperty.value
-                    propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.decimal.toString()))
-                }
-                else {
-                    Value[] values = jcrProperty.values
-                    Collection<NodeProtos.Value> protoValues = values.collect { Value value ->
-                        NodeProtos.Value.newBuilder().setStringValue(value.decimal.toString()).build()
-                    }
-                    propertyBuilder.setValues(
-                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
-                    )
-                }
-                break
-            case DOUBLE:
-                if (!jcrProperty.multiple) {
-                    Value value = jcrProperty.value
-                    propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.double.toString()))
-                }
-                else {
-                    Value[] values = jcrProperty.values
-                    Collection<NodeProtos.Value> protoValues = values.collect { Value value ->
-                        NodeProtos.Value.newBuilder().setStringValue(value.double.toString()).build()
-                    }
-                    propertyBuilder.setValues(
-                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
-                    )
-                }
-                break
-            case LONG:
-                if (!jcrProperty.multiple) {
-                    Value value = jcrProperty.value
-                    propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.long.toString()))
-                }
-                else {
-                    Value[] values = jcrProperty.values
-                    Collection<NodeProtos.Value> protoValues = values.collect { Value value ->
-                        NodeProtos.Value.newBuilder().setStringValue(value.long.toString()).build()
-                    }
-                    propertyBuilder.setValues(
-                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
-                    )
-                }
-                break
-            case NAME:
-                if (!jcrProperty.multiple) {
-                    Value value = jcrProperty.value
-                    propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.string))
-                }
-                else {
-                    Value[] values = jcrProperty.values
-                    Collection<NodeProtos.Value> protoValues = values.collect { Value value ->
-                        NodeProtos.Value.newBuilder().setStringValue(value.string).build()
-                    }
-                    propertyBuilder.setValues(
-                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
-                    )
-                }
-                break
-            case PATH:
-                if (!jcrProperty.multiple) {
-                    Value value = jcrProperty.value
-                    propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.string))
-                }
-                else {
-                    Value[] values = jcrProperty.values
-                    Collection<NodeProtos.Value> protoValues = values.collect { Value value ->
-                        NodeProtos.Value.newBuilder().setStringValue(value.string).build()
-                    }
-                    propertyBuilder.setValues(
-                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
-                    )
-                }
-                break
-            case PropertyType.URI:
-                if (!jcrProperty.multiple) {
-                    Value value = jcrProperty.value
-                    propertyBuilder.setValue(NodeProtos.Value.newBuilder().setStringValue(value.string))
-                }
-                else {
-                    Value[] values = jcrProperty.values
-                    Collection<NodeProtos.Value> protoValues = values.collect { Value value ->
-                        NodeProtos.Value.newBuilder().setStringValue(value.string).build()
-                    }
-                    propertyBuilder.setValues(
-                        NodeProtos.Values.newBuilder().addAllValue(protoValues).build()
-                    )
-                }
-                break
-        //TODO: Is it correct to ignore this? (as Reference value would mean different for Server and for Client
-            case REFERENCE:
-                break
-        //TODO: Is it correct to ignore this? (seems similar to REFERENCE to me)
-            case WEAKREFERENCE:
-                break
+        if(jcrProperty.type == BINARY) {
+            propertyBuilder.addValues(valueBuilder.setBytesValue(ByteString.readFrom(jcrProperty.value.binary.stream)))
         }
-
+        else {
+            //Other property types can potentially have multiple values
+            final Value[] values = jcrProperty.multiple ? jcrProperty.values : [jcrProperty.value] as Value[]
+            values.each { Value value ->
+                propertyBuilder.addValues(valueBuilder.setStringValue(value.string))
+            }
+        }
         propertyBuilder.setType(jcrProperty.type)
         propertyBuilder.build()
     }

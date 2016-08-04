@@ -3,13 +3,6 @@ package com.twcable.grabbit.proto;
 option java_package = "com.twcable.grabbit.proto";
 option java_outer_classname = "NamespaceProtos";
 
-/*
-  Protocol Buffers message format to serialize and deserialize JCR Namespaces
-*/
-message Namespaces {
-    required NamespaceRegistry namespaceRegistry = 1;
-}
-
 message NamespaceRegistry {
     repeated NamespaceEntry entry = 1;
 }

@@ -60,22 +60,17 @@ class JcrNodesProcessorSpec extends Specification {
         when:
         JcrNodesProcessor jcrNodesProcessor = new JcrNodesProcessor()
         NodeProtos.Node nodeProto = jcrNodesProcessor.process(aJcrNode)
-        NodeProtos.Property propertyLong = nodeProto.properties.propertyList.find { it.name == "multiValueLong" }
-        NodeProtos.Property propertyString = nodeProto.properties.propertyList.find { it.name == "multiValueString" }
+        NodeProtos.Property propertyLong = nodeProto.propertiesList.find { it.name == "multiValueLong" }
+        NodeProtos.Property propertyString = nodeProto.propertiesList.find { it.name == "multiValueString" }
 
         then:
         nodeProto != null
-        nodeProto.hasProperties()
+        nodeProto.propertiesCount > 0
 
-        propertyLong.hasValues()
-        !propertyLong.hasValue()
-        propertyLong.values.valueCount == 3
+        propertyLong.valuesCount == 3
         propertyLong.type == LONG
 
-
-        propertyString.hasValues()
-        !propertyString.hasValue()
-        propertyString.values.valueCount == 3
+        propertyString.valuesCount == 3
         propertyString.type == STRING
     }
 
@@ -90,11 +85,11 @@ class JcrNodesProcessorSpec extends Specification {
 
         then:
         nodeProto.name == imageFile
-        nodeProto.properties.propertyList.first().value.stringValue == JcrConstants.NT_FILE
+        nodeProto.propertiesList.first().valuesList[0].stringValue == JcrConstants.NT_FILE
         nodeProto.mandatoryChildNodeList.size() == 1
         nodeProto.mandatoryChildNodeList.first().name == "${imageFile}/jcr:content"
-        nodeProto.mandatoryChildNodeList.first().properties.propertyList.first().name == JcrConstants.JCR_PRIMARYTYPE
-        nodeProto.mandatoryChildNodeList.first().properties.propertyList.first().value.stringValue == JcrConstants.NT_RESOURCE
+        nodeProto.mandatoryChildNodeList.first().propertiesList.first().name == JcrConstants.JCR_PRIMARYTYPE
+        nodeProto.mandatoryChildNodeList.first().propertiesList.first().valuesList[0].stringValue == JcrConstants.NT_RESOURCE
     }
 
     def "Can marshall a JCR Node nt:file with mandatory child node nt:unstructured to a Protobuf Message "() {
@@ -108,11 +103,11 @@ class JcrNodesProcessorSpec extends Specification {
 
         then:
         nodeProto.name == thumbnailFile
-        nodeProto.properties.propertyList.first().value.stringValue == JcrConstants.NT_FILE
+        nodeProto.propertiesList.first().valuesList[0].stringValue == JcrConstants.NT_FILE
         nodeProto.mandatoryChildNodeList.size() == 1
         nodeProto.mandatoryChildNodeList.first().name == "${thumbnailFile}/jcr:content"
-        nodeProto.mandatoryChildNodeList.first().properties.propertyList.first().name == JcrConstants.JCR_PRIMARYTYPE
-        nodeProto.mandatoryChildNodeList.first().properties.propertyList.first().value.stringValue == JcrConstants.NT_UNSTRUCTURED
+        nodeProto.mandatoryChildNodeList.first().propertiesList.first().name == JcrConstants.JCR_PRIMARYTYPE
+        nodeProto.mandatoryChildNodeList.first().propertiesList.first().valuesList[0].stringValue == JcrConstants.NT_UNSTRUCTURED
     }
 
     def "Skip mandatory child node nt:resource as parent has already process"() {
@@ -139,15 +134,15 @@ class JcrNodesProcessorSpec extends Specification {
 
         then:
         nodeProto.name == thumbnailFile
-        nodeProto.properties.propertyList.first().value.stringValue == JcrConstants.NT_FILE
+        nodeProto.propertiesList.first().valuesList[0].stringValue == JcrConstants.NT_FILE
         nodeProto.mandatoryChildNodeList.size() == 1
         nodeProto.mandatoryChildNodeList.first().name == "${thumbnailFile}/jcr:content"
-        nodeProto.mandatoryChildNodeList.first().properties.propertyList.first().name == JcrConstants.JCR_PRIMARYTYPE
-        nodeProto.mandatoryChildNodeList.first().properties.propertyList.first().value.stringValue == JcrConstants.NT_RESOURCE
+        nodeProto.mandatoryChildNodeList.first().propertiesList.first().name == JcrConstants.JCR_PRIMARYTYPE
+        nodeProto.mandatoryChildNodeList.first().propertiesList.first().valuesList[0].stringValue == JcrConstants.NT_RESOURCE
 
         nodeProto.mandatoryChildNodeList.first().mandatoryChildNodeList.first().name == "${thumbnailFile}/jcr:content/metadata"
-        nodeProto.mandatoryChildNodeList.first().mandatoryChildNodeList.first().properties.propertyList.first().name == JcrConstants.JCR_PRIMARYTYPE
-        nodeProto.mandatoryChildNodeList.first().mandatoryChildNodeList.first().properties.propertyList.first().value.stringValue == JcrConstants.NT_UNSTRUCTURED
+        nodeProto.mandatoryChildNodeList.first().mandatoryChildNodeList.first().propertiesList.first().name == JcrConstants.JCR_PRIMARYTYPE
+        nodeProto.mandatoryChildNodeList.first().mandatoryChildNodeList.first().propertiesList.first().valuesList[0].stringValue == JcrConstants.NT_UNSTRUCTURED
     }
 
     private JcrNode createNode(String path, boolean isMandatory, String primaryType, Collection<JcrNode> children = []) {
@@ -245,11 +240,11 @@ class JcrNodesProcessorSpec extends Specification {
 
         then:
         nodeProto != null
-        nodeProto.properties.propertyList.first().value.stringValue == JcrConstants.NT_FILE
+        nodeProto.propertiesList.first().valuesList[0].stringValue == JcrConstants.NT_FILE
         nodeProto.mandatoryChildNodeList.size() == 1
         nodeProto.mandatoryChildNodeList.first().name == "testMandatoryChild" //making sure child was processed
-        nodeProto.mandatoryChildNodeList.first().properties.propertyList.first().name == JcrConstants.JCR_PRIMARYTYPE
-        nodeProto.mandatoryChildNodeList.first().properties.propertyList.first().value.stringValue == JcrConstants.NT_UNSTRUCTURED
+        nodeProto.mandatoryChildNodeList.first().propertiesList.first().name == JcrConstants.JCR_PRIMARYTYPE
+        nodeProto.mandatoryChildNodeList.first().propertiesList.first().valuesList[0].stringValue == JcrConstants.NT_UNSTRUCTURED
     }
 
 
@@ -309,7 +304,7 @@ class JcrNodesProcessorSpec extends Specification {
 
         then:
         nodeProto != null //checking that new data is being copied
-        nodeProto.hasProperties()
+        nodeProto.propertiesCount > 0
 
         where:
         aJcrNode << [

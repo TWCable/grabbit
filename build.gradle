@@ -34,6 +34,10 @@ plugins {
             url "http://dl.bintray.com/twcable/aem"
         }
 
+        maven {
+            url "http://dl.bintray.com/twcable/osgi"
+        }
+
         //Provides all Adobe AEM specific repos (like cq-workflow-console)
         maven {
             url "http://repo.adobe.com/nexus/content/groups/public"
