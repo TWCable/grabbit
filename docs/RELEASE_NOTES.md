@@ -2,6 +2,14 @@
 
 [ ![Download](https://api.bintray.com/packages/twcable/aem/Grabbit/images/download.svg) ](https://bintray.com/twcable/aem/Grabbit/_latestVersion)
 
+## 6.0.0
+
+* Upgrade to protoc 2.6.1 and clean up of messaging structure
+* Feature 112. Added ability to specify batch size at job and transaction level
+* Project build restructure
+* README restructure and updates
+
+
 ## 5.0.1
 
 * Adds feature that provides a way to delete JcrJobRepository that is older than X hours from "now"
