@@ -1,7 +1,3 @@
-package com.twcable.grabbit.util
-
-import groovy.transform.CompileStatic
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -17,6 +13,9 @@ import groovy.transform.CompileStatic
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.util
+
+import groovy.transform.CompileStatic
 
 @CompileStatic
 class CryptoUtil {

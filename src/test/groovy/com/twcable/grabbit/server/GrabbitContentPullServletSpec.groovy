@@ -1,16 +1,3 @@
-package com.twcable.grabbit.server
-
-import com.twcable.grabbit.server.services.ServerService
-import org.apache.sling.api.SlingHttpServletRequest
-import org.apache.sling.api.SlingHttpServletResponse
-import spock.lang.Specification
-import spock.lang.Subject
-
-import javax.servlet.ServletOutputStream
-
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
-import static javax.servlet.http.HttpServletResponse.SC_OK
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -26,6 +13,18 @@ import static javax.servlet.http.HttpServletResponse.SC_OK
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.server
+
+import com.twcable.grabbit.server.services.ServerService
+import org.apache.sling.api.SlingHttpServletRequest
+import org.apache.sling.api.SlingHttpServletResponse
+import spock.lang.Specification
+import spock.lang.Subject
+
+import javax.servlet.ServletOutputStream
+
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
+import static javax.servlet.http.HttpServletResponse.SC_OK
 
 @Subject(GrabbitContentPullServlet)
 class GrabbitContentPullServletSpec extends Specification {

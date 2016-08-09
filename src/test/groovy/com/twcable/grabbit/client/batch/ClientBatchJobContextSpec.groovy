@@ -1,15 +1,3 @@
-package com.twcable.grabbit.client.batch
-
-import spock.lang.Specification
-import spock.lang.Subject
-
-import javax.jcr.Session
-
-import java.util.concurrent.Callable as Job
-import java.util.concurrent.Executor
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -25,6 +13,17 @@ import java.util.concurrent.Executors
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.client.batch
+
+import spock.lang.Specification
+import spock.lang.Subject
+
+import javax.jcr.Session
+
+import java.util.concurrent.Callable as Job
+import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 @Subject(ClientBatchJobContext)
 class ClientBatchJobContextSpec extends Specification {

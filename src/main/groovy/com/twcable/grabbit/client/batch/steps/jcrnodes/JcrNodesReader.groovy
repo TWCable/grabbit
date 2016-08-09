@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package com.twcable.grabbit.client.batch.steps.jcrnodes
 
 import com.twcable.grabbit.client.batch.ClientBatchJobContext

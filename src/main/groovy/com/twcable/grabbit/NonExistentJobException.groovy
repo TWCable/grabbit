@@ -1,8 +1,3 @@
-package com.twcable.grabbit
-
-import groovy.transform.CompileStatic
-import groovy.transform.InheritConstructors
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -18,6 +13,10 @@ import groovy.transform.InheritConstructors
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit
+
+import groovy.transform.CompileStatic
+import groovy.transform.InheritConstructors
 
 /**
  * Exception representing a fault in retrieving a non-existent job from a job explorer.

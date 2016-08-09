@@ -1,5 +1,3 @@
-package com.twcable.grabbit.jcr
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -15,6 +13,7 @@ package com.twcable.grabbit.jcr
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.jcr
 
 import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import com.twcable.grabbit.proto.NodeProtos.Value as ProtoValue
@@ -61,7 +60,7 @@ class ProtoNodeDecorator {
     }
 
 
-    JCRNodeDecorator writeToJcr(@Nonnull Session session) {
+    JcrNodeDecorator writeToJcr(@Nonnull Session session) {
         final jcrNode = getOrCreateNode(session)
         //Write mixin types first to avoid InvalidConstraintExceptions
         final mixinProperty = getMixinProperty()
@@ -71,7 +70,7 @@ class ProtoNodeDecorator {
         //Then add other properties
         writableProperties.each { it.writeToNode(jcrNode) }
 
-        return new JCRNodeDecorator(jcrNode)
+        return new JcrNodeDecorator(jcrNode)
     }
 
 

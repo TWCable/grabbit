@@ -1,5 +1,3 @@
-package com.twcable.grabbit.jcr
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -15,6 +13,7 @@ package com.twcable.grabbit.jcr
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.jcr
 
 import com.day.cq.commons.jcr.JcrConstants
 import com.google.protobuf.ByteString

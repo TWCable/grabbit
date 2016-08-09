@@ -1,5 +1,3 @@
-package com.twcable.grabbit.jcr
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -15,8 +13,10 @@ package com.twcable.grabbit.jcr
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.jcr
 
 import com.day.cq.commons.jcr.JcrConstants
+import spock.lang.Shared
 import spock.lang.Specification
 
 import javax.jcr.Node
@@ -27,15 +27,26 @@ import javax.jcr.nodetype.ItemDefinition
 import javax.jcr.nodetype.NodeDefinition
 import javax.jcr.nodetype.NodeType
 
+import static org.apache.jackrabbit.JcrConstants.JCR_CREATED
 import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 
 @SuppressWarnings("GroovyAssignabilityCheck")
 class JCRNodeDecoratorSpec extends Specification {
+    @Shared
+    static Calendar jcrModifiedDate = Calendar.getInstance()
+    static Calendar cqModifiedDate = Calendar.getInstance()
+    static Calendar jcrCreatedDate = Calendar.getInstance()
+
+    def setupSpec(){
+        jcrModifiedDate.setTime(new Date(2016,6,4))
+        cqModifiedDate.setTime(new Date(2016,6,3))
+        jcrCreatedDate.setTime(new Date(2016,6,2))
+    }
 
     def "null nodes are not allowed for JCRNodeDecorator construction"() {
         when:
-        new JCRNodeDecorator(null)
+        new JcrNodeDecorator(null)
 
         then:
         thrown(IllegalArgumentException)
@@ -51,7 +62,7 @@ class JCRNodeDecoratorSpec extends Specification {
         }
 
         when:
-        final nodeDecorator = new JCRNodeDecorator(node)
+        final nodeDecorator = new JcrNodeDecorator(node)
         nodeDecorator.setLastModified()
 
         then:
@@ -69,7 +80,7 @@ class JCRNodeDecoratorSpec extends Specification {
         }
 
         when:
-        final nodeDecorator = new JCRNodeDecorator(node)
+        final nodeDecorator = new JcrNodeDecorator(node)
         nodeDecorator.setLastModified()
 
         then:
@@ -85,7 +96,7 @@ class JCRNodeDecoratorSpec extends Specification {
         }
 
         when:
-        final nodeDecorator = new JCRNodeDecorator(node)
+        final nodeDecorator = new JcrNodeDecorator(node)
         nodeDecorator.setLastModified()
 
         then:
@@ -102,7 +113,7 @@ class JCRNodeDecoratorSpec extends Specification {
         }
 
         when:
-        final nodeDecorator = new JCRNodeDecorator(node)
+        final nodeDecorator = new JcrNodeDecorator(node)
 
         then:
         nodeDecorator.getPrimaryType() == JcrConstants.NT_FILE
@@ -118,7 +129,7 @@ class JCRNodeDecoratorSpec extends Specification {
         }
 
         when:
-        final nodeDecorator = new JCRNodeDecorator(node)
+        final nodeDecorator = new JcrNodeDecorator(node)
 
         then:
         nodeDecorator.isRequiredNode() == isMandatory
@@ -140,7 +151,7 @@ class JCRNodeDecoratorSpec extends Specification {
         }
 
         when:
-        final nodeDecorator = new JCRNodeDecorator(node)
+        final nodeDecorator = new JcrNodeDecorator(node)
 
         then:
         nodeDecorator.hasMandatoryChildNodes() == hasMandatoryChildNodes
@@ -167,7 +178,7 @@ class JCRNodeDecoratorSpec extends Specification {
         }
 
         when: "The node has children"
-        final nodeDecorator = Spy(JCRNodeDecorator, constructorArgs: [node]) {
+        final nodeDecorator = Spy(JcrNodeDecorator, constructorArgs: [node]) {
             hasMandatoryChildNodes() >> true
         }
 
@@ -177,7 +188,7 @@ class JCRNodeDecoratorSpec extends Specification {
         and: "If no child nodes, getRequiredChildNodes() returns null"
 
         when:
-        final otherNodeDecorator = Spy(JCRNodeDecorator, constructorArgs: [Mock(Node)]) {
+        final otherNodeDecorator = Spy(JcrNodeDecorator, constructorArgs: [Mock(Node)]) {
             hasMandatoryChildNodes() >> false
         }
 
@@ -189,9 +200,38 @@ class JCRNodeDecoratorSpec extends Specification {
     def "Can adapt the decorator back to the wrapped node"() {
         given:
         final node = Mock(Node)
-        final nodeDecorator = new JCRNodeDecorator(node)
+        final nodeDecorator = new JcrNodeDecorator(node)
 
         expect:
         (nodeDecorator as Node) == node
+    }
+
+    def "Get modified date for a node"() {
+        given:
+        final node = Mock(Node) {
+            hasProperty(JCR_LASTMODIFIED) >> jcrModifiedPresent
+            getProperty(JCR_LASTMODIFIED) >> Mock(Property) {
+                getDate() >> jcrModifiedDate
+            }
+            hasProperty("cq:lastModified") >> lastModifiedPresent
+            getProperty("cq:lastModified") >> Mock(Property) {
+                getDate() >> cqModifiedDate
+            }
+            hasProperty(JCR_CREATED) >> jcrCreatedPresent
+            getProperty(JCR_CREATED) >> Mock(Property) {
+                getDate() >> jcrCreatedDate
+            }
+        }
+        final nodeDecorator = new JcrNodeDecorator(node)
+
+        expect:
+        nodeDecorator.getModifiedOrCreatedDate() == modifiedDate
+
+        where:
+        jcrModifiedPresent  |   lastModifiedPresent |   jcrCreatedPresent   | modifiedDate
+        true                |   true                |   false               | jcrModifiedDate.time
+        false               |   true                |   true                | cqModifiedDate.time
+        false               |   false               |   true                | jcrCreatedDate.time
+        false               |   false               |   false               | null
     }
 }

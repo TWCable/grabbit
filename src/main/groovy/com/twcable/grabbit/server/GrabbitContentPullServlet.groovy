@@ -1,17 +1,3 @@
-package com.twcable.grabbit.server
-
-import com.twcable.grabbit.server.services.ServerService
-import groovy.transform.CompileStatic
-import groovy.util.logging.Slf4j
-import org.apache.felix.scr.annotations.Reference
-import org.apache.felix.scr.annotations.sling.SlingServlet
-import org.apache.sling.api.SlingHttpServletRequest
-import org.apache.sling.api.SlingHttpServletResponse
-import org.apache.sling.api.servlets.SlingSafeMethodsServlet
-
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
-import static javax.servlet.http.HttpServletResponse.SC_OK
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -27,6 +13,19 @@ import static javax.servlet.http.HttpServletResponse.SC_OK
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.server
+
+import com.twcable.grabbit.server.services.ServerService
+import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j
+import org.apache.felix.scr.annotations.Reference
+import org.apache.felix.scr.annotations.sling.SlingServlet
+import org.apache.sling.api.SlingHttpServletRequest
+import org.apache.sling.api.SlingHttpServletResponse
+import org.apache.sling.api.servlets.SlingSafeMethodsServlet
+
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
+import static javax.servlet.http.HttpServletResponse.SC_OK
 
 /**
  * This servlet is used to pull a stream of Grabbit content.

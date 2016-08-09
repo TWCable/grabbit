@@ -1,15 +1,3 @@
-package com.twcable.grabbit
-
-import com.twcable.grabbit.client.batch.ClientBatchJob
-import com.twcable.grabbit.spring.batch.repository.GrabbitJobExecution
-import org.springframework.batch.core.ExitStatus
-import org.springframework.batch.core.JobExecution
-import org.springframework.batch.core.JobInstance
-import org.springframework.batch.core.JobParameters
-import org.springframework.batch.core.StepExecution
-import org.springframework.batch.core.explore.JobExplorer
-import spock.lang.Specification
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -25,6 +13,17 @@ import spock.lang.Specification
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit
+
+import com.twcable.grabbit.client.batch.ClientBatchJob
+import com.twcable.grabbit.spring.batch.repository.GrabbitJobExecution
+import org.springframework.batch.core.ExitStatus
+import org.springframework.batch.core.JobExecution
+import org.springframework.batch.core.JobInstance
+import org.springframework.batch.core.JobParameters
+import org.springframework.batch.core.StepExecution
+import org.springframework.batch.core.explore.JobExplorer
+import spock.lang.Specification
 
 class ClientJobStatusSpec extends Specification {
 

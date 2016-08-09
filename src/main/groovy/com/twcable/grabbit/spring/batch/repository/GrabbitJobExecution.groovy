@@ -1,9 +1,3 @@
-package com.twcable.grabbit.spring.batch.repository
-
-import groovy.transform.CompileStatic
-import groovy.transform.InheritConstructors
-import org.springframework.batch.core.JobExecution
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -19,6 +13,12 @@ import org.springframework.batch.core.JobExecution
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package com.twcable.grabbit.spring.batch.repository
+
+import groovy.transform.CompileStatic
+import groovy.transform.InheritConstructors
+import org.springframework.batch.core.JobExecution
 
 /**
  * GrabbitJobExecution is a simple extension of {@Link JobExecution}.

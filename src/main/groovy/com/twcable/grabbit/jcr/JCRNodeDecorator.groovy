@@ -1,5 +1,3 @@
-package com.twcable.grabbit.jcr
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -15,34 +13,39 @@ package com.twcable.grabbit.jcr
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.jcr
 
-//TODO: Refactor JcrNodesProcessor to use this
-
+import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
+import com.twcable.grabbit.proto.NodeProtos.Node.Builder as ProtoNodeBuilder
+import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
 import groovy.transform.CompileStatic
+
 import groovy.util.logging.Slf4j
 import org.apache.jackrabbit.value.DateValue
 
 import javax.annotation.Nonnull
+import javax.annotation.Nullable
 import javax.jcr.Node as JCRNode
+import javax.jcr.Property
+import javax.jcr.Property as JcrProperty
 import javax.jcr.RepositoryException
 import javax.jcr.nodetype.ItemDefinition
 
-import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
-import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
+import static org.apache.jackrabbit.JcrConstants.*
 
 @CompileStatic
 @Slf4j
-class JCRNodeDecorator {
+class JcrNodeDecorator {
 
     @Delegate
     JCRNode innerNode
 
 
     //Evaluated in a lazy fashion
-    private Collection<JCRNodeDecorator> immediateChildNodes
+    private Collection<JcrNodeDecorator> immediateChildNodes
 
 
-    JCRNodeDecorator(@Nonnull JCRNode node) {
+    JcrNodeDecorator(@Nonnull JCRNode node) {
         if(!node) throw new IllegalArgumentException("node must not be null!")
         this.innerNode = node
     }
@@ -51,9 +54,9 @@ class JCRNodeDecorator {
     /**
      * @return this node's immediate children, empty if none
      */
-    Collection<JCRNodeDecorator> getImmediateChildNodes() {
+    Collection<JcrNodeDecorator> getImmediateChildNodes() {
         if(!immediateChildNodes) {
-            immediateChildNodes = (getNodes().collect { JCRNode node -> new JCRNodeDecorator(node) }  ?: []) as Collection<JCRNodeDecorator>
+            immediateChildNodes = (getNodes().collect { JCRNode node -> new JcrNodeDecorator(node) }  ?: []) as Collection<JcrNodeDecorator>
         }
         return immediateChildNodes
     }
@@ -83,8 +86,9 @@ class JCRNodeDecorator {
     * Identify all required child nodes
     * @return list of immediate required child nodes that must exist with this node, or null if no children
     */
-    Collection<JCRNodeDecorator> getRequiredChildNodes() {
-        return hasMandatoryChildNodes() ? getImmediateChildNodes().findAll{ JCRNodeDecorator childJcrNode -> childJcrNode.isRequiredNode() } : null
+    @Nullable
+    Collection<JcrNodeDecorator> getRequiredChildNodes() {
+        return hasMandatoryChildNodes() ? getImmediateChildNodes().findAll{ JcrNodeDecorator childJcrNode -> childJcrNode.isRequiredNode() } : null
     }
 
 
@@ -103,6 +107,52 @@ class JCRNodeDecorator {
     */
     boolean isRequiredNode() {
         return definition.isMandatory()
+    }
+
+    /**
+     * Build node and "only" mandatory child nodes
+     */
+    @Nonnull
+     ProtoNode toProtoNode() {
+        final ProtoNodeBuilder protoNodeBuilder = ProtoNode.newBuilder()
+        protoNodeBuilder.setName(path)
+        protoNodeBuilder.addAllProperties(getProtoProperties())
+        requiredChildNodes?.each {
+            protoNodeBuilder.addMandatoryChildNode(it.toProtoNode())
+        }
+        return protoNodeBuilder.build()
+    }
+
+    /**
+     * @return resulting collection of transferable proto properties collected from jcrNode
+     */
+    @Nonnull
+    private Collection<ProtoProperty> getProtoProperties() {
+        final List<Property> properties = properties.toList()
+        return properties.findResults { JcrProperty jcrProperty ->
+            JcrPropertyDecorator decoratedProperty = new JcrPropertyDecorator(jcrProperty)
+            decoratedProperty.isTransferable() ? decoratedProperty.toProtoProperty() : null
+        }
+    }
+
+    /**
+     * Returns the "jcr:lastModified", "cq:lastModified" or "jcr:created" date property
+     * for current Jcr Node
+     * @return null if none of the 3 are found
+     */
+    @Nullable
+    Date getModifiedOrCreatedDate() {
+        final String CQ_LAST_MODIFIED = "cq:lastModified"
+        if (hasProperty(JCR_LASTMODIFIED)) {
+            return getProperty(JCR_LASTMODIFIED).date.time
+        }
+        else if (hasProperty(CQ_LAST_MODIFIED)) {
+            return getProperty(CQ_LAST_MODIFIED).date.time
+        }
+        else if (hasProperty(JCR_CREATED)) {
+            return getProperty(JCR_CREATED).date.time
+        }
+        return null
     }
 
 

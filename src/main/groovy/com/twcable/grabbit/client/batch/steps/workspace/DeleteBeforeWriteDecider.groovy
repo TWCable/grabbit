@@ -1,13 +1,3 @@
-package com.twcable.grabbit.client.batch.steps.workspace
-
-import com.twcable.grabbit.client.batch.ClientBatchJob
-import groovy.transform.CompileStatic
-import groovy.util.logging.Slf4j
-import org.springframework.batch.core.JobExecution
-import org.springframework.batch.core.StepExecution
-import org.springframework.batch.core.job.flow.FlowExecutionStatus
-import org.springframework.batch.core.job.flow.JobExecutionDecider
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -23,6 +13,15 @@ import org.springframework.batch.core.job.flow.JobExecutionDecider
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.client.batch.steps.workspace
+
+import com.twcable.grabbit.client.batch.ClientBatchJob
+import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j
+import org.springframework.batch.core.JobExecution
+import org.springframework.batch.core.StepExecution
+import org.springframework.batch.core.job.flow.FlowExecutionStatus
+import org.springframework.batch.core.job.flow.JobExecutionDecider
 
 /**
  * This class decides whether to execute the @see{@link DeleteBeforeWriteTasklet} based on the

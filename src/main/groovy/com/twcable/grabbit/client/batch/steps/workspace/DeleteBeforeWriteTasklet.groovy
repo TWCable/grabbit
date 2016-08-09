@@ -1,19 +1,3 @@
-package com.twcable.grabbit.client.batch.steps.workspace
-
-import com.twcable.grabbit.client.batch.ClientBatchJobContext
-import groovy.transform.CompileStatic
-import groovy.util.logging.Slf4j
-import org.springframework.batch.core.StepContribution
-import org.springframework.batch.core.scope.context.ChunkContext
-import org.springframework.batch.core.step.tasklet.Tasklet
-import org.springframework.batch.repeat.RepeatStatus
-
-import javax.annotation.Nonnull
-import javax.annotation.Nullable
-import javax.jcr.Node
-import javax.jcr.PathNotFoundException
-import javax.jcr.Session
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -29,6 +13,21 @@ import javax.jcr.Session
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.client.batch.steps.workspace
+
+import com.twcable.grabbit.client.batch.ClientBatchJobContext
+import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j
+import org.springframework.batch.core.StepContribution
+import org.springframework.batch.core.scope.context.ChunkContext
+import org.springframework.batch.core.step.tasklet.Tasklet
+import org.springframework.batch.repeat.RepeatStatus
+
+import javax.annotation.Nonnull
+import javax.annotation.Nullable
+import javax.jcr.Node
+import javax.jcr.PathNotFoundException
+import javax.jcr.Session
 
 /**
  * A client preSyncFlow tasklet that deletes nodes under the job path

@@ -1,12 +1,3 @@
-package com.twcable.grabbit.client.batch.steps.workspace
-
-import com.twcable.grabbit.client.batch.ClientBatchJob
-import org.springframework.batch.core.JobExecution
-import org.springframework.batch.core.JobParameters
-import org.springframework.batch.core.StepExecution
-import org.springframework.batch.core.job.flow.FlowExecutionStatus
-import spock.lang.Specification
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -22,6 +13,14 @@ import spock.lang.Specification
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.client.batch.steps.workspace
+
+import com.twcable.grabbit.client.batch.ClientBatchJob
+import org.springframework.batch.core.JobExecution
+import org.springframework.batch.core.JobParameters
+import org.springframework.batch.core.StepExecution
+import org.springframework.batch.core.job.flow.FlowExecutionStatus
+import spock.lang.Specification
 
 class DeleteBeforeWriteDeciderSpec extends Specification {
 

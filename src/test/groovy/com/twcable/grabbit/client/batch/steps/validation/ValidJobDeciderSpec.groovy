@@ -1,19 +1,3 @@
-package com.twcable.grabbit.client.batch.steps.validation
-
-import com.twcable.grabbit.client.batch.ClientBatchJob
-import com.twcable.grabbit.client.batch.ClientBatchJobContext
-import org.springframework.batch.core.JobExecution
-import org.springframework.batch.core.JobParameters
-import org.springframework.batch.core.StepExecution
-import spock.lang.Specification
-import spock.lang.Subject
-import spock.lang.Unroll
-
-import javax.jcr.Node
-import javax.jcr.PathNotFoundException
-import javax.jcr.RepositoryException
-import javax.jcr.Session
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -29,6 +13,21 @@ import javax.jcr.Session
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.client.batch.steps.validation
+
+import com.twcable.grabbit.client.batch.ClientBatchJob
+import com.twcable.grabbit.client.batch.ClientBatchJobContext
+import org.springframework.batch.core.JobExecution
+import org.springframework.batch.core.JobParameters
+import org.springframework.batch.core.StepExecution
+import spock.lang.Specification
+import spock.lang.Subject
+import spock.lang.Unroll
+
+import javax.jcr.Node
+import javax.jcr.PathNotFoundException
+import javax.jcr.RepositoryException
+import javax.jcr.Session
 
 @Subject(ValidJobDecider)
 class ValidJobDeciderSpec extends Specification {

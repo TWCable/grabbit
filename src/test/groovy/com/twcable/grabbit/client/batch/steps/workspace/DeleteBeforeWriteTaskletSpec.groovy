@@ -1,18 +1,3 @@
-package com.twcable.grabbit.client.batch.steps.workspace
-
-import com.twcable.grabbit.client.batch.ClientBatchJobContext
-import org.springframework.batch.core.StepContribution
-import org.springframework.batch.core.scope.context.ChunkContext
-import org.springframework.batch.repeat.RepeatStatus
-import spock.lang.Specification
-
-import javax.jcr.Node
-import javax.jcr.PathNotFoundException
-import javax.jcr.Session
-
-import static com.twcable.jackalope.JCRBuilder.node
-import static com.twcable.jackalope.JCRBuilder.repository
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -28,6 +13,20 @@ import static com.twcable.jackalope.JCRBuilder.repository
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.client.batch.steps.workspace
+
+import com.twcable.grabbit.client.batch.ClientBatchJobContext
+import org.springframework.batch.core.StepContribution
+import org.springframework.batch.core.scope.context.ChunkContext
+import org.springframework.batch.repeat.RepeatStatus
+import spock.lang.Specification
+
+import javax.jcr.Node
+import javax.jcr.PathNotFoundException
+import javax.jcr.Session
+
+import static com.twcable.jackalope.JCRBuilder.node
+import static com.twcable.jackalope.JCRBuilder.repository
 
 @SuppressWarnings("GroovyAccessibility")
 class DeleteBeforeWriteTaskletSpec extends Specification {

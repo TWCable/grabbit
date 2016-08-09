@@ -1,11 +1,3 @@
-package com.twcable.grabbit.resources
-
-import org.apache.sling.api.resource.ResourceResolver
-import spock.lang.Specification
-import spock.lang.Unroll
-
-import static com.twcable.grabbit.resources.JobResource.*
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -21,6 +13,13 @@ import static com.twcable.grabbit.resources.JobResource.*
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.resources
+
+import org.apache.sling.api.resource.ResourceResolver
+import spock.lang.Specification
+import spock.lang.Unroll
+
+import static com.twcable.grabbit.resources.JobResource.*
 
 class JobResourceSpec extends Specification {
 

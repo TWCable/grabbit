@@ -1,18 +1,3 @@
-package com.twcable.grabbit.client.batch.steps.validation
-
-import com.twcable.grabbit.client.batch.ClientBatchJob
-import com.twcable.grabbit.client.batch.ClientBatchJobContext
-import groovy.transform.CompileStatic
-import groovy.util.logging.Slf4j
-import org.springframework.batch.core.JobExecution
-import org.springframework.batch.core.StepExecution
-import org.springframework.batch.core.job.flow.FlowExecutionStatus
-import org.springframework.batch.core.job.flow.JobExecutionDecider
-
-import javax.jcr.PathNotFoundException
-import javax.jcr.RepositoryException
-import javax.jcr.Session
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -28,6 +13,20 @@ import javax.jcr.Session
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.client.batch.steps.validation
+
+import com.twcable.grabbit.client.batch.ClientBatchJob
+import com.twcable.grabbit.client.batch.ClientBatchJobContext
+import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j
+import org.springframework.batch.core.JobExecution
+import org.springframework.batch.core.StepExecution
+import org.springframework.batch.core.job.flow.FlowExecutionStatus
+import org.springframework.batch.core.job.flow.JobExecutionDecider
+
+import javax.jcr.PathNotFoundException
+import javax.jcr.RepositoryException
+import javax.jcr.Session
 
 /**
  * This class serves as a validation gate for jobs in-flight.  It should be the first step on the client when running a job to determine

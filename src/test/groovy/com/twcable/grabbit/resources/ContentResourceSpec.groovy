@@ -1,10 +1,3 @@
-package com.twcable.grabbit.resources
-
-import org.apache.sling.api.resource.ResourceResolver
-import spock.lang.Specification
-
-import static com.twcable.grabbit.resources.ContentResource.CONTENT_RESOURCE_TYPE
-
 /*
  * Copyright 2015 Time Warner Cable, Inc.
  *
@@ -20,6 +13,12 @@ import static com.twcable.grabbit.resources.ContentResource.CONTENT_RESOURCE_TYP
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.twcable.grabbit.resources
+
+import org.apache.sling.api.resource.ResourceResolver
+import spock.lang.Specification
+
+import static com.twcable.grabbit.resources.ContentResource.CONTENT_RESOURCE_TYPE
 
 class ContentResourceSpec extends Specification {
 
