@@ -1,0 +1,13 @@
+Grabbit Does not support direct requests on this url.<br/>
+
+Visit one of the following links for more info!<br/>
+
+<a href="/grabbit/job">
+    Job Requests
+</a> <br/>
+<a href="/grabbit/content">
+    Content Requests
+</a> <br/>
+<a href="/grabbit/transaction">
+    Transaction Requests
+</a>

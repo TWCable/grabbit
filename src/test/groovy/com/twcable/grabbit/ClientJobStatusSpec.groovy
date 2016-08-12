@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.twcable.grabbit
 
 import com.twcable.grabbit.client.batch.ClientBatchJob
 import com.twcable.grabbit.spring.batch.repository.GrabbitJobExecution
-import org.springframework.batch.core.ExitStatus
-import org.springframework.batch.core.JobExecution
-import org.springframework.batch.core.JobInstance
-import org.springframework.batch.core.JobParameters
-import org.springframework.batch.core.StepExecution
+import org.springframework.batch.core.*
 import org.springframework.batch.core.explore.JobExplorer
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class ClientJobStatusSpec extends Specification {
 
@@ -167,6 +165,19 @@ class ClientJobStatusSpec extends Specification {
         status.empty
     }
 
+    def "If no jobs have ever been run, getAllTransactions returns an empty list"() {
+        given:
+        final JobExplorer jobExplorer = Mock(JobExplorer) {
+            getJobInstances(ClientBatchJob.JOB_NAME, 0, Integer.MAX_VALUE) >> null
+        }
+
+        when:
+        final Collection<String> transactionList = ClientJobStatus.getAllTransactions(jobExplorer)
+
+        then:
+        transactionList.empty
+    }
+
     def "Get status of all jobs ever run"() {
         given:
         final JobInstance jobInstance = Mock(JobInstance)
@@ -221,5 +232,54 @@ class ClientJobStatusSpec extends Specification {
         then:
         status.size() == 1
         status.get(0).transactionID == 456L
+    }
+
+    @Unroll
+    def "If there are different jobs with same transaction id, then getAllTransactions will return unique Collection of transaction ids"() {
+        given:
+        final JobInstance jobInstance = Mock(JobInstance)
+        final JobInstance anotherJobInstance = Mock(JobInstance)
+        final JobExplorer jobExplorer = Mock(JobExplorer) {
+            getJobInstances(ClientBatchJob.JOB_NAME, 0, Integer.MAX_VALUE) >> [
+                    jobInstance,anotherJobInstance
+            ]
+            getJobExecutions(jobInstance) >> [
+                    Mock(JobExecution) {
+                        getId() >> jobId
+                    }
+            ]
+            getJobExecutions(anotherJobInstance) >> [
+                    Mock(JobExecution) {
+                        getId() >> anotherJobId
+                    }
+            ]
+            getJobExecution(jobId) >> Mock(GrabbitJobExecution) {
+                getJobParameters() >> Mock(JobParameters)
+                isRunning() >> false
+                getEndTime() >> Mock(Date)
+                getStartTime() >> Mock(Date)
+                getTransactionID() >> transactionId
+            }
+            getJobExecution(anotherJobId) >> Mock(GrabbitJobExecution) {
+                getJobParameters() >> Mock(JobParameters)
+                isRunning() >> false
+                getEndTime() >> Mock(Date)
+                getStartTime() >> Mock(Date)
+                getTransactionID() >> anotherTransactionId
+            }
+        }
+
+        when:
+        final Collection<String> status = ClientJobStatus.getAllTransactions(jobExplorer)
+
+        then:
+        status.size() == size
+
+        where:
+        jobId << [1L, 2L]
+        anotherJobId << [3L, 4L]
+        transactionId << [100L, 100L]
+        anotherTransactionId << [100L, 101L]
+        size << [1, 2]
     }
 }

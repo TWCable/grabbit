@@ -54,6 +54,31 @@ class GrabbitTransactionServletSpec extends Specification {
         transactionServlet.doGet(request, response)
     }
 
+    def "A request for transaction status with an transactionId 'all' results in a OK response"() {
+        given:
+        final request = Mock(SlingHttpServletRequest) {
+            getResource() >> Mock(Resource) {
+                getResourceMetadata() >> Mock(ResourceMetadata) {
+                    get(TransactionResource.TRANSACTION_ID_KEY) >> "all"
+                }
+            }
+            getPathInfo() >> "/grabbit/transaction/all"
+        }
+        final response = Mock(SlingHttpServletResponse) {
+            1 * setStatus(SC_OK)
+            getWriter() >> Mock(PrintWriter)
+        }
+        final applicationContext = Mock(ConfigurableApplicationContext) {
+            getBean("clientJobExplorer", JobExplorer) >> Mock(JobExplorer)
+        }
+
+        final transactionServlet = new GrabbitTransactionServlet()
+        transactionServlet.setConfigurableApplicationContext(applicationContext)
+
+        expect:
+        transactionServlet.doGet(request, response)
+    }
+
     def "If no transactionId is provided for a transaction status request, we respond with a bad request response"() {
         given:
         final request = Mock(SlingHttpServletRequest) {

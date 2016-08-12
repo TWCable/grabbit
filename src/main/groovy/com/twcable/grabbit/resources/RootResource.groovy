@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2015 Time Warner Cable, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,37 +12,31 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Representation of a Grabbit's Root Resource provided by {@link GrabbitResourceProvider}.
+ * Queried from {@link com.twcable.grabbit.client.servlets.GrabbitRootServlet}
  */
 
 package com.twcable.grabbit.resources
 
 import groovy.transform.CompileStatic
 import org.apache.sling.api.resource.ResourceResolver
+import org.apache.sling.api.resource.SyntheticResource
 
 import javax.annotation.Nonnull
 
-/**
- * A resource representing some content to be streamed from a Grabbit instance.
- * provided by {@link GrabbitResourceProvider}.
- * Queried from {@link com.twcable.grabbit.server.GrabbitContentPullServlet}.
- */
 @CompileStatic
-class ContentResource extends RootResource {
+class RootResource extends SyntheticResource  {
 
-    public static final String CONTENT_RESOURCE_TYPE = "${ROOT_RESOURCE_TYPE}/content"
+    static final String ROOT_RESOURCE_TYPE = "twcable:grabbit"
 
-    ContentResource(@Nonnull final ResourceResolver resourceResolver, @Nonnull final String resolutionPath) {
-        super(resourceResolver, resolutionPath, CONTENT_RESOURCE_TYPE)
+    RootResource(@Nonnull final ResourceResolver resourceResolver,@Nonnull final String resolutionPath,
+                 String resourceType = ROOT_RESOURCE_TYPE) {
+        super(resourceResolver, resolutionPath, resourceType)
     }
-
 
     @Override
     String getResourceType() {
-        return CONTENT_RESOURCE_TYPE
-    }
-
-    @Override
-    String getResourceSuperType(){
         return ROOT_RESOURCE_TYPE
     }
 }

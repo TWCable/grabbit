@@ -1,0 +1,2 @@
+Request was made to get status of a transaction, but a transactionID was not provided for /grabbit/transaction.<br/>
+<a href='/grabbit/transaction/all'>Click</a> to view a list of all transactions.

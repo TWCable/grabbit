@@ -18,7 +18,6 @@ package com.twcable.grabbit.resources
 
 import groovy.transform.CompileStatic
 import org.apache.sling.api.resource.ResourceResolver
-import org.apache.sling.api.resource.SyntheticResource
 
 import javax.annotation.Nonnull
 import java.util.regex.Matcher
@@ -30,10 +29,10 @@ import java.util.regex.Matcher
  * Queried from {@link com.twcable.grabbit.client.servlets.GrabbitTransactionServlet}.
  */
 @CompileStatic
-class TransactionResource extends SyntheticResource {
+class TransactionResource extends RootResource {
 
-    public static final String TRANSACTION_RESOURCE_TYPE = "twcable:grabbit/transaction"
-    public static final String TRANSACTION_ID_KEY = "twcable:grabbit:transactionresource.transactionID"
+    public static final String TRANSACTION_RESOURCE_TYPE = "${ROOT_RESOURCE_TYPE}/transaction"
+    public static final String TRANSACTION_ID_KEY = "${ROOT_RESOURCE_TYPE}:transactionresource.transactionID"
 
     TransactionResource(@Nonnull final ResourceResolver resourceResolver, @Nonnull final String resolutionPath) {
         super(resourceResolver, resolutionPath, TRANSACTION_RESOURCE_TYPE)
@@ -56,5 +55,10 @@ class TransactionResource extends SyntheticResource {
     @Override
     String getResourceType() {
         return TRANSACTION_RESOURCE_TYPE
+    }
+
+    @Override
+    String getResourceSuperType(){
+        return ROOT_RESOURCE_TYPE
     }
 }

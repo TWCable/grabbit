@@ -83,8 +83,8 @@ class GrabbitResourceProvider implements ResourceProvider {
                 log.debug "Resolving ${path} to CleanJobRepositoryResource"
                 return new CleanJobRepositoryResource(resolver, path)
             default:
-                //Should provide a root resource for /grabbit, along with HATEOS style for this link, and other links. https://github.com/TWCable/grabbit/issues/22
-                return null
+                log.debug "Resolving ${path} to RootResource"
+                return new RootResource(resolver, path)
         }
     }
 

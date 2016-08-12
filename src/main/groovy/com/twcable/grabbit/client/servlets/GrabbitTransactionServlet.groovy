@@ -41,10 +41,16 @@ import static javax.servlet.http.HttpServletResponse.SC_OK
 @SlingServlet(methods = ['GET'], resourceTypes = ['twcable:grabbit/transaction'])
 class GrabbitTransactionServlet extends SlingSafeMethodsServlet {
 
+    //A "special" meta-jobID that allows for the status of all transactions to be queried.
+    static final String ALL_TRANSACTION_ID = "all"
+
     @Reference(bind = 'setConfigurableApplicationContext')
     ConfigurableApplicationContext configurableApplicationContext
 
     /**
+     * Used for querying the status of a transaction id for jobs executed in that transaction.(eg /grabbit/transaction/123, where 123 is the transaction ID)
+     * A special case is {@code ALL_TRANSACTION_ID}, to which this servlet will respond with the list of all transactions recorded.
+     *
      * @param request The request for querying a transaction.
      * @param response The response for the query. Will respond with an HTTP 200, and JSON status string if the transaction is found.
      * If the transaction isn't found or no transactionID is provided, will respond with an HTTP 400, and a description of what went wrong.
@@ -56,8 +62,19 @@ class GrabbitTransactionServlet extends SlingSafeMethodsServlet {
             String transactionIDString = request.resource.resourceMetadata[TransactionResource.TRANSACTION_ID_KEY]
             // Guard against the transactionID coming back as null or empty
             if(transactionIDString != null && !transactionIDString.empty) {
-                //At this point we know we at least have something as the "transactionID." It may still not be a valid numeric ID
-                transactionID = transactionIDString.toLong()
+                if(ALL_TRANSACTION_ID.equals(transactionIDString)){
+                    final JobExplorer jobExplorer = configurableApplicationContext.getBean("clientJobExplorer", JobExplorer)
+                    final Collection<String> transactionIds = ClientJobStatus.getAllTransactions(jobExplorer)
+                    response.setStatus(SC_OK)
+                    response.setContentType("text/html")
+                    response.writer.write this.class.getResourceAsStream("GrabbitTransactionResource-all.txt").text + transactionIds.collect {
+                        "<a href=/grabbit/transaction/${it}>${it}</a><br/>"
+                    }.join(" ")
+                    return
+                }else{
+                    //At this point, we know we at least have something as the "transactionID". It may still not be a valid numeric ID
+                    transactionID = transactionIDString.toLong()
+                }
             }
         } catch(NumberFormatException ex) {
             log.warn "Bad request to receive transaction status for : ${request.pathInfo}. Transaction ID's must be numeric."
@@ -85,6 +102,7 @@ class GrabbitTransactionServlet extends SlingSafeMethodsServlet {
         }
         log.warn "Bad request to receive transaction status for : ${request.pathInfo}. A transactionID was not provided."
         response.setStatus(SC_BAD_REQUEST)
-        response.writer.write("Request was made to get status of a transaction, but a transactionID was not provided for ${request.pathInfo}.")
+        response.setContentType("text/html")
+        response.writer.write this.class.getResourceAsStream("GrabbitTransactionResource-BadRequest.txt").text
     }
 }

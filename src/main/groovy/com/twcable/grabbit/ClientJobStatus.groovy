@@ -125,4 +125,18 @@ class ClientJobStatus {
             it.transactionID == transactionID
         } as Collection<ClientJobStatus>
     }
+
+    /**
+     * @param explorer The job explorer to query.
+     * @throws IllegalArgumentException If explorer is null.
+     * @return a {@link Collection} representing all transaction ids; or an empty collection if there are no transactions.
+     * This may mean that the transactions never existed, or that the data store for the JCR job repository was externally modified
+     */
+    @Nonnull
+    static Collection<String> getAllTransactions(@Nonnull final JobExplorer explorer) {
+        if(explorer == null) throw new IllegalArgumentException("jobExplorer == null")
+        getAll(explorer).collect {
+            it.transactionID
+        }.unique() as Collection<String>
+    }
 }

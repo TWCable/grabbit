@@ -18,7 +18,6 @@ package com.twcable.grabbit.resources
 
 import groovy.transform.CompileStatic
 import org.apache.sling.api.resource.ResourceResolver
-import org.apache.sling.api.resource.SyntheticResource
 
 import javax.annotation.Nonnull
 import java.util.regex.Matcher
@@ -28,10 +27,10 @@ import java.util.regex.Matcher
  * Queried from {@link com.twcable.grabbit.client.servlets.GrabbitJobServlet}.
  */
 @CompileStatic
-class JobResource extends SyntheticResource {
+class JobResource extends RootResource {
 
-    public static final String JOB_RESOURCE_TYPE = "twcable:grabbit/job"
-    public static final String JOB_EXECUTION_ID_KEY = "twcable:grabbit:jobresource.jobExecutionId"
+    public static final String JOB_RESOURCE_TYPE = "${ROOT_RESOURCE_TYPE}/job"
+    public static final String JOB_EXECUTION_ID_KEY = "${ROOT_RESOURCE_TYPE}:jobresource.jobExecutionId"
 
     JobResource(@Nonnull final ResourceResolver resourceResolver, @Nonnull final String resolutionPath) {
         super(resourceResolver, resolutionPath, JOB_RESOURCE_TYPE)
@@ -54,5 +53,10 @@ class JobResource extends SyntheticResource {
     @Override
     String getResourceType() {
         return JOB_RESOURCE_TYPE
+    }
+
+    @Override
+    String getResourceSuperType(){
+        return ROOT_RESOURCE_TYPE
     }
 }

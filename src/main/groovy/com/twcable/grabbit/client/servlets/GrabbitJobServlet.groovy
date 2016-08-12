@@ -104,7 +104,7 @@ class GrabbitJobServlet extends SlingAllMethodsServlet {
         }
         log.warn "Bad request to receive job status for : ${request.pathInfo}. A job ID was not provided in the request."
         response.setStatus(SC_BAD_REQUEST)
-        response.writer.write("Request was made to get the status of a job, but no job ID was provided for ${request.pathInfo}.")
+        response.writer.write("Request was made to get the status of a job, but no job ID was provided for ${request.pathInfo}. Try again with ${request.pathInfo}/<Job-ID> or ${request.pathInfo}/all.")
     }
 
     /**

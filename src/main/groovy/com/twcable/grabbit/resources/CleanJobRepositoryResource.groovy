@@ -18,7 +18,6 @@ package com.twcable.grabbit.resources
 
 import groovy.transform.CompileStatic
 import org.apache.sling.api.resource.ResourceResolver
-import org.apache.sling.api.resource.SyntheticResource
 
 import javax.annotation.Nonnull
 
@@ -28,9 +27,9 @@ import javax.annotation.Nonnull
  * Queried from {@link com.twcable.grabbit.spring.batch.repository.servlets.GrabbitCleanJobRepositoryServlet}.
  */
 @CompileStatic
-class CleanJobRepositoryResource extends SyntheticResource {
+class CleanJobRepositoryResource extends RootResource {
 
-    public static final String CLEAN_JOBREPOSITORY_RESOURCE_TYPE = "twcable:grabbit/jobrepository/clean"
+    public static final String CLEAN_JOBREPOSITORY_RESOURCE_TYPE = "${ROOT_RESOURCE_TYPE}/jobrepository/clean"
 
     CleanJobRepositoryResource(@Nonnull final ResourceResolver resourceResolver, @Nonnull final String resolutionPath) {
         super(resourceResolver, resolutionPath, CLEAN_JOBREPOSITORY_RESOURCE_TYPE)
@@ -40,5 +39,10 @@ class CleanJobRepositoryResource extends SyntheticResource {
     @Override
     String getResourceType() {
         return CLEAN_JOBREPOSITORY_RESOURCE_TYPE
+    }
+
+    @Override
+    String getResourceSuperType(){
+        return ROOT_RESOURCE_TYPE
     }
 }
