@@ -25,7 +25,7 @@ dependencies {
     compile "org.apache.felix:org.osgi.core:${felix_osgi_version}"
     compile "org.apache.felix:org.osgi.compendium:${felix_osgi_version}"
 
-    compile "joda-time:joda-time:1.6.2"
+    compile "joda-time:joda-time:2.7"
 
     // Need the "javax.jms" library for Spring JMS
     compile "org.glassfish:javax.jms:${jms_version}"
