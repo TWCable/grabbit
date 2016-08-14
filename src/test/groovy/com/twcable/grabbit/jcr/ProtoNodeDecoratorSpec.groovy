@@ -59,6 +59,7 @@ class ProtoNodeDecoratorSpec extends Specification {
                 .newBuilder()
                 .setName(JCR_PRIMARYTYPE)
                 .setType(STRING)
+                .setMultiple(false)
                 .addValues(ProtoValue.newBuilder().setStringValue(JcrConstants.NT_UNSTRUCTURED))
                 .build()
         nodeBuilder.addProperties(primaryTypeProperty)
@@ -67,6 +68,7 @@ class ProtoNodeDecoratorSpec extends Specification {
                 .newBuilder()
                 .setName(JCR_MIXINTYPES)
                 .setType(STRING)
+                .setMultiple(true)
                 .addAllValues(
                     [
                         ProtoValue.newBuilder().setStringValue("somemixintype").build(),
@@ -81,6 +83,7 @@ class ProtoNodeDecoratorSpec extends Specification {
                 .newBuilder()
                 .setName("someproperty")
                 .setType(STRING)
+                .setMultiple(false)
                 .addValues(ProtoValue.newBuilder().setStringValue("somevalue"))
                 .build()
         nodeBuilder.addProperties(someOtherProperty)

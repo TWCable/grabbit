@@ -55,6 +55,7 @@ class JcrNodesWriterSpec extends Specification {
             .newBuilder()
             .setName(JCR_PRIMARYTYPE)
             .setType(STRING)
+            .setMultiple(false)
             .addValues(ProtoValue.newBuilder().setStringValue(NT_FILE))
             .build()
 
@@ -62,6 +63,7 @@ class JcrNodesWriterSpec extends Specification {
             .newBuilder()
             .setName(JCR_LASTMODIFIED)
             .setType(STRING)
+            .setMultiple(false)
             .addValues(NodeProtos.Value.newBuilder().setStringValue("Date"))
             .build()
 
@@ -75,6 +77,7 @@ class JcrNodesWriterSpec extends Specification {
                 .newBuilder()
                 .setName(JCR_PRIMARYTYPE)
                 .setType(STRING)
+                .setMultiple(false)
                 .addValues(NodeProtos.Value.newBuilder().setStringValue(NT_RESOURCE))
                 .build()
 
@@ -109,6 +112,7 @@ class JcrNodesWriterSpec extends Specification {
             .newBuilder()
             .setName("jcr:primaryType")
             .setType(STRING)
+            .setMultiple(false)
             .addValues(NodeProtos.Value.newBuilder().setStringValue("nt:unstructured"))
             .build()
 
@@ -116,6 +120,7 @@ class JcrNodesWriterSpec extends Specification {
             .newBuilder()
             .setName("multiValuedLong")
             .setType(LONG)
+            .setMultiple(true)
             .addAllValues(
                 [
                     ProtoValue.newBuilder().setStringValue("12345").build(),
@@ -170,6 +175,7 @@ class JcrNodesWriterSpec extends Specification {
         ProtoPropertyBuilder propertyBuilder = ProtoProperty.newBuilder()
                 .setName(primaryTypeName)
                 .setType(STRING)
+                .setMultiple(false)
                 .addValues(ProtoValue.newBuilder().setStringValue(primaryTypeValue))
 
         nodeBuilder.addProperties(propertyBuilder.build())

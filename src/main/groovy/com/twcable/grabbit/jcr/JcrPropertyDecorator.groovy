@@ -80,6 +80,7 @@ class JcrPropertyDecorator {
                 propertyBuilder.addValues(valueBuilder.setStringValue(value.string))
             }
         }
+        propertyBuilder.setMultiple(multiple)
         propertyBuilder.setType(type)
         propertyBuilder.build()
     }

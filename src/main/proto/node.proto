@@ -12,7 +12,8 @@ message Node {
 message Property {
     required string name = 1;
     required uint32 type = 2;
-    repeated Value values = 3;
+    required bool multiple = 3;
+    repeated Value values = 4;
 }
 
 message Value {

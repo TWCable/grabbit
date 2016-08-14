@@ -82,16 +82,6 @@ class ProtoPropertyDecorator {
         innerProtoProperty.name == JCR_MIXINTYPES
     }
 
-
-    boolean isMultiple() {
-        /**
-         * According to the JCR spec, all properties must have a value; however, a multi-value property can have an "empty" value (like an empty array)
-         * That is how we know it is a multiple valued property if the values count is 0
-         */
-        return valuesCount > 1 || valuesCount == 0
-    }
-
-
     ProtoValue getValue() {
         innerProtoProperty.valuesList.first()
     }
