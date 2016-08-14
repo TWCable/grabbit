@@ -30,7 +30,7 @@ function newGrabbitRequest() {
     echo $SET_YELLOW
     echo "Processing....."
     echo $SET_NO_COLOR
-    curl -s -f -X PUT --data-binary "@$configpath" -u $username:$password -D /tmp/grabbit_headers $client$GRABBIT_JOB > /tmp/grabbit
+    curl -s -f -X PUT --header "Content-Type: text/plain" --data-binary "@$configpath" -u $username:$password -D /tmp/grabbit_headers $client$GRABBIT_JOB > /tmp/grabbit
     RSP_CODE=$?
     if [ $RSP_CODE -ne 0 ]; then
         clear
