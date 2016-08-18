@@ -59,9 +59,25 @@ class ProtoNodeDecorator {
         protoProperties.findAll { !(it.name in [JCR_PRIMARYTYPE, JCR_MIXINTYPES]) }
     }
 
+    void writeJcrNodesRecursively(Session session) {
+        JcrNodeDecorator decoratedJcrNode = writeToJcr(session)
+        decoratedJcrNode.setLastModified()
+        // This will processed all mandatory child nodes only
+        if(innerProtoNode.mandatoryChildNodeList && innerProtoNode.mandatoryChildNodeList.size() > 0) {
+            for(ProtoNode childProtoNode: innerProtoNode.mandatoryChildNodeList) {
+                new ProtoNodeDecorator(childProtoNode).writeJcrNodesRecursively(session)
+            }
+        }
+    }
 
-    JcrNodeDecorator writeToJcr(@Nonnull Session session) {
+
+    private JcrNodeDecorator writeToJcr(@Nonnull Session session) {
         final jcrNode = getOrCreateNode(session)
+
+        JcrNodeDecorator decoratedJcrNode = new JcrNodeDecorator(jcrNode)
+        if (!decoratedJcrNode.isCheckedOut()) {
+            decoratedJcrNode.checkoutNode()
+        }
         //Write mixin types first to avoid InvalidConstraintExceptions
         final mixinProperty = getMixinProperty()
         if(mixinProperty) {
@@ -70,7 +86,7 @@ class ProtoNodeDecorator {
         //Then add other properties
         writableProperties.each { it.writeToNode(jcrNode) }
 
-        return new JcrNodeDecorator(jcrNode)
+        return decoratedJcrNode
     }
 
 

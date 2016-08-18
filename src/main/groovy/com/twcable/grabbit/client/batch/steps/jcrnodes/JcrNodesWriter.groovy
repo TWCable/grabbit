@@ -17,7 +17,6 @@
 package com.twcable.grabbit.client.batch.steps.jcrnodes
 
 import com.twcable.grabbit.client.batch.ClientBatchJobContext
-import com.twcable.grabbit.jcr.JcrNodeDecorator
 import com.twcable.grabbit.jcr.ProtoNodeDecorator
 import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import groovy.transform.CompileStatic
@@ -71,7 +70,7 @@ class JcrNodesWriter implements ItemWriter<ProtoNode>, ItemWriteListener {
     void write(List<? extends ProtoNode> nodeProtos) throws Exception {
         Session session = theSession()
         for (ProtoNode nodeProto : nodeProtos) {
-            writeToJcr(nodeProto, session)
+            new ProtoNodeDecorator(nodeProto).writeJcrNodesRecursively(session)
         }
     }
 
@@ -87,16 +86,7 @@ class JcrNodesWriter implements ItemWriter<ProtoNode>, ItemWriteListener {
         return retVal
     }
 
-    private static void writeToJcr(ProtoNode nodeProto, Session session) {
-        JcrNodeDecorator jcrNode = new ProtoNodeDecorator(nodeProto).writeToJcr(session)
-        jcrNode.setLastModified()
-        // This will processed all mandatory child nodes only
-        if(nodeProto.mandatoryChildNodeList && nodeProto.mandatoryChildNodeList.size() > 0) {
-            for(ProtoNode childNode: nodeProto.mandatoryChildNodeList) {
-                writeToJcr(childNode, session)
-            }
-        }
-    }
+
 
     private Session theSession() {
         ClientBatchJobContext.session

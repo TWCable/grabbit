@@ -19,17 +19,23 @@ import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import com.twcable.grabbit.proto.NodeProtos.Node.Builder as ProtoNodeBuilder
 import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
 import groovy.transform.CompileStatic
-
+import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Slf4j
+import org.apache.jackrabbit.commons.NamespaceHelper
 import org.apache.jackrabbit.value.DateValue
+import com.twcable.grabbit.proto.NodeProtos.Value as ProtoValue
+
 
 import javax.annotation.Nonnull
 import javax.annotation.Nullable
+import javax.jcr.ItemNotFoundException
 import javax.jcr.Node as JCRNode
 import javax.jcr.Property
 import javax.jcr.Property as JcrProperty
 import javax.jcr.RepositoryException
+import javax.jcr.Session
 import javax.jcr.nodetype.ItemDefinition
+import javax.jcr.nodetype.NodeTypeManager
 
 import static org.apache.jackrabbit.JcrConstants.*
 
@@ -133,6 +139,43 @@ class JcrNodeDecorator {
             JcrPropertyDecorator decoratedProperty = new JcrPropertyDecorator(jcrProperty)
             decoratedProperty.isTransferable() ? decoratedProperty.toProtoProperty() : null
         }
+    }
+
+    void checkoutNode() {
+        try {
+            JcrNodeDecorator decoratedVersionableAncestor = findVersionableAncestor();
+            if (decoratedVersionableAncestor && !decoratedVersionableAncestor.isCheckedOut()) {
+                decoratedVersionableAncestor.session.workspace.versionManager.checkout(decoratedVersionableAncestor.path);
+            }
+        }
+        catch (Exception exception) {
+            log.warn "Could not checkout node ${this.path}, ${exception.message}"
+            exception.printStackTrace()
+        }
+    }
+
+    private JcrNodeDecorator findVersionableAncestor() throws RepositoryException {
+        if (isVersionable()) {
+            return this;
+        }
+        try {
+            JcrNodeDecorator parentDecoratedNode = new JcrNodeDecorator(this.parent);
+            return parentDecoratedNode.findVersionableAncestor();
+        } catch (ItemNotFoundException e) {
+            return null;
+        }
+    }
+
+    /**
+     * mix:simpleVersionable cannot be checked in. Throws javax.jcr.UnsupportedRepositoryOperationException
+     * Checking here for mix:versionable only
+     * */
+    private boolean isVersionable() throws RepositoryException {
+        return isNodeType(MIX_VERSIONABLE)
+    }
+
+    String getName(String name) throws RepositoryException {
+        return new NamespaceHelper(getSession()).getJcrName(name);
     }
 
     /**

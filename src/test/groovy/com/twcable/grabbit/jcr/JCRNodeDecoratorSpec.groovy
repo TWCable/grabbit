@@ -16,8 +16,11 @@
 package com.twcable.grabbit.jcr
 
 import com.day.cq.commons.jcr.JcrConstants
+import com.twcable.jackalope.NodeBuilder
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.util.mop.ConfineMetaClassChanges
 
 import javax.jcr.Node
 import javax.jcr.NodeIterator
@@ -27,6 +30,14 @@ import javax.jcr.nodetype.ItemDefinition
 import javax.jcr.nodetype.NodeDefinition
 import javax.jcr.nodetype.NodeType
 
+import static com.twcable.jackalope.JCRBuilder.node
+import static com.twcable.jackalope.JCRBuilder.node
+import static com.twcable.jackalope.JCRBuilder.property
+import static com.twcable.jackalope.JCRBuilder.property
+import static com.twcable.jackalope.JCRBuilder.property
+import static com.twcable.jackalope.JCRBuilder.property
+import static com.twcable.jackalope.JCRBuilder.property
+import static com.twcable.jackalope.JcrConstants.NT_FILE
 import static org.apache.jackrabbit.JcrConstants.JCR_CREATED
 import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
@@ -233,5 +244,33 @@ class JCRNodeDecoratorSpec extends Specification {
         false               |   true                |   true                | cqModifiedDate.time
         false               |   false               |   true                | jcrCreatedDate.time
         false               |   false               |   false               | null
+    }
+
+    /*
+    *  Needs mixin implementation in Jackalope
+    *  https://github.com/TWCable/jackalope/pull/7
+    */
+    @Ignore
+    def "Checkout nearest versionable node"() {
+        given:
+        NodeBuilder fakeNodeBuilder =
+                node("a",
+                        node("b", property("jcr:mixinTypes", ["mix:versionable"].toArray()),
+                                property("jcr:primaryType", "cq:Page"),
+                                node("c",
+                                        node("d")),
+
+                        ),
+                )
+
+        Node parentNode = fakeNodeBuilder.build();
+
+        final nodeDecorator = new JcrNodeDecorator(parentNode.getNode("b/c/d"))
+
+        when:
+        nodeDecorator.checkoutNode()
+
+        then:
+        parentNode.getNode("b").getProperty("jcr:isCheckedOut") == true
     }
 }
