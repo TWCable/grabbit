@@ -34,7 +34,7 @@ import static com.twcable.jackalope.JCRBuilder.property
 import static org.apache.jackrabbit.JcrConstants.*
 
 @SuppressWarnings("GroovyAssignabilityCheck")
-class JCRNodeDecoratorSpec extends Specification {
+class JcrNodeDecoratorSpec extends Specification {
     @Shared
     static Calendar jcrModifiedDate = Calendar.getInstance()
     static Calendar cqModifiedDate = Calendar.getInstance()
