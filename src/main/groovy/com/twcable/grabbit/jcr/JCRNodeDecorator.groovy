@@ -19,12 +19,8 @@ import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import com.twcable.grabbit.proto.NodeProtos.Node.Builder as ProtoNodeBuilder
 import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
 import groovy.transform.CompileStatic
-import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Slf4j
-import org.apache.jackrabbit.commons.NamespaceHelper
 import org.apache.jackrabbit.value.DateValue
-import com.twcable.grabbit.proto.NodeProtos.Value as ProtoValue
-
 
 import javax.annotation.Nonnull
 import javax.annotation.Nullable
@@ -33,9 +29,7 @@ import javax.jcr.Node as JCRNode
 import javax.jcr.Property
 import javax.jcr.Property as JcrProperty
 import javax.jcr.RepositoryException
-import javax.jcr.Session
 import javax.jcr.nodetype.ItemDefinition
-import javax.jcr.nodetype.NodeTypeManager
 
 import static org.apache.jackrabbit.JcrConstants.*
 
@@ -172,10 +166,6 @@ class JcrNodeDecorator {
      * */
     private boolean isVersionable() throws RepositoryException {
         return isNodeType(MIX_VERSIONABLE)
-    }
-
-    String getName(String name) throws RepositoryException {
-        return new NamespaceHelper(getSession()).getJcrName(name);
     }
 
     /**

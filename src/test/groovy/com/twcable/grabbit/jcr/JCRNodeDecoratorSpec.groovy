@@ -20,7 +20,6 @@ import com.twcable.jackalope.NodeBuilder
 import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
-import spock.util.mop.ConfineMetaClassChanges
 
 import javax.jcr.Node
 import javax.jcr.NodeIterator
@@ -31,16 +30,8 @@ import javax.jcr.nodetype.NodeDefinition
 import javax.jcr.nodetype.NodeType
 
 import static com.twcable.jackalope.JCRBuilder.node
-import static com.twcable.jackalope.JCRBuilder.node
 import static com.twcable.jackalope.JCRBuilder.property
-import static com.twcable.jackalope.JCRBuilder.property
-import static com.twcable.jackalope.JCRBuilder.property
-import static com.twcable.jackalope.JCRBuilder.property
-import static com.twcable.jackalope.JCRBuilder.property
-import static com.twcable.jackalope.JcrConstants.NT_FILE
-import static org.apache.jackrabbit.JcrConstants.JCR_CREATED
-import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
-import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
+import static org.apache.jackrabbit.JcrConstants.*
 
 @SuppressWarnings("GroovyAssignabilityCheck")
 class JCRNodeDecoratorSpec extends Specification {
