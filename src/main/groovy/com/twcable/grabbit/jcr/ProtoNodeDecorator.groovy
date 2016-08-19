@@ -59,6 +59,11 @@ class ProtoNodeDecorator {
         protoProperties.findAll { !(it.name in [JCR_PRIMARYTYPE, JCR_MIXINTYPES]) }
     }
 
+    /**
+     * This method writes a node with all the mandatory child node to the Jcr
+     * using current proto node properties
+     * @param session to write Jcr nodes
+     */
     void writeJcrNodesRecursively(Session session) {
         JcrNodeDecorator decoratedJcrNode = writeToJcr(session)
         decoratedJcrNode.setLastModified()

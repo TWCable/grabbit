@@ -135,6 +135,9 @@ class JcrNodeDecorator {
         }
     }
 
+    /**
+     * Finds out nearest versionable ancestor for a node and performs a checkout
+    */
     void checkoutNode() {
         try {
             JcrNodeDecorator decoratedVersionableAncestor = findVersionableAncestor();
@@ -144,7 +147,6 @@ class JcrNodeDecorator {
         }
         catch (Exception exception) {
             log.warn "Could not checkout node ${this.path}, ${exception.message}"
-            exception.printStackTrace()
         }
     }
 
