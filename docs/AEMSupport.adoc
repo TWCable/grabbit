@@ -5,7 +5,9 @@
 
 == Below details AEM version support for the various releases of Grabbit.
 ```
->= v4.x - AEM 6.1
+   v7.x - AEM 6.1 and AEM 6.2
+   v5.x - AEM 6.1
+   v4.x - AEM 6.1
    v3.x - CQ 5.6 and AEM 6.0
    v2.x - CQ 5.6
 ```
