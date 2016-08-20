@@ -4,7 +4,7 @@
 
 . Update the `version` property in link:../gradle.properties[`gradle.properties`]. We follow http://semver.org/spec/v2.0.0.html[Semantic Versioning 2.0.0], so increment accordingly
 
-. Update link:../RELEASE_NOTES.md[RELEASE_NOTES.md] with what has changed. Assuming the commit messages have been written well, it will generally be the subject lines of the commits since the last release, but edit (including adding) as appropriate for a human to easily understand what has changed
+. Update link:./RELEASE_NOTES.md[RELEASE_NOTES.md] with what has changed. Assuming the commit messages have been written well, it will generally be the subject lines of the commits since the last release, but edit (including adding) as appropriate for a human to easily understand what has changed
 
 === Create A Clean Build
 
@@ -17,7 +17,7 @@ $ ./gradlew clean check integrationTestReport createPackage
 
 [source,bash]
 --
-$ git add gradle.properties RELEASE_NOTES.md
+$ git add gradle.properties docs/RELEASE_NOTES.md
 $ git commit -m v9.9.9   # "v" followed by the version number
 $ git tag v9.9.9
 $ git push origin HEAD:master

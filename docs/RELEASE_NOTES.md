@@ -2,6 +2,14 @@
 
 [ ![Download](https://api.bintray.com/packages/twcable/aem/Grabbit/images/download.svg) ](https://bintray.com/twcable/aem/Grabbit/_latestVersion)
 
+## 7.0.0
+
+* Refactor JcrNodesProcessor to use JcrPropertyDecorator
+* Provide Root ResourceProvider for Grabbit
+* Upgrade joda-time dependency to 2.7 and update MANIFEST.MF to accept [2,3) for AEM 6.1 & AEM 6.2 compatibility
+* Added Content-Type header in curl request in grabbit.sh for it to work in AEM 6.2
+* Transfer current property's state whether it's multiple or not from Server to Client
+
 ## 6.0.0
 
 * Upgrade to protoc 2.6.1 and clean up of messaging structure
