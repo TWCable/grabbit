@@ -10,14 +10,6 @@
 * Added Content-Type header in curl request in grabbit.sh for it to work in AEM 6.2
 * Transfer current property's state whether it's multiple or not from Server to Client
 
-## 6.0.0
-
-* Upgrade to protoc 2.6.1 and clean up of messaging structure
-* Feature 112. Added ability to specify batch size at job and transaction level
-* Project build restructure
-* README restructure and updates
-
-
 ## 5.0.1
 
 * Adds feature that provides a way to delete JcrJobRepository that is older than X hours from "now"
