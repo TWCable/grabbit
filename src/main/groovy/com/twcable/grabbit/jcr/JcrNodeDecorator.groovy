@@ -140,9 +140,9 @@ class JcrNodeDecorator {
     */
     void checkoutNode() {
         try {
-            JcrNodeDecorator decoratedVersionableAncestor = findVersionableAncestor();
+            JcrNodeDecorator decoratedVersionableAncestor = findVersionableAncestor()
             if (decoratedVersionableAncestor && !decoratedVersionableAncestor.isCheckedOut()) {
-                decoratedVersionableAncestor.session.workspace.versionManager.checkout(decoratedVersionableAncestor.path);
+                decoratedVersionableAncestor.session.workspace.versionManager.checkout(decoratedVersionableAncestor.path)
             }
         }
         catch (Exception exception) {
@@ -150,24 +150,20 @@ class JcrNodeDecorator {
         }
     }
 
-    private JcrNodeDecorator findVersionableAncestor() throws RepositoryException {
+    private JcrNodeDecorator findVersionableAncestor() {
         if (isVersionable()) {
-            return this;
+            return this
         }
         try {
-            JcrNodeDecorator parentDecoratedNode = new JcrNodeDecorator(this.parent);
-            return parentDecoratedNode.findVersionableAncestor();
+            JcrNodeDecorator parentDecoratedNode = new JcrNodeDecorator(this.parent)
+            return parentDecoratedNode.findVersionableAncestor()
         } catch (ItemNotFoundException e) {
-            return null;
+            return null
         }
     }
 
-    /**
-     * mix:simpleVersionable cannot be checked in. Throws javax.jcr.UnsupportedRepositoryOperationException
-     * Checking here for mix:versionable only
-     * */
-    private boolean isVersionable() throws RepositoryException {
-        return isNodeType(MIX_VERSIONABLE)
+    private boolean isVersionable() {
+        return isNodeType(MIX_VERSIONABLE) || isNodeType("mix:simpleVersionable")
     }
 
     /**
