@@ -18,6 +18,7 @@ package com.twcable.grabbit.client.batch.steps.jcrnodes
 
 import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import com.twcable.grabbit.proto.NodeProtos
+import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.springframework.batch.item.ItemReader
@@ -32,11 +33,11 @@ import org.springframework.batch.item.UnexpectedInputException
 @Slf4j
 @CompileStatic
 @SuppressWarnings("GrMethodMayBeStatic")
-class JcrNodesReader implements ItemReader<NodeProtos.Node> {
+class JcrNodesReader implements ItemReader<ProtoNode> {
 
     @Override
     NodeProtos.Node read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
-        NodeProtos.Node nodeProto = NodeProtos.Node.parseDelimitedFrom(theInputStream())
+        ProtoNode nodeProto = ProtoNode.parseDelimitedFrom(theInputStream())
         if (!nodeProto) {
             log.info "Received all data from Server"
             return null

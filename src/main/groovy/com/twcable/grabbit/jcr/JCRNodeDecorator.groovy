@@ -146,7 +146,7 @@ class JcrNodeDecorator {
         if (hasProperty(JCR_LASTMODIFIED)) {
             return getProperty(JCR_LASTMODIFIED).date.time
         }
-        else if (hasProperty(CQ_LAST_MODIFIED)) {
+        else if (hasProperty("cq:lastModified")) {
             return getProperty(CQ_LAST_MODIFIED).date.time
         }
         else if (hasProperty(JCR_CREATED)) {
