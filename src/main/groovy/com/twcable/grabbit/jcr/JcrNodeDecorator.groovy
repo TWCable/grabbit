@@ -20,6 +20,7 @@ import com.twcable.grabbit.proto.NodeProtos.Node.Builder as ProtoNodeBuilder
 import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import org.apache.jackrabbit.commons.JcrUtils
 import org.apache.jackrabbit.value.DateValue
 
 import javax.annotation.Nonnull
@@ -29,7 +30,9 @@ import javax.jcr.Node as JCRNode
 import javax.jcr.Property
 import javax.jcr.Property as JcrProperty
 import javax.jcr.RepositoryException
+import javax.jcr.Session
 import javax.jcr.nodetype.ItemDefinition
+import javax.jcr.version.VersionException
 
 import static org.apache.jackrabbit.JcrConstants.*
 
@@ -45,11 +48,41 @@ class JcrNodeDecorator {
     private Collection<JcrNodeDecorator> immediateChildNodes
 
 
-    JcrNodeDecorator(@Nonnull JCRNode node) {
+    JcrNodeDecorator(@Nonnull final JCRNode node) {
         if(!node) throw new IllegalArgumentException("node must not be null!")
         this.innerNode = node
     }
 
+    static JcrNodeDecorator createFromProtoNode(@Nonnull final ProtoNodeDecorator protoNode, @Nonnull final Session session) {
+        final JcrNodeDecorator theDecorator = new JcrNodeDecorator(getOrCreateNode(protoNode, session))
+        final mandatoryNodes = protoNode.getMandatoryChildNodes()
+        if(mandatoryNodes && mandatoryNodes.size() > 0) {
+            mandatoryNodes.each {
+                it.writeToJcr(session)
+            }
+        }
+        //If a version exception is thrown,
+        try {
+            protoNode.writableProperties.each { it.writeToNode(innerNode) }
+        }
+        catch(VersionException ex) {
+            theDecorator.checkoutNode()
+            protoNode.writableProperties.each { it.writeToNode(innerNode) }
+            theDecorator.checkinNode()
+        }
+        theDecorator.setLastModified()
+        return theDecorator
+    }
+
+    /**
+     * This method is rather succinct, but helps isolate this JcrUtils static method call
+     * so that we can get better test coverage.
+     * @param session to create or get the node path for
+     * @return the newly created, or found node
+     */
+    private static JCRNode getOrCreateNode(ProtoNodeDecorator protoNode, Session session) {
+        JcrUtils.getOrCreateByPath(protoNode.name, protoNode.primaryType, session)
+    }
 
     /**
      * @return this node's immediate children, empty if none
@@ -133,6 +166,10 @@ class JcrNodeDecorator {
             JcrPropertyDecorator decoratedProperty = new JcrPropertyDecorator(jcrProperty)
             decoratedProperty.isTransferable() ? decoratedProperty.toProtoProperty() : null
         }
+    }
+
+    void checkinNode() {
+
     }
 
     /**

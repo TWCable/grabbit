@@ -56,71 +56,15 @@ class ProtoNodeDecorator {
 
 
     Collection<ProtoPropertyDecorator> getWritableProperties() {
-        protoProperties.findAll { !(it.name in [JCR_PRIMARYTYPE, JCR_MIXINTYPES]) }
+        protoProperties.findAll { !(it.name in [JCR_PRIMARYTYPE]) }
     }
 
-    /**
-     * This method writes a node with all the mandatory child node to the Jcr
-     * using current proto node properties
-     * @param session to write Jcr nodes
-     */
-    void writeJcrNodesRecursively(Session session) {
-        JcrNodeDecorator decoratedJcrNode = writeToJcr(session)
-        decoratedJcrNode.setLastModified()
-        // This will processed all mandatory child nodes only
-        if(innerProtoNode.mandatoryChildNodeList && innerProtoNode.mandatoryChildNodeList.size() > 0) {
-            for(ProtoNode childProtoNode: innerProtoNode.mandatoryChildNodeList) {
-                new ProtoNodeDecorator(childProtoNode).writeJcrNodesRecursively(session)
-            }
-        }
+    List<ProtoNodeDecorator> getMandatoryChildNodes() {
+        return mandatoryChildNodeList.collect { new ProtoNodeDecorator(it) }
     }
 
-
-    private JcrNodeDecorator writeToJcr(@Nonnull Session session) {
-        final jcrNode = getOrCreateNode(session)
-
-        JcrNodeDecorator decoratedJcrNode = new JcrNodeDecorator(jcrNode)
-        if (!decoratedJcrNode.isCheckedOut()) {
-            decoratedJcrNode.checkoutNode()
-        }
-        //Write mixin types first to avoid InvalidConstraintExceptions
-        final mixinProperty = getMixinProperty()
-        if(mixinProperty) {
-            addMixins(mixinProperty, jcrNode)
-        }
-        //Then add other properties
-        writableProperties.each { it.writeToNode(jcrNode) }
-
-        return decoratedJcrNode
-    }
-
-
-    /**
-     * This method is rather succinct, but helps isolate this JcrUtils static method call
-     * so that we can get better test coverage.
-     * @param session to create or get the node path for
-     * @return the newly created, or found node
-     */
-    JCRNode getOrCreateNode(Session session) {
-        JcrUtils.getOrCreateByPath(innerProtoNode.name, primaryType, session)
-    }
-
-
-    /**
-     * If a property can be added as a mixin, adds it to the given node
-     * @param property
-     * @param node
-     */
-    private static void addMixins(ProtoPropertyDecorator property, JCRNode node) {
-        property.valuesList.each { ProtoValue value ->
-            if (node.canAddMixin(value.stringValue)) {
-                node.addMixin(value.stringValue)
-                log.debug "Added mixin ${value.stringValue} for : ${node.name}."
-            }
-            else {
-                log.warn "Encountered invalid mixin type while unmarshalling for Proto value : ${value}"
-            }
-        }
+    JcrNodeDecorator writeToJcr(@Nonnull Session session) {
+        return JcrNodeDecorator.createFromProtoNode(this, session)
     }
 
 }

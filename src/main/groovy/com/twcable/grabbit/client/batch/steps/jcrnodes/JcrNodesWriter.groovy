@@ -70,7 +70,7 @@ class JcrNodesWriter implements ItemWriter<ProtoNode>, ItemWriteListener {
     void write(List<? extends ProtoNode> nodeProtos) throws Exception {
         Session session = theSession()
         for (ProtoNode nodeProto : nodeProtos) {
-            new ProtoNodeDecorator(nodeProto).writeJcrNodesRecursively(session)
+            new ProtoNodeDecorator(nodeProto).writeToJcr(session)
         }
     }
 

@@ -44,7 +44,10 @@ class ProtoPropertyDecorator {
 
 
     void writeToNode(@Nonnull JCRNode node) {
-        if(primaryType || mixinType) throw new IllegalStateException("Refuse to write jcr:primaryType or jcr:mixinType as normal properties.  These are not allowed")
+        if(primaryType) throw new IllegalStateException("Refuse to write jcr:primaryType. This can not be written after node creation")
+        if(mixinType) {
+            writeMixinTypeToNode(node)
+        }
         try {
             if (multiple) {
                 node.setProperty(this.name, getPropertyValues(), this.type)
@@ -68,6 +71,18 @@ class ProtoPropertyDecorator {
             }
             else {
                 log.warn "WARNING!  Property ${name} will not be written to ${node.name}!  There was a problem when writing value type ${PropertyType.nameFromValue(type)}${multiple ? '[]' : ''} to existing node with same type, due to a ValueFormatException, and we were unable to recover"
+            }
+        }
+    }
+
+    private void writeMixinTypeToNode(@Nonnull JCRNode node) {
+        valuesList.each { ProtoValue value ->
+            if(node.canAddMixin(value.stringValue)){
+                node.addMixin(value.stringValue)
+                log.debug "Added mixin ${value.stringValue} for : ${node.name}."
+            }
+            else {
+                log.warn "Encountered invalid mixin type while unmarshalling for Proto value : ${value}"
             }
         }
     }
