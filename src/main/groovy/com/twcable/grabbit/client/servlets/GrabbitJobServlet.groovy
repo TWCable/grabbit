@@ -22,6 +22,7 @@ import com.twcable.grabbit.GrabbitConfiguration.ConfigurationException
 import com.twcable.grabbit.NonExistentJobException
 import com.twcable.grabbit.client.services.ClientService
 import com.twcable.grabbit.resources.JobResource
+import com.twcable.grabbit.spring.batch.repository.JcrJobRepositoryFactoryBean
 import groovy.json.JsonBuilder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -32,9 +33,17 @@ import org.apache.sling.api.SlingHttpServletRequest
 import org.apache.sling.api.SlingHttpServletResponse
 import org.apache.sling.api.servlets.SlingAllMethodsServlet
 import org.springframework.batch.core.explore.JobExplorer
+import org.springframework.batch.core.launch.JobExecutionNotRunningException
+import org.springframework.batch.core.launch.NoSuchJobExecutionException
+import org.springframework.batch.core.launch.support.SimpleJobOperator
 import org.springframework.context.ConfigurableApplicationContext
 
+import javax.annotation.Nonnull
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServletResponse
+
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
 import static javax.servlet.http.HttpServletResponse.SC_OK
 
 /**
@@ -49,7 +58,7 @@ import static javax.servlet.http.HttpServletResponse.SC_OK
  */
 @Slf4j
 @CompileStatic
-@SlingServlet(methods = ['GET', 'PUT'], resourceTypes = ['twcable:grabbit/job'])
+@SlingServlet(methods = ['GET', 'PUT', 'DELETE'], resourceTypes = ['twcable:grabbit/job'])
 class GrabbitJobServlet extends SlingAllMethodsServlet {
 
     //A "special" meta-jobID that allows for the status of all jobs to be queried.
@@ -145,6 +154,28 @@ class GrabbitJobServlet extends SlingAllMethodsServlet {
         response.contentType = "application/json"
         response.addHeader("GRABBIT_TRANSACTION_ID", String.valueOf(configuration.transactionID))
         response.writer.write(new JsonBuilder(jobExecutionIds).toString())
+    }
+
+    @Override
+    protected void doDelete(SlingHttpServletRequest request, SlingHttpServletResponse response)  {
+        String jobExecutionId = request.getParameter("jobId") ?: ""
+        SimpleJobOperator jobOperator = configurableApplicationContext.getBean(SimpleJobOperator)
+        if(!jobExecutionId.isLong()) {
+            log.warn "Parameter ${jobExecutionId} 'jobId' is invalid"
+            response.status = SC_BAD_REQUEST
+            response.writer.write("Parameter 'jobId' is invalid")
+            return
+        }
+        try {
+            jobOperator.stop(jobExecutionId.toLong())
+            response.status = SC_OK
+            response.writer.write("Job ${jobExecutionId} Successfully Stopped")
+        }
+        catch (Exception exception){
+            response.status = SC_NOT_FOUND
+            response.writer.write("No running job with id ${jobExecutionId}")
+        }
+
     }
 
     /**
