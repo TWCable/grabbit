@@ -31,7 +31,6 @@ import org.springframework.batch.core.launch.JobExecutionNotRunningException
 import org.springframework.batch.core.launch.NoSuchJobException
 import org.springframework.batch.core.launch.support.SimpleJobOperator
 import org.springframework.context.ConfigurableApplicationContext
-import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
