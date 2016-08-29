@@ -27,6 +27,7 @@ import javax.jcr.Node as JCRNode
 import javax.jcr.PropertyType
 import javax.jcr.Value
 import javax.jcr.ValueFormatException
+import javax.jcr.version.VersionException
 
 import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
@@ -43,7 +44,7 @@ class ProtoPropertyDecorator {
     }
 
 
-    void writeToNode(@Nonnull JCRNode node) {
+    void writeToNode(@Nonnull JCRNode node) throws VersionException {
         if(primaryType) throw new IllegalStateException("Refuse to write jcr:primaryType. This can not be written after node creation")
         if(mixinType) {
             writeMixinTypeToNode(node)
@@ -75,7 +76,7 @@ class ProtoPropertyDecorator {
         }
     }
 
-    private void writeMixinTypeToNode(@Nonnull JCRNode node) {
+    void writeMixinTypeToNode(@Nonnull JCRNode node) {
         valuesList.each { ProtoValue value ->
             if(node.canAddMixin(value.stringValue)){
                 node.addMixin(value.stringValue)

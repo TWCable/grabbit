@@ -34,6 +34,7 @@ import javax.jcr.Session
 import javax.jcr.nodetype.ItemDefinition
 import javax.jcr.version.VersionException
 
+import static javax.jcr.nodetype.NodeType.*
 import static org.apache.jackrabbit.JcrConstants.*
 
 @CompileStatic
@@ -56,19 +57,19 @@ class JcrNodeDecorator {
     static JcrNodeDecorator createFromProtoNode(@Nonnull final ProtoNodeDecorator protoNode, @Nonnull final Session session) {
         final JcrNodeDecorator theDecorator = new JcrNodeDecorator(getOrCreateNode(protoNode, session))
         final mandatoryNodes = protoNode.getMandatoryChildNodes()
-        if(mandatoryNodes && mandatoryNodes.size() > 0) {
-            mandatoryNodes.each {
-                it.writeToJcr(session)
-            }
+        mandatoryNodes?.each {
+            it.writeToJcr(session)
         }
         //If a version exception is thrown,
         try {
             protoNode.writableProperties.each { it.writeToNode(innerNode) }
         }
         catch(VersionException ex) {
-            theDecorator.checkoutNode()
-            protoNode.writableProperties.each { it.writeToNode(innerNode) }
-            theDecorator.checkinNode()
+            JcrNodeDecorator checkedOutNode = theDecorator.checkoutNode()
+            if (checkedOutNode) {
+                protoNode.writableProperties.each { it.writeToNode(innerNode) }
+                checkedOutNode.checkinNode()
+            }
         }
         theDecorator.setLastModified()
         return theDecorator
@@ -168,23 +169,30 @@ class JcrNodeDecorator {
         }
     }
 
-    void checkinNode() {
-
+    private void checkinNode() {
+        try {
+            this.session.workspace.versionManager.checkin(this.path)
+        }
+        catch (RepositoryException e) {
+            log.warn("Error checking in node ${this.path}")
+        }
     }
 
     /**
      * Finds out nearest versionable ancestor for a node and performs a checkout
     */
-    void checkoutNode() {
+    private JcrNodeDecorator checkoutNode() {
         try {
             JcrNodeDecorator decoratedVersionableAncestor = findVersionableAncestor()
             if (decoratedVersionableAncestor && !decoratedVersionableAncestor.isCheckedOut()) {
                 decoratedVersionableAncestor.session.workspace.versionManager.checkout(decoratedVersionableAncestor.path)
+                return decoratedVersionableAncestor
             }
         }
-        catch (Exception exception) {
+        catch (RepositoryException exception) {
             log.warn "Could not checkout node ${this.path}, ${exception.message}"
         }
+        return null
     }
 
     private JcrNodeDecorator findVersionableAncestor() {
@@ -200,7 +208,7 @@ class JcrNodeDecorator {
     }
 
     private boolean isVersionable() {
-        return isNodeType(MIX_VERSIONABLE) || isNodeType("mix:simpleVersionable")
+        return mixinNodeTypes.any{it in [MIX_SIMPLE_VERSIONABLE, MIX_VERSIONABLE]}
     }
 
     /**
