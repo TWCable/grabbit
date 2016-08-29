@@ -95,7 +95,7 @@ function stopJob {
     echo "*****************************************************"
        return
     fi
-    statusJson=`curl -s -u $username:$password --request POST $client$GRABBIT_JOB"?jobId="$selection`
+    statusJson=`curl -s -u $username:$password --request DELETE $client$GRABBIT_JOB"?jobId="$selection`
     echo
     echo "$statusJson"
     echo "*****************************************************"

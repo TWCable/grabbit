@@ -49,7 +49,7 @@ import static javax.servlet.http.HttpServletResponse.*
  */
 @Slf4j
 @CompileStatic
-@SlingServlet(methods = ['GET', 'PUT', 'POST'], resourceTypes = ['twcable:grabbit/job'])
+@SlingServlet(methods = ['GET', 'PUT', 'DELETE'], resourceTypes = ['twcable:grabbit/job'])
 class GrabbitJobServlet extends SlingAllMethodsServlet {
 
     //A "special" meta-jobID that allows for the status of all jobs to be queried.
@@ -148,8 +148,14 @@ class GrabbitJobServlet extends SlingAllMethodsServlet {
     }
 
     @Override
-    protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)  {
+    protected void doDelete(SlingHttpServletRequest request, SlingHttpServletResponse response)  {
         String jobExecutionId = request.getParameter("jobId") ?: ""
+
+        if(jobExecutionId == ALL_JOBS_ID) {
+            response.setStatus(SC_BAD_REQUEST)
+            response.writer.write("Stopping 'all' jobs is not supported. Please specify single job id")
+            return
+        }
         if(!jobExecutionId.isLong()) {
             log.warn "Parameter ${jobExecutionId} 'jobId' is invalid"
             response.status = SC_BAD_REQUEST
