@@ -46,6 +46,7 @@ class CreateHttpConnectionTaskletSpec extends Specification {
                 (ClientBatchJob.SERVER_PASSWORD)    : "password",
                 (ClientBatchJob.PATH)               : "/content/test",
                 (ClientBatchJob.EXCLUDE_PATHS)      : "/exclude*/exclude/metoo",
+                (ClientBatchJob.SCHEME)             : "http",
                 (ClientBatchJob.HOST)               : "localhost",
                 (ClientBatchJob.PORT)               : "4503",
                 (ClientBatchJob.CONTENT_AFTER_DATE) : "2008-09-22T13:57:31.2311892-04:00"
@@ -146,7 +147,7 @@ class CreateHttpConnectionTaskletSpec extends Specification {
         credentials.password == "password"
     }
 
-    def "buildURIForRequest() builds a Grabbit URI correctly"() {
+    def "buildURIForRequest() builds a Grabbit http URI correctly"() {
         given:
         final jobParameters = getMockJobParameters()
         final CreateHttpConnectionTasklet tasklet = new CreateHttpConnectionTasklet()
@@ -156,5 +157,18 @@ class CreateHttpConnectionTaskletSpec extends Specification {
 
         then:
         uri.toString() == "http://localhost:4503/grabbit/content?path=%252Fcontent%252Ftest&after=2008-09-22T13%253A57%253A31.2311892-04%253A00&excludePath=%252Fexclude&excludePath=%252Fexclude%252Fmetoo"
+    }
+
+    def "buildURIForRequest() builds a Grabbit https URI correctly"() {
+        given:
+        final jobParameters = getMockJobParameters()
+        jobParameters.put(ClientBatchJob.SCHEME, "https")
+        final CreateHttpConnectionTasklet tasklet = new CreateHttpConnectionTasklet()
+
+        when:
+        final URI uri = tasklet.buildURIForRequest(jobParameters)
+
+        then:
+        uri.toString() == "https://localhost:4503/grabbit/content?path=%252Fcontent%252Ftest&after=2008-09-22T13%253A57%253A31.2311892-04%253A00&excludePath=%252Fexclude&excludePath=%252Fexclude%252Fmetoo"
     }
 }

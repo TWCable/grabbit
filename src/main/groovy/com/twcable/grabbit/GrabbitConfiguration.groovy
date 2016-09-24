@@ -35,6 +35,7 @@ class GrabbitConfiguration {
 
     final String serverUsername
     final String serverPassword
+    final String serverScheme
     final String serverHost
     final String serverPort
     final boolean deltaContent
@@ -45,12 +46,13 @@ class GrabbitConfiguration {
     final static int DEFAULT_BATCH_SIZE = 100
 
 
-    private GrabbitConfiguration(@Nonnull String user, @Nonnull String pass, @Nonnull String host,
-                                 @Nonnull String port, boolean deltaContent,
+    private GrabbitConfiguration(@Nonnull String user, @Nonnull String pass, @Nonnull String scheme,
+                                 @Nonnull String host, @Nonnull String port, boolean deltaContent,
                                  @Nonnull Collection<PathConfiguration> pathConfigs) {
         // all input is being verified by the "create" factory method
         this.serverUsername = user
         this.serverPassword = pass
+        this.serverScheme = scheme
         this.serverHost = host
         this.serverPort = port
         this.deltaContent = deltaContent
@@ -84,6 +86,7 @@ class GrabbitConfiguration {
 
         def serverUsername = nonEmpty(configMap, 'serverUsername', errorBuilder)
         def serverPassword = nonEmpty(configMap, 'serverPassword', errorBuilder)
+        def serverScheme = schemeVal(configMap, 'serverScheme', errorBuilder)
         def serverHost = nonEmpty(configMap, 'serverHost', errorBuilder)
         def serverPort = nonEmpty(configMap, 'serverPort', errorBuilder)
         def deltaContent = boolVal(configMap, 'deltaContent')
@@ -110,6 +113,7 @@ class GrabbitConfiguration {
         return new GrabbitConfiguration(
             serverUsername,
             serverPassword,
+            serverScheme,
             serverHost,
             serverPort,
             deltaContent,
@@ -147,6 +151,25 @@ class GrabbitConfiguration {
         else {
             errorBuilder.add(key, 'is missing')
             return null
+        }
+    }
+
+
+    private static String schemeVal(Map<String, String> configMap, String key,
+                                    ConfigurationException.Builder errorBuilder) {
+        if (configMap.containsKey(key)) {
+            def val = configMap.get(key).toLowerCase()
+            if (val == "http" || val == "https") {
+                return val
+            }
+            else {
+                errorBuilder.add(key, 'must be either http or https')
+                return null
+            }
+        }
+        else {
+            log.debug "Input doesn't contain ${key} for a URL scheme value. Will default to http"
+            return "http"
         }
     }
 

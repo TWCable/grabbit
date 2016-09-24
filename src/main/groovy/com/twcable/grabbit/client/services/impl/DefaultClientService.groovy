@@ -60,7 +60,7 @@ class DefaultClientService implements ClientService {
         for (PathConfiguration pathConfig : configuration.pathConfigurations) {
             try {
                 final clientBatchJob = new ClientBatchJob.ServerBuilder(configurableApplicationContext)
-                    .andServer(configuration.serverHost, configuration.serverPort)
+                    .andServer(configuration.serverScheme, configuration.serverHost, configuration.serverPort)
                     .andCredentials(clientUsername, configuration.serverUsername, configuration.serverPassword)
                     .andClientJobExecutions(fetchAllClientJobExecutions())
                     .withTransactionID(configuration.transactionID)

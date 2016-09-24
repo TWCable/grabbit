@@ -93,6 +93,7 @@ class CreateHttpConnectionTasklet implements Tasklet {
         final String path = jobParameters.get(ClientBatchJob.PATH)
         final String excludePathParam = jobParameters.get(ClientBatchJob.EXCLUDE_PATHS)
         final excludePaths = (excludePathParam != null && !excludePathParam.isEmpty() ? excludePathParam.split(/\*/) : Collections.EMPTY_LIST) as Collection<String>
+        final String scheme = jobParameters.get(ClientBatchJob.SCHEME)
         final String host = jobParameters.get(ClientBatchJob.HOST)
         final String port = jobParameters.get(ClientBatchJob.PORT)
         final String contentAfterDate = jobParameters.get(ClientBatchJob.CONTENT_AFTER_DATE) ?: ""
@@ -100,7 +101,7 @@ class CreateHttpConnectionTasklet implements Tasklet {
         final String encodedContentAfterDate = URLEncoder.encode(contentAfterDate, 'utf-8')
         final String encodedPath = URLEncoder.encode(path, 'utf-8')
 
-        URIBuilder uriBuilder = new URIBuilder(scheme: "http", host: host, port: port as Integer, path: "/grabbit/content")
+        URIBuilder uriBuilder = new URIBuilder(scheme: scheme, host: host, port: port as Integer, path: "/grabbit/content")
         uriBuilder.addParameter("path", encodedPath)
         uriBuilder.addParameter("after", encodedContentAfterDate)
         for(String excludePath : excludePaths) {

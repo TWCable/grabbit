@@ -163,6 +163,89 @@ class GrabbitConfigurationSpec extends Specification {
 
     }
 
+    def "Should return http server scheme by default"() {
+        given:
+        def input  = """
+        {
+            "serverUsername" : "admin",
+            "serverPassword" : "admin",
+            "serverHost" : "localhost",
+            "serverPort" : "4503",
+            "deltaContent" : false,
+            "pathConfigurations" :  [
+                {
+                    "path" : "/content/a/b"
+                }
+            ]
+        }
+        """
+        def expectedOutput = "http"
+
+        when:
+        def actualOutput = GrabbitConfiguration.create(input)
+
+        then:
+        actualOutput instanceof GrabbitConfiguration
+        actualOutput.serverScheme == expectedOutput
+
+    }
+
+    def "Should return https scheme if configured"() {
+        given:
+        def input  = """
+        {
+            "serverUsername" : "admin",
+            "serverPassword" : "admin",
+            "serverScheme" : "https",
+            "serverHost" : "localhost",
+            "serverPort" : "4503",
+            "deltaContent" : false,
+            "pathConfigurations" :  [
+                {
+                    "path" : "/content/a/b"
+                }
+            ]
+        }
+        """
+        def expectedOutput = "https"
+
+        when:
+        def actualOutput = GrabbitConfiguration.create(input)
+
+        then:
+        actualOutput instanceof GrabbitConfiguration
+        actualOutput.serverScheme == expectedOutput
+
+    }
+
+    def "Should fail to process invalid scheme"() {
+        given:
+        def input  = """
+        {
+            "serverUsername" : "admin",
+            "serverPassword" : "admin",
+            "serverScheme" : "invalid-scheme",
+            "serverHost" : "localhost",
+            "serverPort" : "4503",
+            "deltaContent" : false,
+            "pathConfigurations" :  [
+                {
+                    "path" : "/content/a/b"
+                }
+            ]
+        }
+        """
+        def errors =  [serverScheme: "must be either http or https"]
+
+        when:
+        GrabbitConfiguration.create(input)
+
+        then:
+        final GrabbitConfiguration.ConfigurationException exception = thrown()
+        exception.errors == errors
+
+    }
+
     @Unroll
     def "Should create configuration from json input"() {
         when:

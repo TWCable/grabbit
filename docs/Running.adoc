@@ -130,6 +130,7 @@ The corresponding `YAML` configuration for the JSON above will look something li
 
 ===== Optional fields
 
+* __serverScheme__: string. The protocol the client should use when connecting to the server. Supported options are `http` and `https`. Defaults to `http`.
 * __deltaContent__: boolean, ```true``` syncs only 'delta' or changed content. Changed content is determined by comparing one of a number of date properties including jcr:lastModified, cq:lastModified, or jcr:created Date with the last successful Grabbit sync date. Nodes without any of previously mentioned date properties will always be synced even with deltaContent on, and if a node's data is changed without updating a date property (ie, from CRX/DE), the change will not be detected.  Most common throughput bottlenecks are usually handled by delta sync for cases such as large DAM trees; but if your case warrants a more fine tuned use of delta sync, you may consider adding mix:lastModified to nodes not usually considered for exclusion, such as extremely large unstructured trees. The deltaContent flag __only__ applies to changes made on the server - changes to the client environment will not be detected (and won't be overwritten if changes were made on the client's path but not on the server).
 * __batchSize__: integer. Used to specify the number of nodes in one batch, Defaults to 100.
 * __deleteBeforeWrite__: boolean. Before the client retrieves content, should content under each path be cleared? When used in combination with excludePaths, nodes indicated by excludePaths will not be deleted

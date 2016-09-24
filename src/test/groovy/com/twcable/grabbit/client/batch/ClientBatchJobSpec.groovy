@@ -46,7 +46,7 @@ class ClientBatchJobSpec extends Specification {
         final appContext = Mock(ConfigurableApplicationContext)
         appContext.getBean(_ as String, JobOperator) >> Mock(JobOperator)
         final job = new ClientBatchJob.ServerBuilder(appContext)
-            .andServer("host", "port")
+            .andServer("scheme", "host", "port")
             .andCredentials("clientUser", "serverUser", "serverPass")
             .andClientJobExecutions(jobExecutions)
             .andConfiguration(new GrabbitConfiguration.PathConfiguration(path, [], [], deleteBeforeWrite, pathDeltaContent, 100))

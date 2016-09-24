@@ -3,6 +3,7 @@
    # Information for connecting to the source content
    serverUsername : '<username>'
    serverPassword : '<password>'
+   serverScheme : http
    serverHost : some.other.server
    serverPort : 4502
 

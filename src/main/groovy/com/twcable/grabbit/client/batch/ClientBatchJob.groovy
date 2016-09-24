@@ -40,6 +40,7 @@ class ClientBatchJob {
     public static final String PATH = "path"
     public static final String EXCLUDE_PATHS = "excludePaths"
     public static final String WORKFLOW_CONFIGS = "workflowConfigIds"
+    public static final String SCHEME = "scheme"
     public static final String HOST = "host"
     public static final String PORT = "port"
     public static final String SERVER_USERNAME = "serverUsername"
@@ -84,6 +85,7 @@ class ClientBatchJob {
     @CompileStatic
     static class ServerBuilder {
         final ConfigurableApplicationContext configAppContext
+        String scheme
         String host
         String port
 
@@ -93,7 +95,8 @@ class ClientBatchJob {
         }
 
 
-        CredentialsBuilder andServer(String host, String port) {
+        CredentialsBuilder andServer(String scheme, String host, String port) {
+            this.scheme = scheme
             this.host = host
             this.port = port
             return new CredentialsBuilder(this)
@@ -188,6 +191,7 @@ class ClientBatchJob {
             final jobParameters = [
                 "timestamp"              : System.currentTimeMillis() as String,
                 (PATH)                : pathConfiguration.path,
+                (SCHEME)              : serverBuilder.scheme,
                 (HOST)                : serverBuilder.host,
                 (PORT)                : serverBuilder.port,
                 (CLIENT_USERNAME)     : credentialsBuilder.clientUsername,
