@@ -64,7 +64,7 @@ class ValidJobDecider implements JobExecutionDecider {
         //No parent, so nothing to worry about
         if(parts.length <= 2) return JOB_VALID
 
-        final parentPath = jobPath - "/${parts[-1]}"
+        final parentPath = parts[0..-2].join('/')
         final Session session = theSession()
         try {
             session.getNode(parentPath)
