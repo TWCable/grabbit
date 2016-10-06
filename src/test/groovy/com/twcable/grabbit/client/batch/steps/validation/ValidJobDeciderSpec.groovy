@@ -79,17 +79,19 @@ class ValidJobDeciderSpec extends Specification {
         jobDecider.decide(jobExecution, stepExecution) == ValidJobDecider.JOB_INVALID
     }
 
-    def "Will pass validation if paths with an existent parent are submitted"(){
+    @Unroll
+    def "Will pass validation if paths with an existent parent are submitted, path: #path for parent path #parentPath"(){
         when:
         final JobExecution jobExecution = Mock(JobExecution) {
             getJobParameters() >> {
                 return Mock(JobParameters) {
-                    getString(ClientBatchJob.PATH) >> "/foo/bar"
+                    getString(ClientBatchJob.PATH) >> path
                 }
             }
         }
         final Session session = Mock(Session) {
-            getNode("/foo") >> { return Mock(Node) }
+            getNode(parentPath) >> { return Mock(Node) }
+            getNode(_) >> { throw new PathNotFoundException()}
         }
 
         ClientBatchJobContext.setSession(session)
@@ -99,6 +101,12 @@ class ValidJobDeciderSpec extends Specification {
 
         then:
         jobDecider.decide(jobExecution, stepExecution) == ValidJobDecider.JOB_VALID
+
+        where:
+        parentPath | path
+        '/foo'     | '/foo/bar'
+        '/foo'     | '/foo/fo'
+        '/foo'     | '/foo/fo/'
     }
 
     def "Recovers gracefully if an issue is encountered with the repository"() {
