@@ -14,7 +14,7 @@
 
     <property>
         <name>org.apache.sling.commons.log.names</name>
-        <value>com.twcable.grabbit.server.batch</value>
+        <value>com.twcable.grabbit.server</value>
         <type>String</type>
     </property>
 
