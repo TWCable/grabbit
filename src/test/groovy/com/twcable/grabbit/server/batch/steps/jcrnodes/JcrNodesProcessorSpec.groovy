@@ -19,12 +19,14 @@ package com.twcable.grabbit.server.batch.steps.jcrnodes
 import com.twcable.grabbit.proto.NodeProtos
 import com.twcable.jackalope.NodeBuilder as FakeNodeBuilder
 import com.twcable.jackalope.impl.jcr.ValueImpl
+import javax.jcr.ItemNotFoundException
 import org.apache.jackrabbit.JcrConstants
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter
 import spock.lang.Specification
 import spock.lang.Subject
 import javax.jcr.Node as JcrNode
+import javax.jcr.Property
 import javax.jcr.Property as JcrProperty
 import javax.jcr.PropertyIterator
 import javax.jcr.nodetype.NodeDefinition
@@ -38,6 +40,8 @@ import org.joda.time.DateTime
 import javax.jcr.NodeIterator
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 
 @Subject(JcrNodesProcessor)
 class JcrNodesProcessorSpec extends Specification {
@@ -157,6 +161,10 @@ class JcrNodesProcessorSpec extends Specification {
             getPrimaryNodeType() >> Mock(NodeType) {
                 getChildNodeDefinitions() >> childDefinitions.toArray()
             }
+            getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                getString() >> primaryType
+            }
+            getParent() >> { throw new ItemNotFoundException() }
         }
 
         children.each { JcrNode child ->
@@ -201,6 +209,7 @@ class JcrNodesProcessorSpec extends Specification {
 
         JcrNode node = Mock(JcrNode) {  //mocks a parent with updated lastModified property
             getPath() >> "testParent"
+            getParent() >> { throw new ItemNotFoundException() }
             getProperties() >> propertyIterator(primaryTypeProperty(JcrConstants.NT_FILE))
             hasProperty(JcrConstants.JCR_LASTMODIFIED) >> true
             getProperty(JcrConstants.JCR_LASTMODIFIED) >> Mock(JcrProperty){
@@ -213,6 +222,9 @@ class JcrNodesProcessorSpec extends Specification {
                 getChildNodeDefinitions() >> Mock(NodeDefinition) {
                     isMandatory() >> true //has mandatory child
                 }
+            }
+            getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                getString() >> 'nt:file'
             }
 
             getNodes() >> Mock(NodeIterator) {
@@ -227,6 +239,9 @@ class JcrNodesProcessorSpec extends Specification {
                         getChildNodeDefinitions() >> Mock(NodeDefinition) {
                             isMandatory() >> false //has no children
                         }
+                    }
+                    getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                        getString() >> 'nt:unstructured'
                     }
                 }
             }

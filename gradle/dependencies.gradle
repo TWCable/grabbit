@@ -19,6 +19,7 @@ dependencies {
 
     // Apache Sling libraries
     compile "org.apache.sling:org.apache.sling.api:${sling_api_version}"
+    compile "org.apache.sling:org.apache.sling.jcr.base:${sling_base_version}"
     compile "org.apache.sling:org.apache.sling.jcr.resource:${sling_jcr_resource_version}"
 
     // Apache Felix libraries
@@ -33,6 +34,8 @@ dependencies {
     // Working with the JCR
     compile "javax.jcr:jcr:${jcr_version}"
     compile "org.apache.jackrabbit:jackrabbit-jcr-commons:${jackrabbit_version}"
+    compile "org.apache.jackrabbit:jackrabbit-api:${jackrabbit_version}"
+    compile "org.apache.jackrabbit:oak-core:${oak_version}"
     compile "org.apache.sling:org.apache.sling.jcr.api:${sling_commons_version}"
 
     // Logging

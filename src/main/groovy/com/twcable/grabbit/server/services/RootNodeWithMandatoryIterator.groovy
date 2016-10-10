@@ -16,7 +16,7 @@
 
 package com.twcable.grabbit.server.services
 
-import com.twcable.grabbit.jcr.JcrNodeDecorator
+import com.twcable.grabbit.jcr.JCRNodeDecorator
 import groovy.transform.CompileStatic
 import groovy.transform.TailRecursive
 
@@ -31,13 +31,13 @@ import javax.jcr.Node as JcrNode
 final class RootNodeWithMandatoryIterator implements Iterator<JcrNode> {
 
     private boolean doneRoot
-    private JcrNodeDecorator rootNode
-    private Iterator<JcrNodeDecorator> immediateChildren
-    private Iterator<JcrNodeDecorator> mandatoryWriteNodes
+    private JCRNodeDecorator rootNode
+    private Iterator<JCRNodeDecorator> immediateChildren
+    private Iterator<JCRNodeDecorator> mandatoryWriteNodes
 
 
     public RootNodeWithMandatoryIterator(JcrNode root) {
-        this.rootNode = new JcrNodeDecorator(root)
+        this.rootNode = new JCRNodeDecorator(root)
         this.doneRoot = false
         //Get all immediate children that are not mandatory write nodes.  We will handle those by iterating over mandatoryWriteNodes
         immediateChildren = getNonMandatoryChildren(this.rootNode).iterator()
@@ -76,20 +76,20 @@ final class RootNodeWithMandatoryIterator implements Iterator<JcrNode> {
     }
 
 
-    private static Collection<JcrNodeDecorator> getNonMandatoryChildren(final JcrNodeDecorator node) {
-        node.getImmediateChildNodes().findAll { !it.isRequiredNode() }
+    private static Collection<JCRNodeDecorator> getNonMandatoryChildren(final JCRNodeDecorator node) {
+        node.getImmediateChildNodes().findAll { !it.isMandatoryNode() }
     }
 
 
     @TailRecursive
-    private static Collection<JcrNodeDecorator> getMandatoryChildren(final JcrNodeDecorator currentNode, final Collection<JcrNodeDecorator> nodesToAdd) {
+    private static Collection<JCRNodeDecorator> getMandatoryChildren(final JCRNodeDecorator currentNode, final Collection<JCRNodeDecorator> nodesToAdd) {
         if(!currentNode.hasMandatoryChildNodes()) {
             return nodesToAdd
         }
 
         final mandatoryNodes = currentNode.getRequiredChildNodes()
 
-        return mandatoryNodes.collectMany { JcrNodeDecorator mandatoryNode ->
+        return mandatoryNodes.collectMany { JCRNodeDecorator mandatoryNode ->
             return getMandatoryChildren(mandatoryNode, (nodesToAdd << mandatoryNode))
         }
     }

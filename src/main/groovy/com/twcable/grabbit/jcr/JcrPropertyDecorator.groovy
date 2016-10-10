@@ -24,7 +24,6 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 
 import javax.annotation.Nonnull
-import javax.jcr.Property
 import javax.jcr.Property as JCRProperty
 import javax.jcr.Value
 
@@ -38,8 +37,11 @@ class JcrPropertyDecorator {
     @Delegate
     JCRProperty innerProperty
 
-    JcrPropertyDecorator(Property property) {
+    private final JCRNodeDecorator nodeOwner
+
+    JcrPropertyDecorator(JCRProperty property, JCRNodeDecorator nodeOwner) {
         this.innerProperty = property
+        this.nodeOwner = nodeOwner
     }
 
     /**
@@ -58,7 +60,7 @@ class JcrPropertyDecorator {
             return true
         }
 
-        !definition.isProtected()
+        return nodeOwner.isAuthorizableType() ?: !definition.isProtected()
     }
 
     /**

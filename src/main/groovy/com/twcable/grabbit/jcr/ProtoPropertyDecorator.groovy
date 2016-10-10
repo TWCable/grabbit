@@ -38,6 +38,7 @@ class ProtoPropertyDecorator {
     @Delegate
     ProtoProperty innerProtoProperty
 
+
     ProtoPropertyDecorator(@Nonnull ProtoProperty protoProperty) {
         this.innerProtoProperty = protoProperty
     }
@@ -82,7 +83,28 @@ class ProtoPropertyDecorator {
         innerProtoProperty.name == JCR_MIXINTYPES
     }
 
-    ProtoValue getValue() {
+
+    boolean isUserType() {
+        getStringValue() == 'rep:User'
+    }
+
+
+    boolean isGroupType() {
+        getStringValue() == 'rep:Group'
+    }
+
+
+    boolean isAuthorizableIDType() {
+        innerProtoProperty.name == 'rep:authorizableId'
+    }
+
+
+    String getStringValue() {
+        getValue().stringValue
+    }
+
+
+    private ProtoValue getValue() {
         innerProtoProperty.valuesList.first()
     }
 

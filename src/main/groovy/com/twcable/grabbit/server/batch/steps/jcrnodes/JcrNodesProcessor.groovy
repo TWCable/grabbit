@@ -17,7 +17,7 @@
 package com.twcable.grabbit.server.batch.steps.jcrnodes
 
 import com.twcable.grabbit.DateUtil
-import com.twcable.grabbit.jcr.JcrNodeDecorator
+import com.twcable.grabbit.jcr.JCRNodeDecorator
 import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -47,10 +47,10 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, ProtoNode> {
     @Nullable
     ProtoNode process(JcrNode jcrNode) throws Exception {
 
-        JcrNodeDecorator decoratedNode = new JcrNodeDecorator(jcrNode)
+        JCRNodeDecorator decoratedNode = new JCRNodeDecorator(jcrNode)
 
         //TODO: Access Control Lists nodes are not supported right now.
-        if (decoratedNode.path.contains("rep:policy")) {
+        if (decoratedNode.isACType()) {
             log.info "Ignoring current node ${decoratedNode.innerNode}"
             return null
         }
@@ -66,7 +66,7 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, ProtoNode> {
         }
 
         // Skip this node because it has already been processed by its parent
-        if(decoratedNode.isRequiredNode()) {
+        if(decoratedNode.isMandatoryNode() || decoratedNode.isAuthorizablePart()) {
             return null
         } else {
             // Build parent node

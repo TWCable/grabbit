@@ -16,10 +16,11 @@
 
 package com.twcable.grabbit.jcr
 
-import spock.lang.Specification
-
 import javax.jcr.Property
 import javax.jcr.nodetype.PropertyDefinition
+import spock.lang.Specification
+import spock.lang.Unroll
+
 
 import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
 import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
@@ -28,6 +29,7 @@ import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 @SuppressWarnings("GroovyAssignabilityCheck")
 class JcrPropertyDecoratorSpec extends Specification {
 
+    @Unroll
     def "check if property is transferable"() {
         given:
         Property property = Mock(Property) {
@@ -36,19 +38,26 @@ class JcrPropertyDecoratorSpec extends Specification {
                 isProtected() >> protectedFlag
             }
         }
+        final nodeOwner = Mock(JCRNodeDecorator) {
+            isAuthorizableType() >> authorizableType
+        }
 
         when:
-        final propertyDecorator = new JcrPropertyDecorator(property)
+        final propertyDecorator = new JcrPropertyDecorator(property, nodeOwner)
 
         then:
         expectedOutput == propertyDecorator.isTransferable()
 
         where:
-        propertyName        |   protectedFlag   |   expectedOutput
-        JCR_LASTMODIFIED    |   true            |   false
-        JCR_PRIMARYTYPE     |   false           |   true
-        JCR_MIXINTYPES      |   false           |   true
-        "otherProperty"     |   true            |   false
-        "otherProperty"     |   false           |   true
+        propertyName        | protectedFlag | expectedOutput | authorizableType
+        JCR_LASTMODIFIED    | true          | false          | false
+        JCR_PRIMARYTYPE     | false         | true           | false
+        JCR_MIXINTYPES      | false         | true           | false
+        'otherProperty'     | true          | false          | false
+        'otherProperty'     | false         | true           | false
+        'protectedProperty' | true          | true           | true
+        'protectedProperty' | true          | true           | true
+
+
     }
 }

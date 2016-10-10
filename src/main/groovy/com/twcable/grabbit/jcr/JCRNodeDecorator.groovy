@@ -19,46 +19,71 @@ import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import com.twcable.grabbit.proto.NodeProtos.Node.Builder as ProtoNodeBuilder
 import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
 import groovy.transform.CompileStatic
-
 import groovy.util.logging.Slf4j
-import org.apache.jackrabbit.value.DateValue
-
 import javax.annotation.Nonnull
 import javax.annotation.Nullable
+import javax.jcr.ItemNotFoundException
 import javax.jcr.Node as JCRNode
-import javax.jcr.Property
+import javax.jcr.PathNotFoundException
 import javax.jcr.Property as JcrProperty
 import javax.jcr.RepositoryException
 import javax.jcr.nodetype.ItemDefinition
+import org.apache.jackrabbit.commons.flat.TreeTraverser
+import org.apache.jackrabbit.value.DateValue
 
-import static org.apache.jackrabbit.JcrConstants.*
+
+import static org.apache.jackrabbit.JcrConstants.JCR_CREATED
+import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
+import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
+import static org.apache.jackrabbit.commons.flat.TreeTraverser.ErrorHandler
+import static org.apache.jackrabbit.commons.flat.TreeTraverser.InclusionPolicy
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.AC_NODETYPE_NAMES
 
 @CompileStatic
 @Slf4j
-class JcrNodeDecorator {
+class JCRNodeDecorator {
 
     @Delegate
     JCRNode innerNode
 
+    private final Collection<JcrPropertyDecorator> properties
 
     //Evaluated in a lazy fashion
-    private Collection<JcrNodeDecorator> immediateChildNodes
+    private Collection<JCRNodeDecorator> immediateChildNodes
+    private List<JCRNodeDecorator> childNodeList
 
 
-    JcrNodeDecorator(@Nonnull JCRNode node) {
+    JCRNodeDecorator(@Nonnull JCRNode node) {
         if(!node) throw new IllegalArgumentException("node must not be null!")
         this.innerNode = node
+        Collection<JcrProperty> innerProperties = node.properties.toList()
+        this.properties = innerProperties.collect { JcrProperty property ->
+            new JcrPropertyDecorator(property, this)
+        }
     }
 
 
     /**
      * @return this node's immediate children, empty if none
      */
-    Collection<JcrNodeDecorator> getImmediateChildNodes() {
+    Collection<JCRNodeDecorator> getImmediateChildNodes() {
         if(!immediateChildNodes) {
-            immediateChildNodes = (getNodes().collect { JCRNode node -> new JcrNodeDecorator(node) }  ?: []) as Collection<JcrNodeDecorator>
+            immediateChildNodes = (getNodes().collect { JCRNode node -> new JCRNodeDecorator(node) }  ?: []) as Collection<JCRNodeDecorator>
         }
         return immediateChildNodes
+    }
+
+
+    List<JCRNodeDecorator> getChildNodeList() {
+        if(!childNodeList) {
+            childNodeList = (getChildNodeIterator().collect { JCRNode node -> new JCRNodeDecorator(node) } ?: []) as List<JCRNodeDecorator>
+        }
+        return childNodeList
+    }
+
+
+    Iterator<JCRNode> getChildNodeIterator() {
+        return TreeTraverser.nodeIterator(innerNode, ErrorHandler.IGNORE, new NoRootInclusionPolicy(this))
     }
 
 
@@ -77,18 +102,25 @@ class JcrNodeDecorator {
     }
 
 
-    String getPrimaryType() {
-        innerNode.getProperty(JCR_PRIMARYTYPE).string
+    /**
+    * Identify all required child nodes
+    * @return list of immediate required child nodes that must be transported with this node, or an empty collection if no required nodes
+    */
+    @Nullable
+    Collection<JCRNodeDecorator> getRequiredChildNodes() {
+        if(isAuthorizableType()){
+            return getChildNodeList().findAll { JCRNodeDecorator childJcrNode -> !childJcrNode.isLoginToken() && !childJcrNode.isACType() }
+        }
+        return getMandatoryChildren()
     }
 
 
     /**
-    * Identify all required child nodes
-    * @return list of immediate required child nodes that must exist with this node, or null if no children
-    */
-    @Nullable
-    Collection<JcrNodeDecorator> getRequiredChildNodes() {
-        return hasMandatoryChildNodes() ? getImmediateChildNodes().findAll{ JcrNodeDecorator childJcrNode -> childJcrNode.isRequiredNode() } : null
+     * Some nodes must be saved together, per node definition
+     */
+    @Nonnull
+    private Collection<JCRNodeDecorator> getMandatoryChildren() {
+        return hasMandatoryChildNodes() ? getImmediateChildNodes().findAll{ JCRNodeDecorator childJcrNode -> childJcrNode.isMandatoryNode() } : []
     }
 
 
@@ -102,10 +134,10 @@ class JcrNodeDecorator {
 
 
     /**
-    * This node is a required node of some parent node definition
+    * This node is a mandatory required node of some parent node definition
     * @return true if mandatory, false if not
     */
-    boolean isRequiredNode() {
+    boolean isMandatoryNode() {
         return definition.isMandatory()
     }
 
@@ -117,7 +149,7 @@ class JcrNodeDecorator {
         final ProtoNodeBuilder protoNodeBuilder = ProtoNode.newBuilder()
         protoNodeBuilder.setName(path)
         protoNodeBuilder.addAllProperties(getProtoProperties())
-        requiredChildNodes?.each {
+        requiredChildNodes.each {
             protoNodeBuilder.addMandatoryChildNode(it.toProtoNode())
         }
         return protoNodeBuilder.build()
@@ -128,11 +160,8 @@ class JcrNodeDecorator {
      */
     @Nonnull
     private Collection<ProtoProperty> getProtoProperties() {
-        final List<Property> properties = properties.toList()
-        return properties.findResults { JcrProperty jcrProperty ->
-            JcrPropertyDecorator decoratedProperty = new JcrPropertyDecorator(jcrProperty)
-            decoratedProperty.isTransferable() ? decoratedProperty.toProtoProperty() : null
-        }
+        final Collection<JcrPropertyDecorator> transferableProperties = properties.findAll{ it.isTransferable() }
+        return transferableProperties.collect{ it.toProtoProperty() }
     }
 
     /**
@@ -146,7 +175,7 @@ class JcrNodeDecorator {
         if (hasProperty(JCR_LASTMODIFIED)) {
             return getProperty(JCR_LASTMODIFIED).date.time
         }
-        else if (hasProperty("cq:lastModified")) {
+        else if (hasProperty(CQ_LAST_MODIFIED)) {
             return getProperty(CQ_LAST_MODIFIED).date.time
         }
         else if (hasProperty(JCR_CREATED)) {
@@ -156,12 +185,82 @@ class JcrNodeDecorator {
     }
 
 
+    /**
+     * Authorizable nodes can be unique from server to server, so associated profiles, preferences, etc need to be sent with.
+     * @return true if this node lives under an authorizable
+     */
+    boolean isAuthorizablePart() {
+        try {
+            JCRNodeDecorator parent = new JCRNodeDecorator(getParent())
+            while(!parent.isAuthorizableType()) {
+                parent = new JCRNodeDecorator(parent.getParent())
+            }
+            return true
+        } catch(PathNotFoundException | ItemNotFoundException ex) {
+            return false
+        }
+    }
+
+
+    String getPrimaryType() {
+        innerNode.getProperty(JCR_PRIMARYTYPE).string
+    }
+
+
+    boolean isAuthorizableType() {
+        return primaryType == 'rep:User' || primaryType == 'rep:Group'
+    }
+
+    boolean isACType() {
+        AC_NODETYPE_NAMES.contains(primaryType)
+    }
+
+
+    boolean isLoginToken() {
+        final primaryType = getPrimaryType()
+        return (primaryType == 'rep:Unstructured' && name.tokenize('/')[-1] == '.tokens') || primaryType == 'rep:Token'
+    }
+
+
     Object asType(Class clazz) {
         if(clazz == JCRNode) {
             return innerNode
         }
         else {
             super.asType(clazz)
+        }
+    }
+
+    @Override
+    boolean equals(Object obj) {
+        if (this.is(obj)) return true
+        if (getClass() != obj.class) return false
+
+        JCRNodeDecorator that = (JCRNodeDecorator)obj
+
+        return this.hashCode() == that.hashCode()
+    }
+
+    @Override
+    int hashCode() {
+        return innerNode.getName().hashCode()
+    }
+
+    @CompileStatic
+    private static class NoRootInclusionPolicy implements InclusionPolicy<JCRNode> {
+
+        final JCRNodeDecorator rootNode
+
+        NoRootInclusionPolicy(JCRNode rootNode) {
+            this.rootNode = new JCRNodeDecorator(rootNode)
+        }
+
+
+        @Override
+        boolean include(JCRNode node) {
+            final JCRNodeDecorator candidateNode = new JCRNodeDecorator(node)
+            //Don't include the root, and dont' include mandatory nodes as they are held within their parent
+            return (!rootNode.equals(candidateNode)) && (!candidateNode.isMandatoryNode())
         }
     }
 }

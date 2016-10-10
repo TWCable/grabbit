@@ -23,11 +23,14 @@ import spock.lang.Subject
 import javax.jcr.Node
 import javax.jcr.Node as JcrNode
 import javax.jcr.NodeIterator
+import javax.jcr.Property
+import javax.jcr.PropertyIterator
 import javax.jcr.nodetype.NodeDefinition
 import javax.jcr.nodetype.NodeType
 
 import static com.twcable.jackalope.JCRBuilder.node
 import static com.twcable.jackalope.JCRBuilder.property
+import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 
 @Subject(RootNodeWithMandatoryIterator)
 class RootNodeWithMandatoryIteratorSpec extends Specification {
@@ -89,6 +92,12 @@ class RootNodeWithMandatoryIteratorSpec extends Specification {
                 isMandatory() >> true
             }
             getPrimaryNodeType() >> nodeTypeNoMandatory
+            getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                getString() >> 'nt:unstructured'
+            }
+            getProperties() >> Mock(PropertyIterator) {
+                toList() >> []
+            }
         }
 
         final child1 = Mock(Node) {
@@ -100,11 +109,23 @@ class RootNodeWithMandatoryIteratorSpec extends Specification {
                 hasNext() >>> [true, false]
                 next() >> child3
             }
+            getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                getString() >> 'nt:unstructured'
+            }
+            getProperties() >> Mock(PropertyIterator) {
+                toList() >> []
+            }
         }
 
         final child2 = Mock(Node) {
             getDefinition() >> Mock(NodeDefinition) {
                 isMandatory() >> false
+            }
+            getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                getString() >> 'nt:unstructured'
+            }
+            getProperties() >> Mock(PropertyIterator) {
+                toList() >> []
             }
         }
 
@@ -114,6 +135,12 @@ class RootNodeWithMandatoryIteratorSpec extends Specification {
                 next() >>> [child1, child2]
             }
             getPrimaryNodeType() >> nodeTypeWithMandatory
+            getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                getString() >> 'nt:unstructured'
+            }
+            getProperties() >> Mock(PropertyIterator) {
+                toList() >> []
+            }
         }
 
         when:
