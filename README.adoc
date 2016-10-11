@@ -37,7 +37,7 @@ image:https://api.bintray.com/packages/twcable/aem/Grabbit/images/download.svg[t
 
 * Grabbit Development
 
-** link:{docsDir}/Prerequisites.adoc[Prerequisites]
+** link:{docsDir}/GettingStarted.adoc[Getting Started]
 ** link:{docsDir}/Building.adoc[Building from Source]
 ** link:{docsDir}/RELEASING.adoc[Releasing A New Version]
 

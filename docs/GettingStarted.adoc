@@ -1,3 +1,7 @@
+== Getting Started
+
+The JCR 2.0 Specification (JSR-283) is included under docs for quick reference
+
 == Prerequisites
 
 === Installing Protocol Buffers Compiler
