@@ -16,31 +16,35 @@
 
 package com.twcable.grabbit.server.batch.steps.jcrnodes
 
-import com.twcable.grabbit.proto.NodeProtos
+import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
+import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
 import com.twcable.jackalope.NodeBuilder as FakeNodeBuilder
 import com.twcable.jackalope.impl.jcr.ValueImpl
 import javax.jcr.ItemNotFoundException
-import org.apache.jackrabbit.JcrConstants
-import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter
-import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter
-import spock.lang.Specification
-import spock.lang.Subject
 import javax.jcr.Node as JcrNode
+import javax.jcr.NodeIterator
+import javax.jcr.PathNotFoundException
 import javax.jcr.Property
 import javax.jcr.Property as JcrProperty
 import javax.jcr.PropertyIterator
 import javax.jcr.nodetype.NodeDefinition
 import javax.jcr.nodetype.NodeType
+import org.apache.jackrabbit.JcrConstants
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter
+import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter
+import org.joda.time.DateTime
+import spock.lang.Shared
+import spock.lang.Specification
+import spock.lang.Subject
+import spock.lang.Unroll
+
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.NT_REP_GRANT_ACE
+
 
 import static com.twcable.jackalope.JCRBuilder.node
 import static com.twcable.jackalope.JCRBuilder.property
 import static javax.jcr.PropertyType.LONG
 import static javax.jcr.PropertyType.STRING
-import org.joda.time.DateTime
-import javax.jcr.NodeIterator
-import spock.lang.Shared
-import spock.lang.Unroll
-
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 
 @Subject(JcrNodesProcessor)
@@ -63,9 +67,9 @@ class JcrNodesProcessorSpec extends Specification {
 
         when:
         JcrNodesProcessor jcrNodesProcessor = new JcrNodesProcessor()
-        NodeProtos.Node nodeProto = jcrNodesProcessor.process(aJcrNode)
-        NodeProtos.Property propertyLong = nodeProto.propertiesList.find { it.name == "multiValueLong" }
-        NodeProtos.Property propertyString = nodeProto.propertiesList.find { it.name == "multiValueString" }
+        ProtoNode nodeProto = jcrNodesProcessor.process(aJcrNode)
+        ProtoProperty propertyLong = nodeProto.propertiesList.find { it.name == "multiValueLong" }
+        ProtoProperty propertyString = nodeProto.propertiesList.find { it.name == "multiValueString" }
 
         then:
         nodeProto != null
@@ -85,7 +89,7 @@ class JcrNodesProcessorSpec extends Specification {
                 [createNode("${imageFile}/jcr:content", true, JcrConstants.NT_RESOURCE)])
 
         when:
-        NodeProtos.Node nodeProto = new JcrNodesProcessor().process(parentNode)
+        ProtoNode nodeProto = new JcrNodesProcessor().process(parentNode)
 
         then:
         nodeProto.name == imageFile
@@ -103,7 +107,7 @@ class JcrNodesProcessorSpec extends Specification {
                 [createNode("${thumbnailFile}/jcr:content", true, JcrConstants.NT_UNSTRUCTURED)])
 
         when:
-        NodeProtos.Node nodeProto = new JcrNodesProcessor().process(parentNode)
+        ProtoNode nodeProto = new JcrNodesProcessor().process(parentNode)
 
         then:
         nodeProto.name == thumbnailFile
@@ -120,7 +124,7 @@ class JcrNodesProcessorSpec extends Specification {
         def childrenNode = createNode("${imageFile}/jcr:content", true, JcrConstants.NT_RESOURCE)
 
         when:
-        NodeProtos.Node nodeProto = new JcrNodesProcessor().process(childrenNode)
+        ProtoNode nodeProto = new JcrNodesProcessor().process(childrenNode)
 
         then:
         nodeProto == null
@@ -134,7 +138,7 @@ class JcrNodesProcessorSpec extends Specification {
                     [createNode("${thumbnailFile}/jcr:content/metadata", true, JcrConstants.NT_UNSTRUCTURED)])])
 
         when:
-        NodeProtos.Node nodeProto = new JcrNodesProcessor().process(parentNode)
+        ProtoNode nodeProto = new JcrNodesProcessor().process(parentNode)
 
         then:
         nodeProto.name == thumbnailFile
@@ -251,7 +255,7 @@ class JcrNodesProcessorSpec extends Specification {
         JcrNodesProcessor jcrNodesProcessor = new JcrNodesProcessor()
         DateTime dateTime = new DateTime(2015, 8, 4, 15, 24, 34, 961)
         jcrNodesProcessor.contentAfterDate = (dateTime.toString())
-        NodeProtos.Node nodeProto = jcrNodesProcessor.process(node)
+        ProtoNode nodeProto = jcrNodesProcessor.process(node)
 
         then:
         nodeProto != null
@@ -272,7 +276,7 @@ class JcrNodesProcessorSpec extends Specification {
         when:
         JcrNodesProcessor jcrNodesProcessor = new JcrNodesProcessor()
         jcrNodesProcessor.setContentAfterDate(oldDate.plusDays(1).toString())
-        NodeProtos.Node nodeProto = jcrNodesProcessor.process(aJcrNode)
+        ProtoNode nodeProto = jcrNodesProcessor.process(aJcrNode)
         aJcrNode.properties.toList()
 
         then:
@@ -314,7 +318,7 @@ class JcrNodesProcessorSpec extends Specification {
         when:
         JcrNodesProcessor jcrNodesProcessor = new JcrNodesProcessor()
         jcrNodesProcessor.setContentAfterDate(oldDate.plusDays(1).toString())
-        NodeProtos.Node nodeProto = jcrNodesProcessor.process(aJcrNode)
+        ProtoNode nodeProto = jcrNodesProcessor.process(aJcrNode)
         aJcrNode.properties.toList()
 
         then:
@@ -351,5 +355,71 @@ class JcrNodesProcessorSpec extends Specification {
                 ).build(),
         ]
         propList = aJcrNode.properties.toList().findAll {it.name != JcrConstants.JCR_PRIMARYTYPE}.collectEntries { [(it.name): new DateTime(it.value.date.time.time)]}
+    }
+
+    def "A mandatory node is not processed"() {
+        given:
+        final JcrNode node = Mock(JcrNode) {
+            getProperties() >> Mock(PropertyIterator) {
+                toList() >> []
+            }
+            getDefinition() >> Mock(NodeDefinition) {
+                isMandatory() >> true
+            }
+        }
+
+        when:
+        final ProtoNode result = new JcrNodesProcessor().process(node)
+
+        then:
+        result == null
+    }
+
+    def "An authorizable part is not processed"() {
+        given:
+        final JcrNode node = Mock(JcrNode) {
+            getProperties() >> Mock(PropertyIterator) {
+                toList() >> []
+            }
+            getDefinition() >> Mock(NodeDefinition) {
+                isMandatory() >> false
+            }
+            getParent() >> Mock(JcrNode) {
+                getProperties() >> Mock(PropertyIterator) {
+                    toList() >> []
+                }
+                getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                    getString() >> 'rep:User'
+                }
+            }
+        }
+
+        when:
+        final ProtoNode result = new JcrNodesProcessor().process(node)
+
+        then:
+        result == null
+    }
+
+    def "An AC part is not processed"() {
+        given:
+        final JcrNode node = Mock(JcrNode) {
+            getProperties() >> Mock(PropertyIterator) {
+                toList() >> []
+            }
+            getDefinition() >> Mock(NodeDefinition) {
+                isMandatory() >> false
+            }
+            getParent() >> { throw new PathNotFoundException() }
+            getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                getString() >> NT_REP_GRANT_ACE
+            }
+        }
+
+        when:
+        final ProtoNode result = new JcrNodesProcessor().process(node)
+
+        then:
+        result == null
     }
 }

@@ -33,7 +33,6 @@ import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 @Slf4j
 class DefaultProtoNodeDecorator extends ProtoNodeDecorator {
 
-    private final String nameOverride
 
     protected DefaultProtoNodeDecorator(@Nonnull ProtoNode node, @Nonnull Collection<ProtoPropertyDecorator> protoProperties, String nameOverride) {
         this.innerProtoNode = node
@@ -71,13 +70,6 @@ class DefaultProtoNodeDecorator extends ProtoNodeDecorator {
     private Collection<ProtoPropertyDecorator> getWritableProperties() {
         protoProperties.findAll { !(it.name in [JCR_PRIMARYTYPE, JCR_MIXINTYPES]) }
     }
-
-
-    @Override
-    String getName() {
-        nameOverride ?: innerProtoNode.getName()
-    }
-
 
     /**
      * This method is rather succinct, but helps isolate this JcrUtils static method call

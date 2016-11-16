@@ -71,7 +71,7 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
         final UserManager userManager = getUserManager(session)
         if(isUserType()) {
             //We set a temporary password for now, and then set the real password later in setPasswordForUser(). See the method for why.
-            final newUser = userManager.createUser(authorizableID, Long.toString(CryptoUtil.generateNextId()), new AuthorizablePrincipal(authorizableID), getIntermediateAuthorizablePath())
+            final newUser = userManager.createUser(authorizableID, Long.toString(CryptoUtil.generateNextId()), new AuthorizablePrincipal(authorizableID), getParentPath())
             //This is a special protected property for disabling user access
             if(hasProperty('rep:disabled')) {
                 newUser.disable(getStringValueFrom('rep:disabled'))
@@ -81,14 +81,14 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
             if(hasProperty(authorizableCategory)) {
                 newUser.setProperty(authorizableCategory, new StringValue(getStringValueFrom(authorizableCategory)))
             }
-            session.save()
             //Special users may not have passwords, such as anonymous users
             if(hasProperty('rep:password')) {
                 setPasswordForUser(newUser, session)
             }
+            session.save()
             return newUser
         }
-        final Group group = userManager.createGroup(authorizableID, new AuthorizablePrincipal(authorizableID), getIntermediateAuthorizablePath())
+        final Group group = userManager.createGroup(authorizableID, new AuthorizablePrincipal(authorizableID), getParentPath())
         session.save()
         return group
     }
@@ -127,14 +127,6 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
 
     private String getAuthorizableID() {
         return protoProperties.find { it.isAuthorizableIDType() }.stringValue
-    }
-
-
-    private String getIntermediateAuthorizablePath() {
-        final pathTokens = getName().tokenize('/')
-        //remove last index, as this is the Authorizable node name
-        pathTokens.remove(pathTokens.size() - 1)
-        return "/${pathTokens.join('/')}"
     }
 
 
@@ -252,7 +244,6 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
         * clear-text, which it isn't since we got it from another Jackrabbit instance, we can set the password as-is.
         */
         setPasswordMethod.invoke(userManagerDelegate, getTreeMethod.invoke(authorizable), getAuthorizableID(), getStringValueFrom('rep:password'), false)
-        session.save()
     }
 
 

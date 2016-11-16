@@ -60,7 +60,11 @@ class JcrPropertyDecorator {
             return true
         }
 
-        return nodeOwner.isAuthorizableType() ?: !definition.isProtected()
+        if(nodeOwner.isAuthorizableType() || nodeOwner.isACType()) {
+            return true
+        }
+
+        return !definition.isProtected()
     }
 
     /**

@@ -40,6 +40,7 @@ class JcrPropertyDecoratorSpec extends Specification {
         }
         final nodeOwner = Mock(JCRNodeDecorator) {
             isAuthorizableType() >> authorizableType
+            isACType() >> acType
         }
 
         when:
@@ -49,15 +50,15 @@ class JcrPropertyDecoratorSpec extends Specification {
         expectedOutput == propertyDecorator.isTransferable()
 
         where:
-        propertyName        | protectedFlag | expectedOutput | authorizableType
-        JCR_LASTMODIFIED    | true          | false          | false
-        JCR_PRIMARYTYPE     | false         | true           | false
-        JCR_MIXINTYPES      | false         | true           | false
-        'otherProperty'     | true          | false          | false
-        'otherProperty'     | false         | true           | false
-        'protectedProperty' | true          | true           | true
-        'protectedProperty' | true          | true           | true
-
+        propertyName        | protectedFlag | expectedOutput | authorizableType  | acType
+        JCR_LASTMODIFIED    | true          | false          | false             | false
+        JCR_PRIMARYTYPE     | false         | true           | false             | false
+        JCR_MIXINTYPES      | false         | true           | false             | false
+        'otherProperty'     | true          | false          | false             | false
+        'otherProperty'     | false         | true           | false             | false
+        'protectedProperty' | true          | true           | true              | false
+        'protectedProperty' | true          | true           | true              | false
+        'rep:privileges'    | true          | true           | false             | true
 
     }
 }

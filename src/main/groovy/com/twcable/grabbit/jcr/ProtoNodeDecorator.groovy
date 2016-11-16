@@ -30,6 +30,8 @@ abstract class ProtoNodeDecorator {
 
     protected Collection<ProtoPropertyDecorator> protoProperties
 
+    protected String nameOverride
+
     abstract JCRNodeDecorator writeToJcr(@Nonnull Session session)
 
     static ProtoNodeDecorator createFrom(@Nonnull ProtoNode node, String nameOverride = null) {
@@ -38,6 +40,9 @@ abstract class ProtoNodeDecorator {
         final primaryType = protoProperties.find { it.primaryType }
         if(primaryType.isUserType() || primaryType.isGroupType()) {
             return new AuthorizableProtoNodeDecorator(node, protoProperties)
+        }
+        else if(primaryType.isRepAclType()) {
+            return new ACLProtoNodeDecorator(node, protoProperties, nameOverride)
         }
         return new DefaultProtoNodeDecorator(node, protoProperties, nameOverride)
     }
@@ -54,5 +59,17 @@ abstract class ProtoNodeDecorator {
 
     protected String getStringValueFrom(String propertyName) {
         protoProperties.find { it.name == propertyName }.stringValue
+    }
+
+    protected String getParentPath() {
+        final pathTokens = getName().tokenize('/')
+        //remove last index, as this is the Authorizable node name
+        pathTokens.remove(pathTokens.size() - 1)
+        return "/${pathTokens.join('/')}"
+    }
+
+    @Override
+    String getName() {
+        nameOverride ?: innerProtoNode.getName()
     }
 }

@@ -23,6 +23,8 @@ import spock.lang.Specification
 
 import static javax.jcr.PropertyType.STRING
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.NT_REP_ACL
+
 
 @SuppressWarnings("GroovyAccessibility")
 class ProtoNodeDecoratorSpec extends Specification {
@@ -67,7 +69,7 @@ class ProtoNodeDecoratorSpec extends Specification {
                 .addValues(NodeProtos.Value.newBuilder().setStringValue('rep:User'))
                 .build()
         nodeBuilder.addProperties(userProperty)
-        final protoNodeDecorator = DefaultProtoNodeDecorator.createFrom(nodeBuilder.build())
+        final protoNodeDecorator = ProtoNodeDecorator.createFrom(nodeBuilder.build())
 
         expect:
         protoNodeDecorator instanceof AuthorizableProtoNodeDecorator
@@ -86,9 +88,28 @@ class ProtoNodeDecoratorSpec extends Specification {
                 .addValues(NodeProtos.Value.newBuilder().setStringValue('rep:Group'))
                 .build()
         nodeBuilder.addProperties(groupProperty)
-        final protoNodeDecorator = DefaultProtoNodeDecorator.createFrom(nodeBuilder.build())
+        final protoNodeDecorator = ProtoNodeDecorator.createFrom(nodeBuilder.build())
 
         expect:
         protoNodeDecorator instanceof AuthorizableProtoNodeDecorator
+    }
+
+
+    def "Can create an ACLProtoNodeDecorator with a wrapped rep:ACL node"() {
+        given:
+        NodeProtos.Node.Builder nodeBuilder = NodeProtos.Node.newBuilder()
+        nodeBuilder.setName("/content/test/rep:policy")
+        NodeProtos.Property primaryType = NodeProtos.Property
+                .newBuilder()
+                .setName(JCR_PRIMARYTYPE)
+                .setType(STRING)
+                .setMultiple(false)
+                .addValues(NodeProtos.Value.newBuilder().setStringValue(NT_REP_ACL))
+                .build()
+        nodeBuilder.addProperties(primaryType)
+        final protoNodeDecorator = ProtoNodeDecorator.createFrom(nodeBuilder.build())
+
+        expect:
+        protoNodeDecorator instanceof ACLProtoNodeDecorator
     }
 }

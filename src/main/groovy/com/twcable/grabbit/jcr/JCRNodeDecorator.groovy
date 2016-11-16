@@ -38,6 +38,7 @@ import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 import static org.apache.jackrabbit.commons.flat.TreeTraverser.ErrorHandler
 import static org.apache.jackrabbit.commons.flat.TreeTraverser.InclusionPolicy
 import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.AC_NODETYPE_NAMES
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.NT_REP_ACL
 
 @CompileStatic
 @Slf4j
@@ -111,7 +112,16 @@ class JCRNodeDecorator {
         if(isAuthorizableType()){
             return getChildNodeList().findAll { JCRNodeDecorator childJcrNode -> !childJcrNode.isLoginToken() && !childJcrNode.isACType() }
         }
+        else if(isRepACLType()) {
+            //Send all ACE parts underneath the ACL as required nodes
+            return getChildNodeList()
+        }
         return getMandatoryChildren()
+    }
+
+
+    String getPrimaryType() {
+        innerNode.getProperty(JCR_PRIMARYTYPE).string
     }
 
 
@@ -201,18 +211,29 @@ class JCRNodeDecorator {
         }
     }
 
+    /**
+     * @return is part of a rep:ACL tree, such as rep:GrantACE, or rep:restrictions. These nodes are transported with the rep:ACL parent, and
+     * are not written independently.
+     */
+    boolean isACPart() {
+        final Collection<String> theACNodeTypeNames = new ArrayList(AC_NODETYPE_NAMES)
+        theACNodeTypeNames.remove(NT_REP_ACL)
+        return theACNodeTypeNames.contains(primaryType)
+    }
 
-    String getPrimaryType() {
-        innerNode.getProperty(JCR_PRIMARYTYPE).string
+
+    boolean isRepACLType() {
+        return primaryType == NT_REP_ACL
+    }
+
+
+    boolean isACType() {
+        return AC_NODETYPE_NAMES.contains(primaryType)
     }
 
 
     boolean isAuthorizableType() {
         return primaryType == 'rep:User' || primaryType == 'rep:Group'
-    }
-
-    boolean isACType() {
-        AC_NODETYPE_NAMES.contains(primaryType)
     }
 
 

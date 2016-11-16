@@ -41,19 +41,13 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, ProtoNode> {
 
     /**
      * Converts a JCR Node to a {@link ProtoNode} object.
-     * Returns null if current Node's processing needs to be ignored like for "rep:policy" nodes
+     * Returns null if current node does not need to be processed
      */
     @Override
     @Nullable
     ProtoNode process(JcrNode jcrNode) throws Exception {
 
         JCRNodeDecorator decoratedNode = new JCRNodeDecorator(jcrNode)
-
-        //TODO: Access Control Lists nodes are not supported right now.
-        if (decoratedNode.isACType()) {
-            log.info "Ignoring current node ${decoratedNode.innerNode}"
-            return null
-        }
 
         if (contentAfterDate) {
             final Date afterDate = DateUtil.getDateFromISOString(contentAfterDate)
@@ -65,8 +59,8 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, ProtoNode> {
             }
         }
 
-        // Skip this node because it has already been processed by its parent
-        if(decoratedNode.isMandatoryNode() || decoratedNode.isAuthorizablePart()) {
+        // Skip some nodes because they have already been processed by their parent
+        if(decoratedNode.isMandatoryNode() || decoratedNode.isAuthorizablePart() || decoratedNode.isACPart()) {
             return null
         } else {
             // Build parent node

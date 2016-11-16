@@ -40,6 +40,8 @@ import static javax.jcr.PropertyType.BINARY
 import static org.apache.jackrabbit.JcrConstants.JCR_CREATED
 import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.NT_REP_ACL
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.NT_REP_GRANT_ACE
 
 @SuppressWarnings("GroovyAssignabilityCheck")
 class JCRNodeDecoratorSpec extends Specification {
@@ -326,7 +328,7 @@ class JCRNodeDecoratorSpec extends Specification {
             hasMandatoryChildNodes() >> false
             isAuthorizableType() >> true
             getChildNodeIterator() >> Mock(Iterator) {
-                hasNext() >>> true >> true >> true >> true >> false
+                hasNext() >>> true >> true >> true >> true >> true >> false
                 next() >>>
                     Mock(Node) {
                         getName() >> "/home/users/u/user/preferences"
@@ -364,7 +366,16 @@ class JCRNodeDecoratorSpec extends Specification {
                     Mock(Node) {
                         getName() >> "/home/users/u/user/rep:policy"
                         getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
-                            getString() >> 'rep:ACL'
+                            getString() >> NT_REP_ACL
+                        }
+                        getProperties() >> Mock(PropertyIterator) {
+                            toList() >> []
+                        }
+                    } >>
+                    Mock(Node) {
+                        getName() >> "/home/users/u/user/rep:policy/grant0"
+                        getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                            getString() >> NT_REP_GRANT_ACE
                         }
                         getProperties() >> Mock(PropertyIterator) {
                             toList() >> []

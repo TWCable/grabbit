@@ -20,16 +20,23 @@ import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
 import com.twcable.grabbit.proto.NodeProtos.Value as ProtoValue
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import org.apache.jackrabbit.value.ValueFactoryImpl
-
 import javax.annotation.Nonnull
 import javax.jcr.Node as JCRNode
 import javax.jcr.PropertyType
 import javax.jcr.Value
 import javax.jcr.ValueFormatException
+import org.apache.jackrabbit.value.ValueFactoryImpl
+
 
 import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.AC_NODETYPE_NAMES
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.NT_REP_ACL
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.NT_REP_DENY_ACE
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.NT_REP_GRANT_ACE
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.NT_REP_RESTRICTIONS
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.REP_PRINCIPAL_NAME
+import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.REP_PRIVILEGES
 
 @CompileStatic
 @Slf4j
@@ -84,13 +91,48 @@ class ProtoPropertyDecorator {
     }
 
 
+    boolean isPrincipalName() {
+        innerProtoProperty.name == REP_PRINCIPAL_NAME
+    }
+
+
+    boolean isPrivilege() {
+        innerProtoProperty.name == REP_PRIVILEGES
+    }
+
+
     boolean isUserType() {
-        getStringValue() == 'rep:User'
+        isPrimaryType() && (getStringValue() == 'rep:User')
     }
 
 
     boolean isGroupType() {
-        getStringValue() == 'rep:Group'
+        isPrimaryType() && (getStringValue() == 'rep:Group')
+    }
+
+
+    boolean isACType() {
+        isPrimaryType() && (AC_NODETYPE_NAMES.contains(getStringValue()))
+    }
+
+
+    boolean isRepAclType() {
+        isPrimaryType() && (getStringValue() ==  NT_REP_ACL)
+    }
+
+
+    boolean isGrantACEType() {
+        isPrimaryType() && (getStringValue() == NT_REP_GRANT_ACE)
+    }
+
+
+    boolean isDenyACEType() {
+        isPrimaryType() && (getStringValue() == NT_REP_DENY_ACE)
+    }
+
+
+    boolean isRepRestrictionType() {
+        isPrimaryType() && (getStringValue() == NT_REP_RESTRICTIONS)
     }
 
 
@@ -109,12 +151,12 @@ class ProtoPropertyDecorator {
     }
 
 
-    private Value getPropertyValue() throws ValueFormatException {
+    Value getPropertyValue() throws ValueFormatException {
         getJCRValueFromProtoValue(getValue())
     }
 
 
-    private Value[] getPropertyValues() throws ValueFormatException {
+    Value[] getPropertyValues() throws ValueFormatException {
         return innerProtoProperty.valuesList.collect { ProtoValue protoValue -> getJCRValueFromProtoValue(protoValue) } as Value[]
     }
 
