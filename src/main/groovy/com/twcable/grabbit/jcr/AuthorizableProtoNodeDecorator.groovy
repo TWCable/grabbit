@@ -25,7 +25,6 @@ import groovy.util.logging.Slf4j
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.ReflectPermission
-import java.util.regex.Pattern
 import javax.annotation.Nonnull
 import javax.jcr.Session
 import org.apache.jackrabbit.api.security.user.Authorizable
@@ -34,7 +33,6 @@ import org.apache.jackrabbit.api.security.user.User
 import org.apache.jackrabbit.api.security.user.UserManager
 import org.apache.jackrabbit.value.StringValue
 import org.apache.sling.jcr.base.util.AccessControlUtil
-
 
 /**
  * This class wraps a serialized node that represents an Authorizable. Authorizables are special system protected nodes, that can only be written under certain
@@ -57,10 +55,14 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
             throw new InsufficientGrabbitPrivilegeException("JVM Permissions needed by Grabbit to sync Users/Groups were not found. See log for specific permissions needed, and add these to your security manager; or do not sync users and groups." +
                                                             "Unfortunately, the way Jackrabbit goes about certain things requires us to do a bit of hacking in order to sync Authorizables securely, and efficiently.")
         }
-        Authorizable existingAuthorizable = findAuthorizable(session)
+        //the administrator is a special user that Jackrabbit will not let us mess with.
+        if(getAuthorizableID() == 'admin') {
+            return new JCRNodeDecorator(session.getNode(findAuthorizable(session, 'admin').getPath()))
+        }
+
+        Authorizable existingAuthorizable = findAuthorizable(session, getAuthorizableID())
         Authorizable newAuthorizable = existingAuthorizable ? updateAuthorizable(existingAuthorizable, session) : createNewAuthorizable(session)
-        writeAuthorizablePieces(newAuthorizable, session)
-        return new JCRNodeDecorator(session.getNode(newAuthorizable.getPath()))
+        return new JCRNodeDecorator(session.getNode(newAuthorizable.getPath()), getID())
     }
 
 
@@ -86,11 +88,20 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
                 setPasswordForUser(newUser, session)
             }
             session.save()
+            writeMandatoryPieces(session, newUser.getPath())
             return newUser
         }
-        final Group group = userManager.createGroup(authorizableID, new AuthorizablePrincipal(authorizableID), getParentPath())
+        final Group newGroup = userManager.createGroup(authorizableID, new AuthorizablePrincipal(authorizableID), getParentPath())
+        /*
+         * Write all mandatory pieces, and find those that are authorizables. We then need to see if any of them have membership in this group, and add them.
+         */
+        final Collection<JCRNodeDecorator> authorizablePieces = writeMandatoryPieces(session, newGroup.getPath()).findAll { it.isAuthorizableType() }
+        final Collection<JCRNodeDecorator> members = authorizablePieces.findAll { getMembershipIDs().contains(it.getTransferredID()) }
+        members.each { JCRNodeDecorator member ->
+            newGroup.addMember(member as Authorizable)
+        }
         session.save()
-        return group
+        return newGroup
     }
 
 
@@ -100,28 +111,25 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
      * @return new instance of updated authorizable
      */
     private Authorizable updateAuthorizable(final Authorizable authorizable, final Session session) {
+        //We get all the declared groups of this authorizable so that we can add them back to the new, updated authorizable
+        final Collection<Group> declaredGroups = authorizable.declaredMemberOf().toList()
+        for(Group group : declaredGroups) {
+            group.removeMember(authorizable)
+        }
         authorizable.remove()
         session.save()
-        createNewAuthorizable(session)
-    }
-
-
-    /**
-     * Authorizable pieces (nodes that live under Authorizables - profile, preferences, etc) get sent with the authorizable node instead of streamed independently because we do not know the client's new
-     * authorizable UUID node name at runtime. In other words, authorizables can live under different node names from server to server
-     */
-    private void writeAuthorizablePieces(final Authorizable authorizable, final Session session) {
-        innerProtoNode.mandatoryChildNodeList.each {
-            //We replace the incoming server authorizable path, with the new authorizable path
-            createFrom(it, it.name.replaceFirst(Pattern.quote(getName()), authorizable.getPath())).writeToJcr(session)
+        final Authorizable newAuthorizable = createNewAuthorizable(session)
+        for(Group group: declaredGroups) {
+            group.addMember(newAuthorizable)
         }
         session.save()
+        return newAuthorizable
     }
 
 
-    private Authorizable findAuthorizable(final Session session) {
+    private Authorizable findAuthorizable(final Session session, final String authorizableID) {
         final UserManager userManager = getUserManager(session)
-        return userManager.getAuthorizable(getAuthorizableID())
+        return userManager.getAuthorizable(authorizableID)
     }
 
 
@@ -132,6 +140,11 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
 
     private boolean isUserType() {
         return protoProperties.any { it.userType }
+    }
+
+
+    private Collection<String> getMembershipIDs() {
+        return hasProperty('rep:members') ? getStringValuesFrom('rep:members') : []
     }
 
 
@@ -244,14 +257,5 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
         * clear-text, which it isn't since we got it from another Jackrabbit instance, we can set the password as-is.
         */
         setPasswordMethod.invoke(userManagerDelegate, getTreeMethod.invoke(authorizable), getAuthorizableID(), getStringValueFrom('rep:password'), false)
-    }
-
-
-    /**
-     * An instance wrapper for ease of mocking
-     * @see super.createFrom
-     */
-    ProtoNodeDecorator createFrom(final ProtoNode protoNode, final String nameOverride) {
-        super.createFrom(protoNode, nameOverride)
     }
 }

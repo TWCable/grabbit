@@ -75,7 +75,8 @@ class ServerBatchJob {
 
 
         PathBuilder andConfiguration(Iterator<Map.Entry<String, String>> namespacesIterator,
-                                     Iterator<JcrNode> nodeIterator, ServletOutputStream servletOutputStream) {
+                                     Iterator<JcrNode> nodeIterator,
+                                     ServletOutputStream servletOutputStream) {
             if (namespacesIterator == null) throw new IllegalArgumentException("namespacesIterator == null")
             if (nodeIterator == null) throw new IllegalArgumentException("nodeIterator == null")
             if (servletOutputStream == null) throw new IllegalArgumentException("servletOutputStream == null")

@@ -27,14 +27,21 @@ import javax.jcr.Node as JCRNode
 import javax.jcr.PathNotFoundException
 import javax.jcr.Property as JcrProperty
 import javax.jcr.RepositoryException
+import javax.jcr.Session
+import javax.jcr.Value as JcrValue
 import javax.jcr.nodetype.ItemDefinition
+import org.apache.jackrabbit.api.security.user.Authorizable
+import org.apache.jackrabbit.api.security.user.UserManager
 import org.apache.jackrabbit.commons.flat.TreeTraverser
 import org.apache.jackrabbit.value.DateValue
+import org.apache.sling.jcr.base.util.AccessControlUtil
+import org.slf4j.Logger
 
 
 import static org.apache.jackrabbit.JcrConstants.JCR_CREATED
 import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
+import static org.apache.jackrabbit.JcrConstants.MIX_REFERENCEABLE
 import static org.apache.jackrabbit.commons.flat.TreeTraverser.ErrorHandler
 import static org.apache.jackrabbit.commons.flat.TreeTraverser.InclusionPolicy
 import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.AC_NODETYPE_NAMES
@@ -47,25 +54,42 @@ class JCRNodeDecorator {
     @Delegate
     JCRNode innerNode
 
-    private final Collection<JcrPropertyDecorator> properties
+    private final Collection<JCRPropertyDecorator> wrappedProperties
 
     //Evaluated in a lazy fashion
     private Collection<JCRNodeDecorator> immediateChildNodes
     private List<JCRNodeDecorator> childNodeList
 
+    private final String transferredID
+
 
     JCRNodeDecorator(@Nonnull JCRNode node) {
-        if(!node) throw new IllegalArgumentException("node must not be null!")
-        this.innerNode = node
-        Collection<JcrProperty> innerProperties = node.properties.toList()
-        this.properties = innerProperties.collect { JcrProperty property ->
-            new JcrPropertyDecorator(property, this)
-        }
+        this(node, null)
     }
 
 
+    JCRNodeDecorator(@Nonnull JCRNode node, @Nullable String transferredID) {
+        if(!node) throw new IllegalArgumentException("node must not be null!")
+        this.innerNode = node
+        Collection<JcrProperty> innerProperties = node.properties.toList()
+        this.wrappedProperties = innerProperties.collect { JcrProperty property ->
+            new JCRPropertyDecorator(property, this)
+        }
+        this.transferredID = transferredID
+    }
+
+
+    private Collection<JCRPropertyDecorator> getWrappedProperties() { return wrappedProperties }
+
+
     /**
-     * @return this node's immediate children, empty if none
+     * @return an identifier for this node on a sending server. Not all wrapped nodes will have this. Will return null if it does not exist
+     */
+    String getTransferredID() { return transferredID }
+
+
+    /**
+     * @return this node's immediate children (depth 1), empty if none
      */
     Collection<JCRNodeDecorator> getImmediateChildNodes() {
         if(!immediateChildNodes) {
@@ -74,7 +98,9 @@ class JCRNodeDecorator {
         return immediateChildNodes
     }
 
-
+    /**
+     * @return this node's children via pre-order traversal.
+     */
     List<JCRNodeDecorator> getChildNodeList() {
         if(!childNodeList) {
             childNodeList = (getChildNodeIterator().collect { JCRNode node -> new JCRNodeDecorator(node) } ?: []) as List<JCRNodeDecorator>
@@ -82,10 +108,6 @@ class JCRNodeDecorator {
         return childNodeList
     }
 
-
-    Iterator<JCRNode> getChildNodeIterator() {
-        return TreeTraverser.nodeIterator(innerNode, ErrorHandler.IGNORE, new NoRootInclusionPolicy(this))
-    }
 
 
     void setLastModified() {
@@ -104,24 +126,54 @@ class JCRNodeDecorator {
 
 
     /**
-    * Identify all required child nodes
+    * Identify all required child nodes. This may include any mandatory nodes per definition, associated nodes that are required to write this node info on another server,
+    * and nodes that are referenced via this node's weak/strong reference pointers
     * @return list of immediate required child nodes that must be transported with this node, or an empty collection if no required nodes
     */
     @Nullable
     Collection<JCRNodeDecorator> getRequiredChildNodes() {
+        final Collection<JCRNodeDecorator> requiredNodes = []
         if(isAuthorizableType()){
-            return getChildNodeList().findAll { JCRNodeDecorator childJcrNode -> !childJcrNode.isLoginToken() && !childJcrNode.isACType() }
+            requiredNodes.addAll(getChildNodeList().findAll { JCRNodeDecorator childJcrNode -> !childJcrNode.isLoginToken() && !childJcrNode.isACType() })
         }
         else if(isRepACLType()) {
             //Send all ACE parts underneath the ACL as required nodes
-            return getChildNodeList()
+            requiredNodes.addAll(getChildNodeList())
         }
-        return getMandatoryChildren()
+        else {
+            requiredNodes.addAll(getMandatoryChildren())
+        }
+        requiredNodes.addAll(referencedNodesFrom(requiredNodes + this))
+        return requiredNodes
     }
 
 
     String getPrimaryType() {
         innerNode.getProperty(JCR_PRIMARYTYPE).string
+    }
+
+
+    /**
+     * Find any weak or strong references on this collection of nodes, and attempt to find their nodes
+     * @return any nodes we can find through references
+     */
+    private Collection<JCRNodeDecorator> referencedNodesFrom(Collection<JCRNodeDecorator> nodes) {
+        final Collection<JCRPropertyDecorator> referenceProperties = nodes.collectMany { JCRNodeDecorator node ->
+            /**
+             * Find all references that are transferable. We don't want to send referenced nodes that belong to a protected property that are not being transferred back to the client,
+             * such as version storage entries
+             */
+            return node.getWrappedProperties().findAll { JCRPropertyDecorator property -> property.isReferenceType() && property.isTransferable() }
+        }
+        return referenceProperties.collectMany { JCRPropertyDecorator property ->
+            property.values.toList().findResults { JcrValue value ->
+                try {
+                    return new JCRNodeDecorator(getSession().getNodeByIdentifier(value.string))
+                } catch(ItemNotFoundException ex) {
+                    _log().info "Tried following reference ${value.string} from ${getInnerNode().path}, but this node does not exist any longer. Skipping"
+                }
+            }
+        } as Collection<JCRNodeDecorator>
     }
 
 
@@ -151,13 +203,14 @@ class JCRNodeDecorator {
         return definition.isMandatory()
     }
 
-    /**
-     * Build node and "only" mandatory child nodes
-     */
+
     @Nonnull
      ProtoNode toProtoNode() {
         final ProtoNodeBuilder protoNodeBuilder = ProtoNode.newBuilder()
         protoNodeBuilder.setName(path)
+        if(isNodeType(MIX_REFERENCEABLE)) {
+            protoNodeBuilder.setIdentifier(getIdentifier())
+        }
         protoNodeBuilder.addAllProperties(getProtoProperties())
         requiredChildNodes.each {
             protoNodeBuilder.addMandatoryChildNode(it.toProtoNode())
@@ -165,14 +218,13 @@ class JCRNodeDecorator {
         return protoNodeBuilder.build()
     }
 
-    /**
-     * @return resulting collection of transferable proto properties collected from jcrNode
-     */
+
     @Nonnull
     private Collection<ProtoProperty> getProtoProperties() {
-        final Collection<JcrPropertyDecorator> transferableProperties = properties.findAll{ it.isTransferable() }
+        final Collection<JCRPropertyDecorator> transferableProperties = getWrappedProperties().findAll{ it.isTransferable() }
         return transferableProperties.collect{ it.toProtoProperty() }
     }
+
 
     /**
      * Returns the "jcr:lastModified", "cq:lastModified" or "jcr:created" date property
@@ -243,14 +295,40 @@ class JCRNodeDecorator {
     }
 
 
+    boolean isReferenceable() {
+        return isNodeType(MIX_REFERENCEABLE)
+    }
+
+
+    /**
+     * For ease of mocking. Simply delegates to static accessor in AccessControlUtil
+     */
+    UserManager getUserManager(final Session session) {
+        return AccessControlUtil.getUserManager(session)
+    }
+
+
+    /**
+     * For ease of mocking
+     */
+    Iterator<JCRNode> getChildNodeIterator() {
+        return TreeTraverser.nodeIterator(innerNode, ErrorHandler.IGNORE, new NoRootInclusionPolicy(this))
+    }
+
+
     Object asType(Class clazz) {
         if(clazz == JCRNode) {
             return innerNode
+        }
+        else if(clazz == Authorizable) {
+            if(!isAuthorizableType()) throw new ClassCastException('This class is not an Authorizable type. Check isAuthorizableType() before casting.')
+            return getUserManager(session).getAuthorizableByPath(getPath())
         }
         else {
             super.asType(clazz)
         }
     }
+
 
     @Override
     boolean equals(Object obj) {
@@ -262,10 +340,19 @@ class JCRNodeDecorator {
         return this.hashCode() == that.hashCode()
     }
 
+
     @Override
     int hashCode() {
         return innerNode.getName().hashCode()
     }
+
+    /**
+     * @SL4J generated log property, and @Delegate conflict on accessing log sometimes within closures. This is to get around that
+     */
+    private static Logger _log() {
+        return log
+    }
+
 
     @CompileStatic
     private static class NoRootInclusionPolicy implements InclusionPolicy<JCRNode> {

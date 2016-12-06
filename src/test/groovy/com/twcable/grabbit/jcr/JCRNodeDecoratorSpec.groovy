@@ -23,11 +23,14 @@ import javax.jcr.NodeIterator
 import javax.jcr.Property
 import javax.jcr.PropertyIterator
 import javax.jcr.RepositoryException
+import javax.jcr.Session
 import javax.jcr.Value
 import javax.jcr.nodetype.ItemDefinition
 import javax.jcr.nodetype.NodeDefinition
 import javax.jcr.nodetype.NodeType
 import javax.jcr.nodetype.PropertyDefinition
+import org.apache.jackrabbit.api.security.user.Authorizable
+import org.apache.jackrabbit.api.security.user.UserManager
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter
 import spock.lang.Shared
 import spock.lang.Specification
@@ -37,9 +40,12 @@ import spock.lang.Unroll
 import static com.twcable.grabbit.jcr.JCRNodeDecorator.NoRootInclusionPolicy
 import static com.twcable.grabbit.testutil.StubInputStream.inputStream
 import static javax.jcr.PropertyType.BINARY
+import static javax.jcr.PropertyType.REFERENCE
+import static javax.jcr.PropertyType.WEAKREFERENCE
 import static org.apache.jackrabbit.JcrConstants.JCR_CREATED
 import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
+import static org.apache.jackrabbit.JcrConstants.MIX_REFERENCEABLE
 import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.NT_REP_ACL
 import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.NT_REP_GRANT_ACE
 
@@ -94,6 +100,8 @@ class JCRNodeDecoratorSpec extends Specification {
                         }
                     }
             }
+            isNodeType(MIX_REFERENCEABLE) >> true
+            getIdentifier() >> "node_id"
             getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
                 getString() >> "rep:SystemUser"
             }
@@ -149,6 +157,7 @@ class JCRNodeDecoratorSpec extends Specification {
 
         then:
         protoNode.getName() == '/some/path'
+        protoNode.getIdentifier() == "node_id"
         protoNode.getPropertiesCount() == 1
     }
 
@@ -278,7 +287,7 @@ class JCRNodeDecoratorSpec extends Specification {
     }
 
 
-    def "getRequiredChildNodes()"() {
+    def "getRequiredChildNodes() when the node has mandatory children"() {
         given:
         Node nodeWithMandatoryChildren = Mock(Node) {
             getNodes() >> Mock(NodeIterator) {
@@ -303,6 +312,19 @@ class JCRNodeDecoratorSpec extends Specification {
             }
         }
 
+        when:
+        final nodeDecorator = Spy(JCRNodeDecorator, constructorArgs: [nodeWithMandatoryChildren]) {
+            hasMandatoryChildNodes() >> true
+            isAuthorizableType() >> false
+        }
+
+        then:
+        nodeDecorator.getRequiredChildNodes().size() == 1
+    }
+
+
+    def "getRequiredChildNodes() when the node has authorizable pieces"() {
+        given:
         Node authorizableNode = Mock(Node) {
             getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
                 getString() >> 'rep:User'
@@ -312,19 +334,8 @@ class JCRNodeDecoratorSpec extends Specification {
             }
         }
 
-        when: "The node has mandatory children"
-        final nodeDecorator = Spy(JCRNodeDecorator, constructorArgs: [nodeWithMandatoryChildren]) {
-            hasMandatoryChildNodes() >> true
-            isAuthorizableType() >> false
-        }
-
-        then:
-        nodeDecorator.getRequiredChildNodes().size() == 1
-
-        and: "The node has authorizable pieces"
-
         when:
-        final otherNodeDecorator = Spy(JCRNodeDecorator, constructorArgs: [authorizableNode]) {
+        final nodeDecorator = Spy(JCRNodeDecorator, constructorArgs: [authorizableNode]) {
             hasMandatoryChildNodes() >> false
             isAuthorizableType() >> true
             getChildNodeIterator() >> Mock(Iterator) {
@@ -362,7 +373,7 @@ class JCRNodeDecoratorSpec extends Specification {
                         getProperties() >> Mock(PropertyIterator) {
                             toList() >> []
                         }
-                    }  >>
+                    } >>
                     Mock(Node) {
                         getName() >> "/home/users/u/user/rep:policy"
                         getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
@@ -385,18 +396,118 @@ class JCRNodeDecoratorSpec extends Specification {
         }
 
         then:
-        otherNodeDecorator.getRequiredChildNodes().size() == 2
+        nodeDecorator.getRequiredChildNodes().size() == 2
+    }
 
-        and: "If no child nodes, getRequiredChildNodes() returns an empty collection"
+
+    def "getRequiredChildNodes() if no child nodes, returns an empty collection"() {
+        given:
+        final node = Mock(Node) {
+            getProperties() >> Mock(PropertyIterator) {
+                toList() >> []
+            }
+        }
 
         when:
-        final yetAnotherNodeDecorator = Spy(JCRNodeDecorator, constructorArgs: [nodeWithMandatoryChildren]) {
+        final yetAnotherNodeDecorator = Spy(JCRNodeDecorator, constructorArgs: [node]) {
             hasMandatoryChildNodes() >> false
+            isRepACLType() >> false
             isAuthorizableType() >> false
         }
 
         then:
         yetAnotherNodeDecorator.getRequiredChildNodes() == []
+    }
+
+
+    def "getRequiredChildNodes() returns referenced nodes"() {
+        given:
+        final referenceNode = Mock(Node) {
+            getProperties() >> Mock(PropertyIterator) {
+                toList() >> []
+            }
+        }
+        final node = Mock(Node) {
+            getPath() >> "/some/node/path"
+            getSession() >> Mock(Session) {
+                getNodeByIdentifier({["reference_uuid_one", "reference_uuid_two", "reference_uuid_four"].contains(it)}) >> referenceNode
+                getNodeByIdentifier({!["reference_uuid_one", "reference_uuid_two", "reference_uuid_four"].contains(it)}) >> {
+                    throw new ItemNotFoundException("Node not found")
+                }
+            }
+            getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                getString() >> 'nt:unstructured'
+            }
+            getPrimaryNodeType() >> Mock(NodeType) {
+                getChildNodeDefinitions() >> [
+                        Mock(NodeDefinition) {
+                            isMandatory() >> true
+                        }
+                ].toArray()
+            }
+            getProperties() >> Mock(PropertyIterator) {
+                hasNext() >>> true >> true >> false
+                next() >>
+                Mock(Property) {
+                    getType() >> WEAKREFERENCE
+                    isMultiple() >> true
+                    getDefinition() >> Mock(PropertyDefinition) {
+                        isProtected() >> false
+                    }
+                    getValues() >> ([
+                        Mock(Value) {
+                            getString() >> "reference_uuid_one"
+                        },
+                        Mock(Value) {
+                            getString() >> "reference_uuid_two"
+                        },
+                        Mock(Value) {
+                            getString() >> "reference_uuid_three"
+                        }
+                    ].toArray() as Value[])
+                } >>
+                Mock(Property) {
+                    getType() >> REFERENCE
+                    isMultiple() >> false
+                    getDefinition() >> Mock(PropertyDefinition) {
+                        isProtected() >> true
+                    }
+                    getValue() >> Mock(Value) {
+                        getString() >> "reference_uuid_five"
+                    }
+                }
+            }
+            getNodes() >> Mock(NodeIterator) {
+                hasNext() >>> true >> false
+                next() >> Mock(Node) {
+                    getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                        getString() >> 'nt:unstructured'
+                    }
+                    getProperties() >> Mock(PropertyIterator) {
+                        hasNext() >>> true >> false
+                        next() >> Mock(Property) {
+                            getType() >> REFERENCE
+                            isMultiple() >> false
+                            getDefinition() >> Mock(PropertyDefinition) {
+                                isProtected() >> false
+                            }
+                            getValue() >> Mock(Value) {
+                                getString() >> "reference_uuid_four"
+                            }
+                        }
+                    }
+                    getDefinition() >> Mock(NodeDefinition) {
+                        isMandatory() >> true
+                    }
+                }
+            }
+        }
+
+        when:
+        final nodeDecorator = new JCRNodeDecorator(node)
+
+        then:
+        nodeDecorator.getRequiredChildNodes().size() == 4
     }
 
 
@@ -416,6 +527,30 @@ class JCRNodeDecoratorSpec extends Specification {
         (nodeDecorator as Node) == node
         (nodeDecorator as JCRNodeDecorator) == nodeDecorator
     }
+
+
+    def "Can adapt the decorator to an authorizable if appropriate"() {
+        given:
+        final node = Mock(Node) {
+            getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                getString() >> 'rep:User'
+            }
+            getProperties() >> Mock(PropertyIterator) {
+                toList() >> []
+            }
+            getPath() >> '/home/users/user'
+        }
+        final returnedAuthorizable = Mock(Authorizable)
+        final nodeDecorator = Spy(JCRNodeDecorator, constructorArgs: [node]) {
+            getUserManager(_) >> Mock(UserManager) {
+                1 * getAuthorizableByPath('/home/users/user') >> returnedAuthorizable
+            }
+        }
+
+        expect:
+        (nodeDecorator as Authorizable) == returnedAuthorizable
+    }
+
 
     def "Get modified date for a node"() {
         given:

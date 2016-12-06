@@ -42,16 +42,17 @@ import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 
 class AuthorizableProtoNodeDecoratorSpec extends Specification {
 
-    AuthorizableProtoNodeDecorator theProtoNodeDecorator(boolean forUser, boolean hasProfile, boolean hasPreferences, Closure configuration = null){
+
+    AuthorizableProtoNodeDecorator theProtoNodeDecoratorForUser(boolean hasProfile, boolean hasPreferences, String id, Closure configuration = null){
         ProtoNodeBuilder nodeBuilder = ProtoNode.newBuilder()
-        nodeBuilder.setName(forUser ? "/home/users/u/user1" : "/home/groups/g/group1")
+        nodeBuilder.setName('/home/users/u/user1')
 
         ProtoProperty primaryTypeProperty = ProtoProperty
                 .newBuilder()
                 .setName(JCR_PRIMARYTYPE)
                 .setType(STRING)
                 .setMultiple(false)
-                .addValues(ProtoValue.newBuilder().setStringValue(forUser ? 'rep:User' : 'rep:Group'))
+                .addValues(ProtoValue.newBuilder().setStringValue('rep:User'))
                 .build()
         nodeBuilder.addProperties(primaryTypeProperty)
 
@@ -69,7 +70,7 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
                 .setName('rep:authorizableId')
                 .setType(STRING)
                 .setMultiple(false)
-                .addValues(ProtoValue.newBuilder().setStringValue('authorizableID'))
+                .addValues(ProtoValue.newBuilder().setStringValue(id))
                 .build()
         nodeBuilder.addProperties(authorizableIdProperty)
 
@@ -89,30 +90,85 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
                 .setMultiple(false)
                 .addValues(ProtoValue.newBuilder().setStringValue('nt:unstructured'))
                 .build()
-        nodeBuilder.addProperties(authorizableCategory)
+
         if(hasPreferences) {
-            ProtoNode preferenceNode = ProtoNode.newBuilder()
-                .setName("${nodeBuilder.getName()}/preferences")
-                .addProperties(simplePrimaryType)
-                .build()
+            ProtoNode preferenceNode = ProtoNode
+                    .newBuilder()
+                    .setName("${nodeBuilder.getName()}/preferences")
+                    .addProperties(simplePrimaryType)
+                    .build()
             nodeBuilder.addMandatoryChildNode(preferenceNode)
         }
         if(hasProfile) {
             ProtoNode profileNode = ProtoNode
-                .newBuilder()
-                .setName("${nodeBuilder.getName()}/profile")
-                .addProperties(simplePrimaryType)
-                .build()
+                    .newBuilder()
+                    .setName("${nodeBuilder.getName()}/profile")
+                    .addProperties(simplePrimaryType)
+                    .build()
             nodeBuilder.addMandatoryChildNode(profileNode)
         }
+
         final properties = [new ProtoPropertyDecorator(primaryTypeProperty), new ProtoPropertyDecorator(disabledProperty), new ProtoPropertyDecorator(authorizableIdProperty), new ProtoPropertyDecorator(authorizableCategory)]
+        return GroovySpy(AuthorizableProtoNodeDecorator, constructorArgs: [nodeBuilder.build(), properties], configuration)
+    }
+
+
+    AuthorizableProtoNodeDecorator theProtoNodeDecoratorForGroup(Closure configuration = null){
+        ProtoNodeBuilder nodeBuilder = ProtoNode.newBuilder()
+        nodeBuilder.setName('/home/groups/g/group1')
+
+        ProtoProperty primaryTypeProperty = ProtoProperty
+                .newBuilder()
+                .setName(JCR_PRIMARYTYPE)
+                .setType(STRING)
+                .setMultiple(false)
+                .addValues(ProtoValue.newBuilder().setStringValue('rep:Group'))
+                .build()
+        nodeBuilder.addProperties(primaryTypeProperty)
+
+        ProtoProperty authorizableIdProperty = ProtoProperty
+                .newBuilder()
+                .setName('rep:authorizableId')
+                .setType(STRING)
+                .setMultiple(false)
+                .addValues(ProtoValue.newBuilder().setStringValue('authorizableID'))
+                .build()
+        nodeBuilder.addProperties(authorizableIdProperty)
+
+        ProtoProperty membershipProperty = ProtoProperty
+                .newBuilder()
+                .setName('rep:members')
+                .setType(STRING)
+                .setMultiple(false)
+                .addValues(ProtoValue.newBuilder().setStringValue('member-group-id'))
+                .build()
+        nodeBuilder.addProperties(membershipProperty)
+
+
+        ProtoNodeBuilder memberNodeBuilder = ProtoNode.newBuilder()
+        memberNodeBuilder.setName('/home/groups/g/anothergroup')
+
+        ProtoProperty userPrimaryTypeProperty = ProtoProperty
+                .newBuilder()
+                .setName(JCR_PRIMARYTYPE)
+                .setType(STRING)
+                .setMultiple(false)
+                .addValues(ProtoValue.newBuilder().setStringValue('rep:Group'))
+                .build()
+        memberNodeBuilder.addProperties(userPrimaryTypeProperty)
+
+        memberNodeBuilder.setIdentifier('member-group-id')
+
+        nodeBuilder.addMandatoryChildNode(memberNodeBuilder.build())
+
+        final properties = [new ProtoPropertyDecorator(primaryTypeProperty), new ProtoPropertyDecorator(authorizableIdProperty), new ProtoPropertyDecorator(membershipProperty)]
         return GroovySpy(AuthorizableProtoNodeDecorator, constructorArgs: [nodeBuilder.build(), properties], configuration)
     }
 
 
     def "Throws an InsufficientGrabbitPrivilegeException if JVM permissions are not present"() {
         when:
-        final protoNodeDecorator = theProtoNodeDecorator(false, false, false) {
+        final protoNodeDecorator = theProtoNodeDecoratorForGroup {
             it.getSecurityManager() >> Mock(SecurityManager) {
                 it.checkPermission(permission) >> {
                     throw new SecurityException()
@@ -127,6 +183,42 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
 
         where:
         permission << [new ReflectPermission('suppressAccessChecks'), new RuntimePermission('accessDeclaredMembers'), new RuntimePermission('accessClassInPackage.{org.apache.jackrabbit.oak.security.user}')]
+    }
+
+
+    def "Does not attempt to modify the administrator"() {
+        when:
+        final adminNode = Mock(Node) {
+            getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                it.getString() >> 'rep:User'
+            }
+            getProperties() >> Mock(PropertyIterator) {
+                it.toList() >> []
+            }
+            it.getPrimaryNodeType() >> Mock(NodeType) {
+                it.canSetProperty(_, _) >> false
+            }
+        }
+        final session = Mock(Session) {
+            it.getNode('/home/users/m/a') >> adminNode
+        }
+        final protoNodeDecorator = theProtoNodeDecoratorForUser(false, false, 'admin') {
+            it.getSecurityManager() >> Mock(SecurityManager) {
+                it.checkPermission(_) >> {
+                    return
+                }
+            }
+            it.getUserManager(session) >> Mock(UserManager) {
+                it.getAuthorizable('admin') >> Mock(Authorizable) {
+                    it.getPath() >> '/home/users/m/a'
+                }
+            }
+        }
+
+        final JCRNodeDecorator resultNode = protoNodeDecorator.writeToJcr(session)
+
+        then:
+        (resultNode as Node) == adminNode
     }
 
 
@@ -145,7 +237,7 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
                 }
             }
         }
-        final protoNodeDecorator = theProtoNodeDecorator(false, false, false) {
+        final protoNodeDecorator = theProtoNodeDecoratorForGroup {
             it.getSecurityManager() >> Mock(SecurityManager) {
                 it.checkPermission(permission) >> {
                     return
@@ -156,6 +248,9 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
                     it.getPath() >> 'authorizablePath'
                 }
             }
+            it.writeMandatoryPieces(_, _) >> [
+                Mock(JCRNodeDecorator)
+            ]
         }
 
         protoNodeDecorator.writeToJcr(session)
@@ -183,13 +278,16 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
                 }
             }
         }
-        final protoNodeDecorator = theProtoNodeDecorator(false, false, false) {
+        final protoNodeDecorator = theProtoNodeDecoratorForGroup {
             it.getSecurityManager() >> null
             it.getUserManager(session) >> Mock(UserManager) {
                 it.createGroup(_, _, _) >> Mock(Group) {
                     it.getPath() >> 'authorizablePath'
                 }
             }
+            it.writeMandatoryPieces(_, _) >> [
+                    Mock(JCRNodeDecorator)
+            ]
         }
 
         protoNodeDecorator.writeToJcr(session)
@@ -201,7 +299,7 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
 
     def "getSecurityManager() will retrieve the JVM's security manager"() {
         given:
-        final protoNodeDecorator = theProtoNodeDecorator(false, false, false)
+        final protoNodeDecorator = theProtoNodeDecoratorForGroup()
 
         expect:
         System.getSecurityManager() == protoNodeDecorator.getSecurityManager()
@@ -229,7 +327,7 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
             1 * it.setProperty('cq:authorizableCategory', new StringValue('mcm'))
             it.getPath() >> 'newUserPath'
         }
-        final protoNodeDecorator = theProtoNodeDecorator(true, false, false) {
+        final protoNodeDecorator = theProtoNodeDecoratorForUser(false, false, 'authorizableID') {
             it.getName() >> '/home/users/auth_folder/user'
             it.getSecurityManager() >> null
             it.setPasswordForUser(newUser, session) >> {
@@ -265,16 +363,25 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
         final session = Mock(Session) {
             it.getNode('newGroupPath') >> node
         }
+        final member = Mock(Authorizable)
         final newGroup = Mock(Group) {
             it.getPath() >> 'newGroupPath'
+            1 * it.addMember(member)
         }
-        final protoNodeDecorator = theProtoNodeDecorator(false, false, false) {
+        final protoNodeDecorator = theProtoNodeDecoratorForGroup {
             it.getName() >> '/home/groups/auth_folder/group'
             it.getSecurityManager() >> null
             it.getUserManager(session) >> Mock(UserManager) {
                 it.getAuthorizable('authorizableID') >> null
                 1 * it.createGroup('authorizableID', new AuthorizablePrincipal('authorizableID'), '/home/groups/auth_folder') >> newGroup
             }
+            it.writeMandatoryPieces(session, 'newGroupPath') >> [
+                Mock(JCRNodeDecorator) {
+                    it.isAuthorizableType() >> true
+                    it.getTransferredID() >> 'member-group-id'
+                    it.asType(Authorizable) >> member
+                }
+            ]
         }
 
         when:
@@ -301,15 +408,18 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
         final session = Mock(Session) {
             it.getNode('/home/users/u/newuser') >> node
         }
-        final protoNodeDecorator = theProtoNodeDecorator(false, exists, false) {
+        final protoNodeDecorator = theProtoNodeDecoratorForUser(exists, false, 'authorizableID') {
             it.getSecurityManager() >> null
             it.getUserManager(session) >> Mock(UserManager) {
-                it.getAuthorizable('authorizableID') >> Mock(Authorizable)
-                it.createGroup('authorizableID', _, _) >> Mock(Group) {
+                it.getAuthorizable('authorizableID') >> Mock(Authorizable) {
+                    it.declaredMemberOf() >> [].iterator()
+                }
+                it.createUser('authorizableID', _, _, _) >> Mock(User) {
                     it.getPath() >> '/home/users/u/newuser'
+                    it.declaredMemberOf() >> [].iterator()
                 }
             }
-            (exists ? 1 : 0) * it.createFrom(_ as ProtoNode, '/home/users/u/newuser/profile')  >> Mock(ProtoNodeDecorator)
+            (exists ? 1 : 0) * it._createFrom(_ as ProtoNode, '/home/users/u/newuser/profile')  >> Mock(ProtoNodeDecorator)
         }
 
         then:
@@ -337,15 +447,18 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
         final session = Mock(Session) {
             it.getNode('/home/users/u/newuser') >> node
         }
-        final protoNodeDecorator = theProtoNodeDecorator(false, false, exists) {
+        final protoNodeDecorator = theProtoNodeDecoratorForUser(false, exists, 'authorizableID') {
             it.getSecurityManager() >> null
             it.getUserManager(session) >> Mock(UserManager) {
-                it.getAuthorizable('authorizableID') >> Mock(Authorizable)
-                it.createGroup('authorizableID', _, _) >> Mock(Group) {
+                it.getAuthorizable('authorizableID') >> Mock(Authorizable) {
+                    it.declaredMemberOf() >> [].iterator()
+                }
+                it.createUser('authorizableID', _, _, _) >> Mock(User) {
                     it.getPath() >> '/home/users/u/newuser'
+                    it.declaredMemberOf() >> [].iterator()
                 }
             }
-            (exists ? 1 : 0) * it.createFrom(_ as ProtoNode, '/home/users/u/newuser/preferences')  >> Mock(ProtoNodeDecorator)
+            (exists ? 1 : 0) * it._createFrom(_ as ProtoNode, '/home/users/u/newuser/preferences')  >> Mock(ProtoNodeDecorator)
         }
 
         then:
@@ -355,4 +468,41 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
         where:
         exists << [false, true]
     }
+
+    def "When updating an authorizable, remove old authorizable from declared groups, and add updated authorizable back to groups"() {
+        when:
+        final node = Mock(Node) {
+            getProperty(JCR_PRIMARYTYPE) >> Mock(Property) {
+                it.getString() >> 'rep:User'
+            }
+            getProperties() >> Mock(PropertyIterator) {
+                it.toList() >> []
+            }
+            it.getPrimaryNodeType() >> Mock(NodeType) {
+                it.canSetProperty(_, _) >> false
+            }
+        }
+        final session = Mock(Session) {
+            it.getNode('/home/users/u/newuser') >> node
+        }
+        final group = Mock(Group) {
+            1 * it.removeMember(_)
+            1 * it.addMember(_)
+        }
+        final protoNodeDecorator = theProtoNodeDecoratorForUser(false, false, 'authorizableID') {
+            it.getUserManager(session) >> Mock(UserManager) {
+                it.getAuthorizable('authorizableID') >> Mock(Authorizable) {
+                    it.declaredMemberOf() >> [group].iterator()
+                }
+                it.createUser('authorizableID', _, _, _) >> Mock(User) {
+                    it.getPath() >> '/home/users/u/newuser'
+                    it.declaredMemberOf() >> [].iterator()
+                }
+            }
+        }
+
+        then:
+        protoNodeDecorator.writeToJcr(session)
+    }
+
 }

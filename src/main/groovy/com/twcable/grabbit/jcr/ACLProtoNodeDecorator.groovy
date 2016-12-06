@@ -105,7 +105,7 @@ class ACLProtoNodeDecorator extends ProtoNodeDecorator {
         final String principalName = getPrincipalName(aceNode)
         Principal principal = getPrincipal(session, principalName)
         if(principal == null) {
-            log.warn "Principal for name ${principalName} does not exist, or is not accessible. Can not write ACE/ACL information."
+            log.warn "Principal for name ${principalName} does not exist, or is not accessible. Can not write ACE/ACL information for this principal on ${getParentPath()}. If this principal is currently being synched, it may not be accessible."
             return
         }
         Privilege[] privileges = getPrivilegeNames(aceNode).collect { String privilegeName ->
@@ -166,7 +166,7 @@ class ACLProtoNodeDecorator extends ProtoNodeDecorator {
         final ProtoPropertyDecorator privilegeProperty = node.propertiesList.collect { new ProtoPropertyDecorator(it) }.find { ProtoPropertyDecorator property ->
             property.isPrivilege()
         }
-        return privilegeProperty.getPropertyValues().collect { Value value -> value.string }.toArray() as String[]
+        return privilegeProperty.getStringValues().toArray() as String[]
     }
 
 

@@ -16,7 +16,7 @@
 
 package com.twcable.grabbit.spring.batch.repository.services.impl
 
-import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.jcr.JCRUtil
 import com.twcable.grabbit.spring.batch.repository.JcrJobRepositoryFactoryBean
 import com.twcable.grabbit.spring.batch.repository.services.CleanJobRepository
 import groovy.transform.CompileStatic
@@ -66,7 +66,7 @@ class DefaultCleanJobRepository implements CleanJobRepository {
         Collection<String> jobExecutionContextsToRemove = jobRepositoryFactoryBean.executionContextDao.getJobExecutionContextPaths(olderThanHoursJobExecutions)
         Collection<String> stepExecutionContextsToRemove = jobRepositoryFactoryBean.executionContextDao.getStepExecutionContextPaths(stepExecutionsToRemove)
 
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
 
             log.debug "jobInstancesToRemove: $jobInstancesToRemove, size: ${jobInstancesToRemove.size()}"
             log.debug "jobExecutionsToRemove: $olderThanHoursJobExecutions, size: ${olderThanHoursJobExecutions.size()}"

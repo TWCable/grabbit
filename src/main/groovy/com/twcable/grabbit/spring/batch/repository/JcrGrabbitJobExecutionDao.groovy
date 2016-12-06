@@ -18,7 +18,7 @@ package com.twcable.grabbit.spring.batch.repository
 
 import com.twcable.grabbit.DateUtil
 import com.twcable.grabbit.client.batch.ClientBatchJob
-import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.jcr.JCRUtil
 import com.twcable.grabbit.util.CryptoUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -75,7 +75,7 @@ class JcrGrabbitJobExecutionDao extends AbstractJcrDao implements GrabbitJobExec
 
         //Create a new resource for the jobExecution (with the id)
         jobExecution.incrementVersion()
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final id = CryptoUtil.generateNextId()
             jobExecution.id = id
             Resource rootResource = getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
@@ -126,7 +126,7 @@ class JcrGrabbitJobExecutionDao extends AbstractJcrDao implements GrabbitJobExec
         if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
         if (!jobExecution.id) throw new IllegalArgumentException("jobExecution must have an id")
 
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
 
             //Get the Execution with jobExecution.id from jobExecution root resource
@@ -157,7 +157,7 @@ class JcrGrabbitJobExecutionDao extends AbstractJcrDao implements GrabbitJobExec
     List<JobExecution> findJobExecutions(@Nonnull final JobInstance jobInstance) {
         if (!jobInstance) throw new IllegalArgumentException("jobInstance == null")
 
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final Resource jobExecutionRootResource = getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
             List<Resource> resources = jobExecutionRootResource?.children?.asList()
             if (!resources) return Collections.EMPTY_LIST
@@ -255,7 +255,7 @@ class JcrGrabbitJobExecutionDao extends AbstractJcrDao implements GrabbitJobExec
     Set<JobExecution> findRunningJobExecutions(@Nonnull final String jobName) {
         if (!jobName) throw new IllegalArgumentException("jobName == null")
 
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final jobExecutionRoot = getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
 
             //find jobExecution root, then find all jobExecutions, then find the jobexecution
@@ -290,7 +290,7 @@ class JcrGrabbitJobExecutionDao extends AbstractJcrDao implements GrabbitJobExec
         if (!executionId) throw new IllegalArgumentException("executionId == null")
 
         //find jobExecution root, then find jobExecution with node name : "jobExecution${executionId}"
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final jobExecutionRoot = getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
             final jobExecutionResource = jobExecutionRoot?.children?.asList()?.find { Resource resource ->
                 final properties = resource.adaptTo(ValueMap)
@@ -370,7 +370,7 @@ class JcrGrabbitJobExecutionDao extends AbstractJcrDao implements GrabbitJobExec
      */
     @Override
     protected void ensureRootResource() {
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             if (!getOrCreateResource(resolver, JOB_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
                 throw new IllegalStateException("Cannot get or create RootResource for : ${JOB_EXECUTION_ROOT}")
@@ -385,7 +385,7 @@ class JcrGrabbitJobExecutionDao extends AbstractJcrDao implements GrabbitJobExec
     @Override
     Collection<String> getJobExecutions(Collection<BatchStatus> batchStatuses) {
         String statusPredicate = batchStatuses.collect { "s.status = '${it}'" }.join(' or ')
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             String jobExecutionsQuery = "select * from [nt:unstructured] as s where " +
                     "ISDESCENDANTNODE(s,'${JOB_EXECUTION_ROOT}') AND ( ${statusPredicate} )"
             Collection<String> jobExecutions = resolver.findResources(jobExecutionsQuery, "JCR-SQL2")
@@ -400,7 +400,7 @@ class JcrGrabbitJobExecutionDao extends AbstractJcrDao implements GrabbitJobExec
 
     @Override
     Collection<String> getJobExecutions(int hours, Collection<String> jobExecutions) {
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             //Create a Date object that is "hours" ago from now
             Calendar olderThanHours = Calendar.getInstance()
             log.info "Current time: ${olderThanHours.time}"

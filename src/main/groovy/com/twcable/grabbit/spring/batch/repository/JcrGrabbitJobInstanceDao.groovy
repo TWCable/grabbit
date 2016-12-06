@@ -16,7 +16,7 @@
 
 package com.twcable.grabbit.spring.batch.repository
 
-import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.jcr.JCRUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.sling.api.resource.Resource
@@ -69,7 +69,7 @@ class JcrGrabbitJobInstanceDao extends AbstractJcrDao implements GrabbitJobInsta
         if (!jobParameters) throw new IllegalArgumentException("jobParameters == null")
         if (getJobInstance(jobName, jobParameters)) throw new IllegalStateException("A JobInstance for jobName: ${jobName} must not already exist")
 
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
 
             //TODO : This will need to be a "incrementing ID" after all and NOT use a UUID (for other APIs like
             //getJobInstances which require result to be sorted backwards by "id". If we use UUID, then the possibility of
@@ -115,7 +115,7 @@ class JcrGrabbitJobInstanceDao extends AbstractJcrDao implements GrabbitJobInsta
 
         final jobKey = new DefaultJobKeyGenerator().generateKey(jobParameters)
         //Find a resource under "/jobInstances" for the jobKey above
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
             final jobInstanceResource = rootResource?.children?.asList()?.find { Resource resource ->
                 final properties = resource.adaptTo(ValueMap)
@@ -141,7 +141,7 @@ class JcrGrabbitJobInstanceDao extends AbstractJcrDao implements GrabbitJobInsta
     JobInstance getJobInstance(@Nonnull final Long instanceId) {
         if (!instanceId) throw new IllegalArgumentException("instanceId == null")
         //Get the "instanceId" node from JOB_INSTANCE_ROOT
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
             final jobInstanceResource = rootResource?.children?.asList()?.find { Resource resource ->
                 final properties = resource.adaptTo(ValueMap)
@@ -184,7 +184,7 @@ class JcrGrabbitJobInstanceDao extends AbstractJcrDao implements GrabbitJobInsta
 
         //Get All jobInstances in JOB_INSTANCE_ROOT with jobName property = $jobName
         //Map jobInstances nodes to JobInstance object
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
             final jobInstanceResource = rootResource?.children?.asList()?.findAll { Resource resource ->
                 final properties = resource.adaptTo(ValueMap)
@@ -222,7 +222,7 @@ class JcrGrabbitJobInstanceDao extends AbstractJcrDao implements GrabbitJobInsta
      */
     @Override
     List<String> getJobNames() {
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final jobInstanceResources = getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)?.children?.asList()
             if (!jobInstanceResources) return Collections.EMPTY_LIST
 
@@ -240,7 +240,7 @@ class JcrGrabbitJobInstanceDao extends AbstractJcrDao implements GrabbitJobInsta
      */
     @Override
     protected void ensureRootResource() {
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             if (!getOrCreateResource(resolver, JOB_INSTANCE_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
                 throw new IllegalStateException("Cannot get or create RootResource for : ${JOB_INSTANCE_ROOT}")
@@ -276,7 +276,7 @@ class JcrGrabbitJobInstanceDao extends AbstractJcrDao implements GrabbitJobInsta
 
     @Override
     Collection<String> getJobInstancePaths(Collection<String> jobExecutionResourcePaths) {
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             Collection<String> jobInstancesToRemove = []
             jobExecutionResourcePaths.each { String jobExecutionResourcePath ->
                 Resource jobExecutionResource = resolver.getResource(jobExecutionResourcePath)

@@ -17,16 +17,14 @@ package com.twcable.grabbit.client.batch.steps.validation
 
 import com.twcable.grabbit.client.batch.ClientBatchJob
 import com.twcable.grabbit.client.batch.ClientBatchJobContext
+import com.twcable.grabbit.jcr.JCRUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import javax.jcr.Session
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.job.flow.FlowExecutionStatus
 import org.springframework.batch.core.job.flow.JobExecutionDecider
-
-import javax.jcr.PathNotFoundException
-import javax.jcr.RepositoryException
-import javax.jcr.Session
 
 /**
  * This class serves as a validation gate for jobs in-flight.  It should be the first step on the client when running a job to determine
@@ -57,29 +55,14 @@ class ValidJobDecider implements JobExecutionDecider {
     @Override
     FlowExecutionStatus decide(JobExecution jobExecution, StepExecution stepExecution) {
         String jobPath = jobExecution.jobParameters.getString(ClientBatchJob.PATH)
-        //For processing, remove trailing /
-        jobPath = jobPath.replaceFirst(/\/$/, '')
-        //Get the parent's path (if applicable) and determine if it exists already
-        final parts = jobPath.split('/')
-        //No parent, so nothing to worry about
-        if(parts.length <= 2) return JOB_VALID
-
-        final parentPath = parts[0..-2].join('/')
-        final Session session = theSession()
-        try {
-            session.getNode(parentPath)
-        } catch(PathNotFoundException pathException) {
+        if(JCRUtil.writingToExistingNode(jobPath, theSession())) {
+            log.debug "${ValidJobDecider.class.canonicalName} Job determined to be valid for job path ${jobPath}"
+            return JOB_VALID
+        }
+        else {
             log.warn "${jobPath} is not a valid job path.  Make sure a parent is synched or created before this job is run"
-            log.debug pathException.toString()
             return JOB_INVALID
         }
-        catch(RepositoryException repoException) {
-            log.error "${RepositoryException.class.canonicalName} Something went wrong when accessing the repository at ${this.class.canonicalName} for job path ${jobPath}!"
-            log.error repoException.toString()
-            return JOB_INVALID
-        }
-        log.debug "${ValidJobDecider.class.canonicalName} Job determined to be valid for job path ${jobPath}"
-        return JOB_VALID
     }
 
 }

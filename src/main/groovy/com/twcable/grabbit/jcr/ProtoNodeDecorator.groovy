@@ -18,7 +18,7 @@ package com.twcable.grabbit.jcr
 
 import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import groovy.transform.CompileStatic
-
+import java.util.regex.Pattern
 import javax.annotation.Nonnull
 import javax.jcr.Session
 
@@ -69,12 +69,40 @@ abstract class ProtoNodeDecorator {
         protoProperties.find { it.name == propertyName }.stringValue
     }
 
+
+    protected Collection<String> getStringValuesFrom(String propertyName) {
+        protoProperties.find { it.name == propertyName }.valuesList.collect { it.stringValue }
+    }
+
+
+    protected String getID() {
+        return innerProtoNode.getIdentifier()
+    }
+
+
     protected String getParentPath() {
         final pathTokens = getName().tokenize('/')
         //remove last index, as this is the Authorizable node name
         pathTokens.remove(pathTokens.size() - 1)
         return "/${pathTokens.join('/')}"
     }
+
+
+    protected Collection<JCRNodeDecorator> writeMandatoryPieces(final Session session, final String pathOverride) {
+        final Collection<JCRNodeDecorator> mandatoryPieces = innerProtoNode.mandatoryChildNodeList.collect {
+            //Mandatory nodes, if children of this node, must inherit any name overrides (if they exist)
+            _createFrom(it, it.getName().replaceFirst(Pattern.quote(getName()), pathOverride)).writeToJcr(session)
+        }
+        session.save()
+        return mandatoryPieces
+    }
+
+
+    //An instance wrapper for ease of mocking
+    ProtoNodeDecorator _createFrom(ProtoNode node, String nameOverride) {
+        return createFrom(node, nameOverride)
+    }
+
 
     @Override
     String getName() {

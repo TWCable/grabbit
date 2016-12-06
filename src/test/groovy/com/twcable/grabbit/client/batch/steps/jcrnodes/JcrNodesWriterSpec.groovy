@@ -17,7 +17,7 @@
 package com.twcable.grabbit.client.batch.steps.jcrnodes
 
 import com.twcable.grabbit.client.batch.ClientBatchJobContext
-import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.jcr.JCRUtil
 import com.twcable.grabbit.proto.NodeProtos
 import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import com.twcable.grabbit.proto.NodeProtos.Node.Builder as ProtoNodeBuilder
@@ -88,7 +88,7 @@ class JcrNodesWriterSpec extends Specification {
 
         NodeProtos.Node nodeProto = nodeBuilder.build()
 
-        Session session = JcrUtil.getSession(repository().build(), "admin")
+        Session session = JCRUtil.getSession(repository().build(), "admin")
 
         when:
         ClientBatchJobContext.setSession(session)
@@ -133,7 +133,7 @@ class JcrNodesWriterSpec extends Specification {
 
         ProtoNode protoNode = nodeBuilder.build()
 
-        Session session = JcrUtil.getSession(repository().build(), "admin")
+        Session session = JCRUtil.getSession(repository().build(), "admin")
 
         when:
         ClientBatchJobContext.setSession(session)
@@ -155,7 +155,7 @@ class JcrNodesWriterSpec extends Specification {
             getNodeProto("/foo/bar/foo", "jcr:primaryType", "nt:file")
         ]
 
-        Session session = JcrUtil.getSession(repository().build(), "admin")
+        Session session = JCRUtil.getSession(repository().build(), "admin")
 
         when:
         ClientBatchJobContext.setSession(session)

@@ -19,11 +19,12 @@ import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import com.twcable.grabbit.proto.NodeProtos.Value as ProtoValue
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import java.util.regex.Pattern
 import javax.annotation.Nonnull
 import javax.jcr.Node as JCRNode
 import javax.jcr.Session
+import javax.jcr.Value
 import org.apache.jackrabbit.commons.JcrUtils
+import org.apache.jackrabbit.value.StringValue
 
 
 import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
@@ -49,16 +50,34 @@ class DefaultProtoNodeDecorator extends ProtoNodeDecorator {
         if(mixinProperty) {
             addMixins(mixinProperty, jcrNode)
         }
-        //Then add other properties
-        writableProperties.each { it.writeToNode(jcrNode) }
 
-        if(innerProtoNode.mandatoryChildNodeList && innerProtoNode.mandatoryChildNodeList.size() > 0) {
-            for(ProtoNode childNode: innerProtoNode.mandatoryChildNodeList) {
-                //Mandatory children must inherit any name overrides from their parent (if they exist)
-                createFrom(childNode, childNode.getName().replaceFirst(Pattern.quote(innerProtoNode.name), getName())).writeToJcr(session)
+        final Collection<ProtoPropertyDecorator> referenceTypeProperties = writableProperties.findAll { it.isReferenceType() }
+        final Collection<ProtoPropertyDecorator> nonReferenceTypeProperties = writableProperties.findAll { !it.isReferenceType() }
+
+        //These can be written now. Reference properties can be written after we write the referenced nodes
+        nonReferenceTypeProperties.each { it.writeToNode(jcrNode) }
+
+        final Collection<JCRNodeDecorator> referenceables = writeMandatoryPieces(session, getName()).findAll { it.isReferenceable() }
+
+        /*
+         * Nodes that are referenced from reference properties are written above in writeMandatoryPieces(). We can now map each
+         * reference pointer to a transferred id from a node above, and write the pointer with a mapped nodes new identifier.
+         * The transferred id is what the identifier was on sending server, and the current identifier is what it is now that it is
+          * written to this server. Identifiers only apply to referenceable nodes (i.e nodes with mix:referenceable)
+         */
+        referenceTypeProperties.each { ProtoPropertyDecorator property ->
+            final Collection<Value> newReferenceIDValues = property.getStringValues().findResults { String referenceID ->
+                final JCRNodeDecorator match = referenceables.find { it.transferredID == referenceID }
+                if(match) {
+                    return new StringValue(match.getIdentifier())
+                }
+            } as Collection<Value>
+            if(!newReferenceIDValues.isEmpty()) {
+                property.writeToNode(jcrNode, (newReferenceIDValues.toArray() as Value[]))
             }
         }
-        return new JCRNodeDecorator(jcrNode)
+
+        return new JCRNodeDecorator(jcrNode, getID())
     }
 
 

@@ -16,7 +16,7 @@
 
 package com.twcable.grabbit.server.services.impl
 
-import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.jcr.JCRUtil
 import com.twcable.grabbit.server.batch.ServerBatchJob
 import com.twcable.grabbit.server.services.ExcludePathNodeIterator
 import com.twcable.grabbit.server.services.RootNodeWithMandatoryIterator
@@ -51,17 +51,19 @@ class DefaultServerService implements ServerService {
     ConfigurableApplicationContext configurableApplicationContext
 
 
+    @Override
     void getContentForRootPath(
             @Nullable String serverUsername,
             @Nonnull String path,
             @Nullable Collection<String> excludePaths,
-            @Nullable String afterDateString, @Nonnull ServletOutputStream servletOutputStream) {
+            @Nullable String afterDateString,
+            @Nonnull ServletOutputStream servletOutputStream) {
 
         if (path == null) throw new IllegalStateException("path == null")
         if (excludePaths == null) excludePaths = (Collection<String>) Collections.EMPTY_LIST
         if (servletOutputStream == null) throw new IllegalStateException("servletOutputStream == null")
 
-        JcrUtil.withSession(slingRepository, serverUsername) { Session session ->
+        JCRUtil.withSession(slingRepository, serverUsername) { Session session ->
             Iterator<JcrNode> nodeIterator
 
             //If the path is of type "/a/b/.", that means we should not do a recursive search of b's children

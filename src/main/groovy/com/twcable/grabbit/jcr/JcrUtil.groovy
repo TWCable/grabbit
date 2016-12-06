@@ -18,6 +18,8 @@ package com.twcable.grabbit.jcr
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import javax.jcr.PathNotFoundException
+import javax.jcr.RepositoryException
 import org.apache.sling.api.resource.ResourceResolver
 import org.apache.sling.api.resource.ResourceResolverFactory
 import org.apache.sling.jcr.api.SlingRepository
@@ -31,7 +33,7 @@ import javax.jcr.SimpleCredentials
  */
 @Slf4j
 @CompileStatic
-public class JcrUtil {
+public class JCRUtil {
 
     /**
      * This creates a JCR Session with the rights of the given user (by default
@@ -64,7 +66,7 @@ public class JcrUtil {
      * This handles creating the ResourceResolver with the rights of the given user (by default
      * that is 'anonymous') and does the needed clean up when the code block is finished.
      * <p/>
-     * <code>use(JcrUtil) {<br/>
+     * <code>use(JCRUtil) {<br/>
      * &nbsp slingRepository.withSession{Session session -><br/>
      * &nbsp &nbsp // do something with the Session<br/>
      * &nbsp }<br/>
@@ -112,7 +114,7 @@ public class JcrUtil {
      * This handles creating the ResourceResolver with the rights of the given user (by default
      * that is 'anonymous') and does the needed clean up when the code block is finished.
      * <p/>
-     * <code>use(JcrUtil) {<br/>
+     * <code>use(JCRUtil) {<br/>
      * &nbsp resourceResolverFactory.withResourceResolver {ResourceResolver resourceResolver -><br/>
      * &nbsp &nbsp // do something with the ResourceResolver<br/>
      * &nbsp }<br/>
@@ -146,7 +148,7 @@ public class JcrUtil {
      * This handles creating the ResourceResolver with the rights of the given user (by default
      * that is 'anonymous') and does the needed clean up when the code block is finished.
      * <p/>
-     * <code>use(JcrUtil) {<br/>
+     * <code>use(JCRUtil) {<br/>
      * &nbsp resourceResolverFactory.manageResourceResolver {ResourceResolver resourceResolver -><br/>
      * &nbsp &nbsp // do something with the ResourceResolver<br/>
      * &nbsp }<br/>
@@ -162,6 +164,32 @@ public class JcrUtil {
      */
     static <T> T manageResourceResolver(@Nonnull ResourceResolverFactory resolverFactory, @Nonnull Closure<T> closure) {
         return withResourceResolver(resolverFactory, "admin", closure)
+    }
+
+    /**
+     * @return true if the node at the path being written is being written to an existing node
+     */
+    static boolean writingToExistingNode(@Nonnull final String pathBeingWritten, @Nonnull final Session session) {
+        //For processing, remove trailing /
+        final String thePath = pathBeingWritten.replaceFirst(/\/$/, '')
+        //Get the parent's path (if applicable) and determine if it exists already
+        final parts = thePath.split('/')
+        //No parent, so nothing to worry about
+        if(parts.length <= 2) return true
+
+        final String parentPath = parts[0..-2].join('/')
+        try {
+            session.getNode(parentPath)
+        } catch(PathNotFoundException pathException) {
+            log.debug pathException.toString()
+            return false
+        }
+        catch(RepositoryException repoException) {
+            log.error "${RepositoryException.class.canonicalName} Something went wrong when accessing the repository at ${this.class.canonicalName} for path ${pathBeingWritten}!"
+            log.error repoException.toString()
+            return false
+        }
+        return true
     }
 
 }

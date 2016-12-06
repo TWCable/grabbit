@@ -35,9 +35,11 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, ProtoNode> {
 
     private String contentAfterDate
 
+
     void setContentAfterDate(String contentAfterDate) {
         this.contentAfterDate = contentAfterDate
     }
+
 
     /**
      * Converts a JCR Node to a {@link ProtoNode} object.

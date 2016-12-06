@@ -16,7 +16,7 @@
 
 package com.twcable.grabbit.spring.batch.repository
 
-import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.jcr.JCRUtil
 import com.twcable.grabbit.util.CryptoUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -159,7 +159,7 @@ class JcrGrabbitExecutionContextDao extends AbstractJcrDao implements GrabbitExe
      */
     @Override
     protected void ensureRootResource() {
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             if (!getOrCreateResource(resolver, JOB_EXECUTION_CONTEXT_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
                 throw new IllegalStateException("Cannot get or create RootResource for : ${JOB_EXECUTION_CONTEXT_ROOT}")
@@ -190,7 +190,7 @@ class JcrGrabbitExecutionContextDao extends AbstractJcrDao implements GrabbitExe
         if (!executionId) throw new IllegalArgumentException("executionId == null")
         if (!executionContext) throw new IllegalArgumentException("executionContext == null")
 
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, rootResourceName, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
 
             final existingResource = rootResource.children.asList().find { Resource resource ->
@@ -258,7 +258,7 @@ class JcrGrabbitExecutionContextDao extends AbstractJcrDao implements GrabbitExe
         if (!rootResourceName) throw new IllegalArgumentException("rootResourceName == null")
         if (!executionId) throw new IllegalArgumentException("executionId == null")
 
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, rootResourceName, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
 
             //find resource from the "rootResource" where the executionId property matches "executionid"
@@ -307,7 +307,7 @@ class JcrGrabbitExecutionContextDao extends AbstractJcrDao implements GrabbitExe
 
     @Override
     Collection<String> getJobExecutionContextPaths(Collection<String> jobExecutionResourcePaths) {
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             Collection<String> jobExecutionContextPathsToRemove = []
             jobExecutionResourcePaths.each { String jobExecutionResourcePath ->
                 Resource jobExecutionResource = resolver.getResource(jobExecutionResourcePath)
@@ -332,7 +332,7 @@ class JcrGrabbitExecutionContextDao extends AbstractJcrDao implements GrabbitExe
 
     @Override
     Collection<String> getStepExecutionContextPaths(Collection<String> stepExecutionResourcePaths) {
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             Collection<String> stepExecutionContextPathsToRemove = []
             stepExecutionResourcePaths.each { String stepExecutionResourcePath ->
                 Resource stepExecutionResource = resolver.getResource(stepExecutionResourcePath)

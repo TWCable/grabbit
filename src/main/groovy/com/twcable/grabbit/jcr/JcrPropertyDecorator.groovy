@@ -22,27 +22,38 @@ import com.twcable.grabbit.proto.NodeProtos.Value as ProtoValue
 import com.twcable.grabbit.proto.NodeProtos.Value.Builder as ProtoValueBuilder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-
 import javax.annotation.Nonnull
 import javax.jcr.Property as JCRProperty
 import javax.jcr.Value
 
+
 import static javax.jcr.PropertyType.BINARY
-import static org.apache.jackrabbit.JcrConstants.*
+import static javax.jcr.PropertyType.REFERENCE
+import static javax.jcr.PropertyType.WEAKREFERENCE
+import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
+import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
+import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 
 @CompileStatic
 @Slf4j
-class JcrPropertyDecorator {
+class JCRPropertyDecorator {
 
     @Delegate
     JCRProperty innerProperty
 
     private final JCRNodeDecorator nodeOwner
 
-    JcrPropertyDecorator(JCRProperty property, JCRNodeDecorator nodeOwner) {
+
+    JCRPropertyDecorator(JCRProperty property, JCRNodeDecorator nodeOwner) {
         this.innerProperty = property
         this.nodeOwner = nodeOwner
     }
+
+
+    boolean isReferenceType() {
+        return type == REFERENCE || type == WEAKREFERENCE
+    }
+
 
     /**
      * Determines if JCR Property object can be "rewritten" to the JCR. For example, we can not rewrite a node's
@@ -67,6 +78,13 @@ class JcrPropertyDecorator {
         return !definition.isProtected()
     }
 
+
+    @Override
+    Value[] getValues() {
+        return (multiple ? innerProperty.values : [innerProperty.value]) as Value[]
+    }
+
+
     /**
      * Marshalls current Jcr Property to a ProtoProperty
      */
@@ -81,7 +99,6 @@ class JcrPropertyDecorator {
         }
         else {
             //Other property types can potentially have multiple values
-            final Value[] values = multiple ? values : [value] as Value[]
             values.each { Value value ->
                 propertyBuilder.addValues(valueBuilder.setStringValue(value.string))
             }

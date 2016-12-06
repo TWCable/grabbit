@@ -17,7 +17,7 @@
 package com.twcable.grabbit.spring.batch.repository
 
 import com.twcable.grabbit.DateUtil
-import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.jcr.JCRUtil
 import com.twcable.grabbit.util.CryptoUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -129,7 +129,7 @@ public class JcrGrabbitStepExecutionDao extends AbstractJcrDao implements Grabbi
         if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
         if (!stepExecutionId) throw new IllegalArgumentException("stepExecutionId == null")
 
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final Resource rootResource = getOrCreateResource(resolver, STEP_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
             final stepExecutionResource = rootResource?.children?.asList()?.find { Resource resource ->
                 final properties = resource.adaptTo(ValueMap)
@@ -156,7 +156,7 @@ public class JcrGrabbitStepExecutionDao extends AbstractJcrDao implements Grabbi
         if (!jobExecution) throw new IllegalArgumentException("jobExecution == null")
         //TODO : JOB_EXECUTION's ID must exist
 
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, STEP_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
             final stepExecutionResources = rootResource.children.asList().findAll { Resource resource ->
                 final properties = resource.adaptTo(ValueMap)
@@ -189,7 +189,7 @@ public class JcrGrabbitStepExecutionDao extends AbstractJcrDao implements Grabbi
         if (!executionId) throw new IllegalArgumentException("executionId == null")
         if (!execution) throw new IllegalArgumentException("execution == null")
 
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             final rootResource = getOrCreateResource(resolver, STEP_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)
             final existingResource = resolver.getResource(rootResource, executionId)
 
@@ -286,7 +286,7 @@ public class JcrGrabbitStepExecutionDao extends AbstractJcrDao implements Grabbi
      */
     @Override
     protected void ensureRootResource() {
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             //ResourceUtil.getOrCreateResource()
             if (!getOrCreateResource(resolver, STEP_EXECUTION_ROOT, NT_UNSTRUCTURED, NT_UNSTRUCTURED, true)) {
                 //create the Root Resource
@@ -301,7 +301,7 @@ public class JcrGrabbitStepExecutionDao extends AbstractJcrDao implements Grabbi
 
     @Override
     Collection<String> getStepExecutionPaths(Collection<String> jobExecutionResourcePaths) {
-        JcrUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
+        JCRUtil.manageResourceResolver(resourceResolverFactory) { ResourceResolver resolver ->
             Collection<String> stepExecutionsToRemove = []
             jobExecutionResourcePaths.each { String jobExecutionResourcePath ->
                 Resource jobExecutionResource = resolver.getResource(jobExecutionResourcePath)

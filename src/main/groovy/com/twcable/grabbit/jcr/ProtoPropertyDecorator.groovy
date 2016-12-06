@@ -28,6 +28,8 @@ import javax.jcr.ValueFormatException
 import org.apache.jackrabbit.value.ValueFactoryImpl
 
 
+import static javax.jcr.PropertyType.REFERENCE
+import static javax.jcr.PropertyType.WEAKREFERENCE
 import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 import static org.apache.jackrabbit.oak.spi.security.authorization.accesscontrol.AccessControlConstants.AC_NODETYPE_NAMES
@@ -52,13 +54,18 @@ class ProtoPropertyDecorator {
 
 
     void writeToNode(@Nonnull JCRNode node) {
+        writeToNode(node, getPropertyValues())
+    }
+
+
+    void writeToNode(final JCRNode node, Value[] values) {
         if(primaryType || mixinType) throw new IllegalStateException("Refuse to write jcr:primaryType or jcr:mixinType as normal properties.  These are not allowed")
         try {
             if (multiple) {
-                node.setProperty(this.name, getPropertyValues(), this.type)
+                node.setProperty(this.name, values, this.type)
             }
             else {
-                node.setProperty(this.name, getPropertyValue(), this.type)
+                node.setProperty(this.name, values.first(), this.type)
             }
         }
         catch (ValueFormatException ex) {
@@ -71,7 +78,7 @@ class ProtoPropertyDecorator {
             if(existingProperty.type != this.type || existingProperty.multiple ^ this.multiple) {
                 existingProperty.remove()
                 node.session.save()
-                this.writeToNode(node)
+                this.writeToNode(node, values)
                 log.debug "Resolve successful..."
             }
             else {
@@ -141,23 +148,28 @@ class ProtoPropertyDecorator {
     }
 
 
-    String getStringValue() {
-        getValue().stringValue
-    }
-
-
-    private ProtoValue getValue() {
-        innerProtoProperty.valuesList.first()
+    boolean isReferenceType() {
+        innerProtoProperty.type == REFERENCE || innerProtoProperty.type == WEAKREFERENCE
     }
 
 
     Value getPropertyValue() throws ValueFormatException {
-        getJCRValueFromProtoValue(getValue())
+        getPropertyValues().first()
     }
 
 
     Value[] getPropertyValues() throws ValueFormatException {
         return innerProtoProperty.valuesList.collect { ProtoValue protoValue -> getJCRValueFromProtoValue(protoValue) } as Value[]
+    }
+
+
+    String getStringValue() {
+        getPropertyValue().string
+    }
+
+
+    Collection<String> getStringValues() {
+        getPropertyValues().collect { Value value -> value.string }
     }
 
 

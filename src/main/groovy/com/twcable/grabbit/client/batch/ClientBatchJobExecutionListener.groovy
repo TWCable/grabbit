@@ -16,7 +16,7 @@
 
 package com.twcable.grabbit.client.batch
 
-import com.twcable.grabbit.jcr.JcrUtil
+import com.twcable.grabbit.jcr.JCRUtil
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.sling.jcr.api.SlingRepository
@@ -58,7 +58,7 @@ class ClientBatchJobExecutionListener implements JobExecutionListener {
     void beforeJob(JobExecution jobExecution) {
         log.debug "SlingRepository : ${slingRepository}"
         final clientUsername = jobExecution.jobParameters.getString(ClientBatchJob.CLIENT_USERNAME)
-        final Session session = JcrUtil.getSession(slingRepository, clientUsername)
+        final Session session = JCRUtil.getSession(slingRepository, clientUsername)
 
         ClientBatchJobContext.setSession(session)
         log.info "Starting job : ${jobExecution}\n\n"

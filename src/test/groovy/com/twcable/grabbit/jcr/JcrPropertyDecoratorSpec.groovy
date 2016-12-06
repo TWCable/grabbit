@@ -16,23 +16,26 @@
 
 package com.twcable.grabbit.jcr
 
-import javax.jcr.Property
+import javax.jcr.Property as JCRProperty
 import javax.jcr.nodetype.PropertyDefinition
 import spock.lang.Specification
 import spock.lang.Unroll
 
 
+import static javax.jcr.PropertyType.BINARY
+import static javax.jcr.PropertyType.REFERENCE
+import static javax.jcr.PropertyType.WEAKREFERENCE
 import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED
 import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
 
 @SuppressWarnings("GroovyAssignabilityCheck")
-class JcrPropertyDecoratorSpec extends Specification {
+class JCRPropertyDecoratorSpec extends Specification {
 
     @Unroll
     def "check if property is transferable"() {
         given:
-        Property property = Mock(Property) {
+        JCRProperty property = Mock(JCRProperty) {
             getName() >> propertyName
             getDefinition() >> Mock(PropertyDefinition) {
                 isProtected() >> protectedFlag
@@ -44,7 +47,7 @@ class JcrPropertyDecoratorSpec extends Specification {
         }
 
         when:
-        final propertyDecorator = new JcrPropertyDecorator(property, nodeOwner)
+        final propertyDecorator = new JCRPropertyDecorator(property, nodeOwner)
 
         then:
         expectedOutput == propertyDecorator.isTransferable()
@@ -60,5 +63,23 @@ class JcrPropertyDecoratorSpec extends Specification {
         'protectedProperty' | true          | true           | true              | false
         'rep:privileges'    | true          | true           | false             | true
 
+    }
+
+    def "isReferenceType()"() {
+        when:
+        final JCRProperty property = Mock(JCRProperty) {
+            getType() >> type
+        }
+
+        final jcrPropertyDecorator = new JCRPropertyDecorator(property, Mock(JCRNodeDecorator))
+
+        then:
+        jcrPropertyDecorator.isReferenceType() == expectedValue
+
+        where:
+        type            | expectedValue
+        REFERENCE       | true
+        WEAKREFERENCE   | true
+        BINARY          | false
     }
 }

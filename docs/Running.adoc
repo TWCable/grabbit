@@ -180,20 +180,3 @@ Invalid:
        ]
    }
 ```
-
-=== Syncing Users and Groups
-
-Grabbit has support for syncing users and groups. One *important note* about syncing users is that you must take care to avoid syncing the _admin user_.
-Jackrabbit will not allow modification of the admin user, so Grabbit will fail on a job that attempts to do so. You can find the path of your admin user
-on your data-warehouse instance or other source instance; and add it as an exclude path as so:
-
-```
- pathConfigurations :
-     -
-       path : /home/groups
-     -
-       path : /home/users
-       excludePaths:
-         - k/ki9zhpzfe    #Admin user
-```
-

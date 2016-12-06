@@ -20,62 +20,81 @@ import com.twcable.grabbit.proto.NodeProtos
 import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import com.twcable.grabbit.proto.NodeProtos.Node.Builder as ProtoNodeBuilder
 import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
-import javax.jcr.nodetype.NodeType
-import spock.lang.Specification
-
 import javax.jcr.Node
 import javax.jcr.Property
 import javax.jcr.PropertyIterator
 import javax.jcr.Session
+import javax.jcr.nodetype.NodeType
+import spock.lang.Specification
 
+
+import static javax.jcr.PropertyType.REFERENCE
 import static javax.jcr.PropertyType.STRING
+import static javax.jcr.PropertyType.WEAKREFERENCE
 import static org.apache.jackrabbit.JcrConstants.JCR_MIXINTYPES
 import static org.apache.jackrabbit.JcrConstants.JCR_PRIMARYTYPE
-
 
 class DefaultProtoNodeDecoratorSpec extends Specification {
 
     ProtoNode decoratedProtoNode
     ProtoProperty mixinProperty
     ProtoProperty someOtherProperty
+    ProtoProperty referenceProperty
+    ProtoProperty referencePropertyTwo
+
 
     def setup() {
-        ProtoNodeBuilder nodeBuilder = ProtoNode.newBuilder()
-        nodeBuilder.setName("somenode")
-
         ProtoProperty primaryTypeProperty = NodeProtos.Property
-                .newBuilder()
-                .setName(JCR_PRIMARYTYPE)
-                .setType(STRING)
-                .setMultiple(false)
-                .addValues(NodeProtos.Value.newBuilder().setStringValue(JcrConstants.NT_UNSTRUCTURED))
-                .build()
-        nodeBuilder.addProperties(primaryTypeProperty)
+            .newBuilder()
+            .setName(JCR_PRIMARYTYPE)
+            .setType(STRING)
+            .setMultiple(false)
+            .addValues(NodeProtos.Value.newBuilder().setStringValue(JcrConstants.NT_UNSTRUCTURED))
+            .build()
 
         mixinProperty = NodeProtos.Property
-                .newBuilder()
-                .setName(JCR_MIXINTYPES)
-                .setType(STRING)
-                .setMultiple(true)
-                .addAllValues(
+            .newBuilder()
+            .setName(JCR_MIXINTYPES)
+            .setType(STRING)
+            .setMultiple(true)
+            .addAllValues(
                 [
-                        NodeProtos.Value.newBuilder().setStringValue("somemixintype").build(),
-                        NodeProtos.Value.newBuilder().setStringValue("unwritablemixin").build()
+                    NodeProtos.Value.newBuilder().setStringValue("somemixintype").build(),
+                    NodeProtos.Value.newBuilder().setStringValue("unwritablemixin").build()
                 ]
-        )
-                .build()
-        nodeBuilder.addProperties(mixinProperty)
-
+            ).build()
 
         someOtherProperty = NodeProtos.Property
-                .newBuilder()
-                .setName("someproperty")
-                .setType(STRING)
-                .setMultiple(false)
-                .addValues(NodeProtos.Value.newBuilder().setStringValue("somevalue"))
-                .build()
-        nodeBuilder.addProperties(someOtherProperty)
+            .newBuilder()
+            .setName("someproperty")
+            .setType(STRING)
+            .setMultiple(false)
+            .addValues(NodeProtos.Value.newBuilder().setStringValue("somevalue"))
+            .build()
 
+        referenceProperty = NodeProtos.Property
+            .newBuilder()
+            .setName('jcr:uuid')
+            .setType(WEAKREFERENCE)
+            .setMultiple(false)
+            .addValues(NodeProtos.Value.newBuilder().setStringValue('21232f29-7a57-35a7-8389-4a0e4a801fc3'))
+            .build()
+
+        referencePropertyTwo = NodeProtos.Property
+                .newBuilder()
+                .setName('jcr:uuid')
+                .setType(REFERENCE)
+                .setMultiple(false)
+                .addValues(NodeProtos.Value.newBuilder().setStringValue('41232f29-7a57-35a7-8389-4a0e4a801fc6'))
+                .build()
+
+        ProtoNodeBuilder nodeBuilder = ProtoNode.newBuilder()
+        nodeBuilder.setName("somenode")
+        nodeBuilder.addProperties(primaryTypeProperty)
+        nodeBuilder.addProperties(mixinProperty)
+        nodeBuilder.addProperties(someOtherProperty)
+        nodeBuilder.addProperties(referenceProperty)
+        nodeBuilder.addProperties(referencePropertyTwo)
         decoratedProtoNode = nodeBuilder.build()
     }
 
@@ -110,8 +129,7 @@ class DefaultProtoNodeDecoratorSpec extends Specification {
         final Collection<ProtoPropertyDecorator> properties = protoNodeDecorator.getWritableProperties()
 
         then:
-        properties.size() == 1
-        properties[0].stringValue == "somevalue"
+        properties.size() == 3
     }
 
     def "Can write this ProtoNodeDecorator to the JCR"() {
@@ -133,12 +151,21 @@ class DefaultProtoNodeDecoratorSpec extends Specification {
         }
         final protoPropertyDecorators = [
                 new ProtoPropertyDecorator(mixinProperty),
-                new ProtoPropertyDecorator(someOtherProperty)
+                new ProtoPropertyDecorator(someOtherProperty),
+                new ProtoPropertyDecorator(referenceProperty),
+                new ProtoPropertyDecorator(referencePropertyTwo)
         ]
         final protoNodeDecorator = Spy(DefaultProtoNodeDecorator, constructorArgs: [decoratedProtoNode, protoPropertyDecorators, null]) {
             getOrCreateNode(session) >>  {
                 return jcrNodeRepresentation
             }
+            writeMandatoryPieces(session, 'somenode') >> [
+                Mock(JCRNodeDecorator) {
+                    isReferenceable() >> true
+                    getTransferredID() >> '21232f29-7a57-35a7-8389-4a0e4a801fc3'
+                    getIdentifier() >> '31232f29-7a57-35a7-8389-4a0e4a801fc4'
+                }
+            ]
         }
 
         final jcrNodeDecorator = protoNodeDecorator.writeToJcr(session)

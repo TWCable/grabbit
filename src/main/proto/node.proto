@@ -7,6 +7,7 @@ message Node {
     required string name = 1;
     repeated Property properties = 2;
     repeated Node mandatoryChildNode = 3;
+    optional string identifier = 4;
 }
 
 message Property {
