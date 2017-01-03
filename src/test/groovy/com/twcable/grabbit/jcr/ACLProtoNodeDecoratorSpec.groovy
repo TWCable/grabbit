@@ -29,6 +29,7 @@ import javax.jcr.PathNotFoundException
 import javax.jcr.Property
 import javax.jcr.PropertyIterator
 import javax.jcr.Session
+import javax.jcr.nodetype.NodeType
 import javax.jcr.security.AccessControlEntry
 import javax.jcr.security.AccessControlManager
 import javax.jcr.security.AccessControlPolicy
@@ -148,6 +149,9 @@ class ACLProtoNodeDecoratorSpec extends Specification {
                 it.getString() >> NT_REP_ACL
             }
             it.getName() >> "${ownerNodePath}/rep:policy"
+            it.getPrimaryNodeType() >> Mock(NodeType) {
+                it.canSetProperty(_, _) >> false
+            }
         }
         final Session session = Mock(Session) {
             1 * it.save()
@@ -221,6 +225,9 @@ class ACLProtoNodeDecoratorSpec extends Specification {
                 it.getString() >> NT_REP_ACL
             }
             it.getName() >> "${ownerNodePath}/rep:policy"
+            it.getPrimaryNodeType() >> Mock(NodeType) {
+                it.canSetProperty(_, _) >> false
+            }
         }
         final Session session = Mock(Session) {
             2 * it.save()
@@ -337,6 +344,9 @@ class ACLProtoNodeDecoratorSpec extends Specification {
                 it.getString() >> 'nt:unstructured'
             }
             it.getName() >> ownerNodePath
+            it.getPrimaryNodeType() >> Mock(NodeType) {
+                it.canSetProperty(_, _) >> false
+            }
         }
         final Session session = Mock(Session) {
             it.getNode(ownerNodePath) >> ownerNode

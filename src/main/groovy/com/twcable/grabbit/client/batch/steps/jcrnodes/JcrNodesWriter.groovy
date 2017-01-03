@@ -88,8 +88,7 @@ class JcrNodesWriter implements ItemWriter<ProtoNode>, ItemWriteListener {
     }
 
     private static void writeToJcr(ProtoNode nodeProto, Session session) {
-        JCRNodeDecorator jcrNode = ProtoNodeDecorator.createFrom(nodeProto).writeToJcr(session)
-        jcrNode.setLastModified()
+        ProtoNodeDecorator.createFrom(nodeProto).writeToJcr(session)
     }
 
     private Session theSession() {

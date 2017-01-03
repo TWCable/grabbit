@@ -54,7 +54,7 @@ class ACLProtoNodeDecorator extends ProtoNodeDecorator {
 
 
     @Override
-    JCRNodeDecorator writeToJcr(@Nonnull Session session) {
+    protected JCRNodeDecorator writeNode(@Nonnull Session session) {
         /**
          * We don't write the rep:policy node directly. Rather, we find the rep:policy node's ACE(s) and add them to the
          * owner's existing policy; or we add them to a new policy.

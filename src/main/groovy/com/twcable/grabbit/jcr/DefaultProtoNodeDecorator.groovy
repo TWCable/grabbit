@@ -42,7 +42,7 @@ class DefaultProtoNodeDecorator extends ProtoNodeDecorator {
 
 
     @Override
-    JCRNodeDecorator writeToJcr(@Nonnull Session session) {
+    protected JCRNodeDecorator writeNode(@Nonnull Session session) {
         final jcrNode = getOrCreateNode(session)
         //Write mixin types first to avoid InvalidConstraintExceptions
         final mixinProperty = getMixinProperty()

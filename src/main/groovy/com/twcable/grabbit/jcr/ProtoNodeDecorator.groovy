@@ -32,7 +32,7 @@ abstract class ProtoNodeDecorator {
 
     protected String nameOverride
 
-    abstract JCRNodeDecorator writeToJcr(@Nonnull Session session)
+    protected abstract JCRNodeDecorator writeNode(@Nonnull Session session)
 
     static ProtoNodeDecorator createFrom(@Nonnull ProtoNode node, String nameOverride = null) {
         if(!node) throw new IllegalArgumentException("node must not be null!")
@@ -46,6 +46,14 @@ abstract class ProtoNodeDecorator {
         }
         return new DefaultProtoNodeDecorator(node, protoProperties, nameOverride)
     }
+
+
+    JCRNodeDecorator writeToJcr(@Nonnull Session session) {
+        final JCRNodeDecorator writtenNode = writeNode(session)
+        writtenNode.setLastModified()
+        return writtenNode
+    }
+
 
     boolean hasProperty(String propertyName) {
         propertiesList.any{ it.name == propertyName }

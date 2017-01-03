@@ -26,6 +26,7 @@ import javax.jcr.Node
 import javax.jcr.Property
 import javax.jcr.PropertyIterator
 import javax.jcr.Session
+import javax.jcr.nodetype.NodeType
 import org.apache.jackrabbit.api.security.user.Authorizable
 import org.apache.jackrabbit.api.security.user.Group
 import org.apache.jackrabbit.api.security.user.User
@@ -139,6 +140,9 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
                 getProperties() >> Mock(PropertyIterator) {
                     it.toList() >> []
                 }
+                it.getPrimaryNodeType() >> Mock(NodeType) {
+                    it.canSetProperty(_, _) >> false
+                }
             }
         }
         final protoNodeDecorator = theProtoNodeDecorator(false, false, false) {
@@ -173,6 +177,9 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
                 }
                 getProperties() >> Mock(PropertyIterator) {
                     it.toList() >> []
+                }
+                it.getPrimaryNodeType() >> Mock(NodeType) {
+                    it.canSetProperty(_, _) >> false
                 }
             }
         }
@@ -209,6 +216,9 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
             }
             getProperties() >> Mock(PropertyIterator) {
                 it.toList() >> []
+            }
+            it.getPrimaryNodeType() >> Mock(NodeType) {
+                it.canSetProperty(_, _) >> false
             }
         }
         final session = Mock(Session) {
@@ -248,6 +258,9 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
             getProperties() >> Mock(PropertyIterator) {
                 it.toList() >> []
             }
+            it.getPrimaryNodeType() >> Mock(NodeType) {
+                it.canSetProperty(_, _) >> false
+            }
         }
         final session = Mock(Session) {
             it.getNode('newGroupPath') >> node
@@ -281,6 +294,9 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
             getProperties() >> Mock(PropertyIterator) {
                 it.toList() >> []
             }
+            it.getPrimaryNodeType() >> Mock(NodeType) {
+                it.canSetProperty(_, _) >> false
+            }
         }
         final session = Mock(Session) {
             it.getNode('/home/users/u/newuser') >> node
@@ -313,6 +329,9 @@ class AuthorizableProtoNodeDecoratorSpec extends Specification {
             }
             getProperties() >> Mock(PropertyIterator) {
                 it.toList() >> []
+            }
+            it.getPrimaryNodeType() >> Mock(NodeType) {
+                it.canSetProperty(_, _) >> false
             }
         }
         final session = Mock(Session) {

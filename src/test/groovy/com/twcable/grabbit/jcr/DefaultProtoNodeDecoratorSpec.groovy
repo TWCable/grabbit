@@ -20,6 +20,7 @@ import com.twcable.grabbit.proto.NodeProtos
 import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import com.twcable.grabbit.proto.NodeProtos.Node.Builder as ProtoNodeBuilder
 import com.twcable.grabbit.proto.NodeProtos.Property as ProtoProperty
+import javax.jcr.nodetype.NodeType
 import spock.lang.Specification
 
 import javax.jcr.Node
@@ -125,6 +126,9 @@ class DefaultProtoNodeDecoratorSpec extends Specification {
             }
             getProperties() >> Mock(PropertyIterator) {
                 toList() >> []
+            }
+            it.getPrimaryNodeType() >> Mock(NodeType) {
+                it.canSetProperty(_, _) >> false
             }
         }
         final protoPropertyDecorators = [

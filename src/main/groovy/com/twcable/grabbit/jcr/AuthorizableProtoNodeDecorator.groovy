@@ -52,7 +52,7 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
 
 
     @Override
-    JCRNodeDecorator writeToJcr(@Nonnull Session session) {
+    protected JCRNodeDecorator writeNode(@Nonnull Session session) {
         if(!checkSecurityPermissions()) {
             throw new InsufficientGrabbitPrivilegeException("JVM Permissions needed by Grabbit to sync Users/Groups were not found. See log for specific permissions needed, and add these to your security manager; or do not sync users and groups." +
                                                             "Unfortunately, the way Jackrabbit goes about certain things requires us to do a bit of hacking in order to sync Authorizables securely, and efficiently.")
