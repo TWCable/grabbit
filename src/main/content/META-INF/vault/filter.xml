@@ -3,5 +3,6 @@
     Defines which repository items are generally included
 -->
 <workspaceFilter vesion="1.0">
-    <filter root="/apps/grabbit" />
+    <filter root="/apps/grabbit/config"/>
+    <filter root="/apps/grabbit/install"/>
 </workspaceFilter>
