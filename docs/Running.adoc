@@ -36,6 +36,10 @@ image::../assets/monitor.png[Monitor Jobs]
 
 See link:Monitoring.adoc[Monitoring / Validating the Content Sync] for information on evaluating the returned information.
 
+=== Stopping a Job
+
+From the main screen, enter "s" to stop an existing job. You will be prompted to enter a job id. Enter the job id that you wish to terminate.
+
 
 ==== Configuration
 

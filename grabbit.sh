@@ -88,6 +88,19 @@ function monitorStatus {
     done
 }
 
+function stopJob {
+    echo "Enter jobID to stop, or \"b\" to go back"
+    read selection
+    if [ "$selection" == "b" ]; then
+    echo "*****************************************************"
+       return
+    fi
+    statusJson=`curl -s -u $username:$password --request DELETE $client$GRABBIT_JOB"?jobId="$selection`
+    echo
+    echo "$statusJson"
+}
+
+
 clear
 echo $SET_BLUE
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
@@ -105,12 +118,14 @@ echo "Client Password :"
 read -s password
 
 while true; do
-    echo "Enter \"n\" for new job request, \"m\" to monitor, or \"q\" to quit"
+    echo "Enter \"n\" for new job request, \"m\" to monitor, \"s\" to stop a job, or \"q\" to quit"
     read selection
     if [ "$selection" == "n" ]; then
         newGrabbitRequest
     elif [ "$selection" == "m" ]; then
         monitorStatus
+    elif [ "$selection" == "s" ]; then
+        stopJob
     elif [ "$selection" == "q" ]; then
         exit 0;
     else

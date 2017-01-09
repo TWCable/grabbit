@@ -27,6 +27,9 @@ import org.apache.sling.api.resource.Resource
 import org.apache.sling.api.resource.ResourceMetadata
 import org.springframework.batch.core.JobParameters
 import org.springframework.batch.core.explore.JobExplorer
+import org.springframework.batch.core.launch.JobExecutionNotRunningException
+import org.springframework.batch.core.launch.NoSuchJobExecutionException
+import org.springframework.batch.core.launch.support.SimpleJobOperator
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Specification
 import spock.lang.Subject
@@ -37,6 +40,7 @@ import static com.twcable.grabbit.client.servlets.GrabbitJobServlet.ALL_JOBS_ID
 import static com.twcable.grabbit.testutil.StubInputStream.inputStream
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
 import static javax.servlet.http.HttpServletResponse.SC_OK
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
 
 @Subject(GrabbitJobServlet)
 class GrabbitJobServletSpec extends Specification {
@@ -232,4 +236,38 @@ class GrabbitJobServletSpec extends Specification {
         inputStream << [inputStream(" "), inputStream("foo: 'foo'")]
         //One causes SnakeYAML to produce a null config map, and the other does not pass our validations (missing values)
     }
+
+    def "Stop job response check with differnt set of jobId parameter"() {
+        given:
+        SlingHttpServletRequest request = Mock(SlingHttpServletRequest) {
+            getParameter("jobId") >> inputJobId
+        }
+        SlingHttpServletResponse response = Mock(SlingHttpServletResponse) {
+            getWriter() >> Mock(PrintWriter)
+        }
+        GrabbitJobServlet servlet = new GrabbitJobServlet()
+        final applicationContext = Mock(ConfigurableApplicationContext) {
+            getBean(SimpleJobOperator) >> Mock(SimpleJobOperator) {
+                stop(123L) >> true
+                stop(222L) >> {throw new NoSuchJobExecutionException("Job does not exist")}
+                stop(333L) >> {throw new JobExecutionNotRunningException("Job not running")}
+            }
+        }
+        servlet.setConfigurableApplicationContext(applicationContext)
+
+        when:
+        servlet.doDelete(request, response)
+
+        then:
+        1 * response.setStatus(expectedResponse)
+
+        where:
+        inputJobId  | expectedResponse
+        123L        | SC_OK
+        222L        | SC_NOT_FOUND
+        333L        | SC_OK
+        "aaa"       | SC_BAD_REQUEST
+        ""          | SC_BAD_REQUEST
+    }
+
 }

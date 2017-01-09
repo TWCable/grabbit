@@ -32,10 +32,14 @@ import org.apache.sling.api.SlingHttpServletRequest
 import org.apache.sling.api.SlingHttpServletResponse
 import org.apache.sling.api.servlets.SlingAllMethodsServlet
 import org.springframework.batch.core.explore.JobExplorer
+import org.springframework.batch.core.launch.JobExecutionNotRunningException
+import org.springframework.batch.core.launch.NoSuchJobExecutionException
+import org.springframework.batch.core.launch.support.SimpleJobOperator
 import org.springframework.context.ConfigurableApplicationContext
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
 import static javax.servlet.http.HttpServletResponse.SC_OK
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
 
 /**
  * This servlet is used to manage Grabbit jobs.
@@ -49,7 +53,7 @@ import static javax.servlet.http.HttpServletResponse.SC_OK
  */
 @Slf4j
 @CompileStatic
-@SlingServlet(methods = ['GET', 'PUT'], resourceTypes = ['twcable:grabbit/job'])
+@SlingServlet(methods = ['GET', 'PUT', 'DELETE'], resourceTypes = ['twcable:grabbit/job'])
 class GrabbitJobServlet extends SlingAllMethodsServlet {
 
     //A "special" meta-jobID that allows for the status of all jobs to be queried.
@@ -145,6 +149,38 @@ class GrabbitJobServlet extends SlingAllMethodsServlet {
         response.contentType = "application/json"
         response.addHeader("GRABBIT_TRANSACTION_ID", String.valueOf(configuration.transactionID))
         response.writer.write(new JsonBuilder(jobExecutionIds).toString())
+    }
+
+    @Override
+    protected void doDelete(SlingHttpServletRequest request, SlingHttpServletResponse response)  {
+        String jobExecutionId = request.getParameter("jobId") ?: ""
+
+        if(jobExecutionId == ALL_JOBS_ID) {
+            response.setStatus(SC_BAD_REQUEST)
+            response.writer.write("Stopping 'all' jobs is not supported. Please specify single job id")
+            return
+        }
+        if(!jobExecutionId.isLong()) {
+            log.warn "Parameter ${jobExecutionId} 'jobId' is invalid"
+            response.status = SC_BAD_REQUEST
+            response.writer.write("Parameter 'jobId' is invalid")
+            return
+        }
+        try {
+            SimpleJobOperator jobOperator = configurableApplicationContext.getBean(SimpleJobOperator)
+            jobOperator.stop(jobExecutionId.toLong())
+            response.status = SC_OK
+            response.writer.write("Job ${jobExecutionId} Successfully Stopped")
+        }
+        catch (NoSuchJobExecutionException noSuchJobExc){
+            response.status = SC_NOT_FOUND
+            response.writer.write("No suhc job exists with id ${jobExecutionId}")
+        }
+        catch (JobExecutionNotRunningException jobNotRunningExc){
+            response.status = SC_OK
+            response.writer.write("Job already complete for id ${jobExecutionId}. Nothing to Stop")
+        }
+
     }
 
     /**
