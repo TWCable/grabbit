@@ -2,6 +2,11 @@
 
 [ ![Download](https://api.bintray.com/packages/twcable/aem/Grabbit/images/download.svg) ](https://bintray.com/twcable/aem/Grabbit/_latestVersion)
 
+## 7.1.0
+* Support for writing rep:policy nodes
+* Bug fixes
+* Performance improvements
+
 ## 7.0.2
 * Bug fixes
 
