@@ -2,7 +2,7 @@
     <primaryNodeType>sling:OsgiConfig</primaryNodeType>
     <property>
         <name>org.apache.sling.commons.log.file</name>
-        <value>logs/batch-server.log</value>
+        <value>logs/grabbit-receive.log</value>
         <type>String</type>
     </property>
 
@@ -14,7 +14,7 @@
 
     <property>
         <name>org.apache.sling.commons.log.names</name>
-        <value>com.twcable.grabbit.server</value>
+        <value>com.twcable.grabbit.client</value>
         <type>String</type>
     </property>
 
