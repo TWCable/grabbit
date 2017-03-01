@@ -66,6 +66,8 @@ class CreateHttpConnectionTasklet implements Tasklet {
 
         final Connection connection = createConnection(request, username, password)
 
+        ClientBatchJobContext.setInputStream(connection.inputStream)
+
         if(connection.status != SC_OK) {
             log.warn "Received a status of ${connection.status} when attempting to create a connection to ${jobParameters.get(ClientBatchJob.HOST)}. Bailing out. See debug log for more details."
             log.debug "Request to start a connection with ${jobParameters.get(ClientBatchJob.HOST)} resulted in: ${connection.networkResponse}."
@@ -73,7 +75,6 @@ class CreateHttpConnectionTasklet implements Tasklet {
             return RepeatStatus.FINISHED
         }
 
-        ClientBatchJobContext.setInputStream(connection.inputStream)
         return RepeatStatus.FINISHED
     }
 

@@ -81,14 +81,17 @@ class CreateHttpConnectionTaskletSpec extends Specification {
         final StepContribution stepContribution = Mock(StepContribution) {
             1 * setExitStatus(ExitStatus.FAILED)
         }
+        final InputStream inputStream = Mock(InputStream)
         final CreateHttpConnectionTasklet tasklet = Spy(CreateHttpConnectionTasklet) {
             createConnection(_, 'username', 'password') >> Mock(Connection) {
                 getStatus() >> SC_BAD_GATEWAY
+                getInputStream() >> inputStream
             }
         }
 
         then:
         tasklet.execute(stepContribution, chunkContext) == RepeatStatus.FINISHED
+        ClientBatchJobContext.inputStream != null
     }
 
 
