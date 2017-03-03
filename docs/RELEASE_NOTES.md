@@ -2,6 +2,11 @@
 
 [ ![Download](https://api.bintray.com/packages/twcable/aem/Grabbit/images/download.svg) ](https://bintray.com/twcable/aem/Grabbit/_latestVersion)
 
+## 7.1.1
+* Bug fixes
+* Documentation changes
+* Log names are now changed from batch-client.log to grabbit-receive.log; and batch-server.log to grabbit-send.log
+
 ## 7.1.0
 * Support for writing rep:policy nodes
 * Bug fixes
