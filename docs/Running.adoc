@@ -120,7 +120,7 @@ The corresponding `YAML` configuration for the JSON above will look something li
 ```
 ===== Required fields
 
-* __serverHost__: The server host to receive content.
+* __serverHost__: The server host to pull content from.
 * __serverPort__: Server port for host above.
 * __serverUsername__: Username for sending server authentication.
 * __serverPassword__: Password for sending server authentication.
