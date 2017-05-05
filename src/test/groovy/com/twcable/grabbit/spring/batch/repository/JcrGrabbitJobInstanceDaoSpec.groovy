@@ -181,4 +181,55 @@ class JcrGrabbitJobInstanceDaoSpec extends Specification {
         result.size() == 2
     }
 
+    def "CreateJobInstance for empty repository"() {
+        setup:
+        final builder =
+                node("var",
+                        node("grabbit",
+                                node("job",
+                                        node("repository",
+                                                node("jobInstances"),
+                                                node("jobExecutions")
+                                        )
+                                )
+                        )
+                )
+        final emptyMockFactory = new SimpleResourceResolverFactory(repository(builder).build())
+
+        when:
+        final jobInstanceDao = new JcrGrabbitJobInstanceDao(emptyMockFactory)
+        final result = jobInstanceDao.createJobInstance("FirstJob", new JobParameters())
+
+        then:
+        result.id == 1
+    }
+
+    def "CreateJobInstance for partial repository"() {
+        setup:
+        final builder =
+                node("var",
+                        node("grabbit",
+                                node("job",
+                                        node("repository",
+                                                node("jobInstances",
+                                                        node("2",
+                                                                property(INSTANCE_ID, 2),
+                                                                property(NAME, "someOtherJob"),
+                                                        )
+                                                ),
+                                                node("jobExecutions")
+                                        )
+                                )
+                        )
+                )
+        final partialMockFactory = new SimpleResourceResolverFactory(repository(builder).build())
+
+        when:
+        final jobInstanceDao = new JcrGrabbitJobInstanceDao(partialMockFactory)
+        final result = jobInstanceDao.createJobInstance("FirstJob", new JobParameters())
+
+        then:
+        result.id == 3
+    }
+
 }

@@ -257,10 +257,21 @@ class JcrGrabbitJobInstanceDao extends AbstractJcrDao implements GrabbitJobInsta
         if (!resolver) throw new IllegalArgumentException("resolver == null")
 
         final rootResource = resolver.getResource(JOB_INSTANCE_ROOT)
-        final nextId = (rootResource.children.asList().size() + 1) as Long
+
+        final lastInstance = rootResource?.children?.asList()?.max { Resource resource ->
+            final properties = resource.adaptTo(ValueMap)
+            properties[INSTANCE_ID] as Long
+        }
+        final lastInstanceProperties = lastInstance?.adaptTo(ValueMap)
+        Long nextId = lastInstanceProperties?.get(INSTANCE_ID) as Long
+        if (!nextId) {
+            nextId = 1
+        } else {
+            nextId += 1
+        }
+
         log.debug "Next JobInstance Id : $nextId"
         nextId
-
     }
 
     @Override
