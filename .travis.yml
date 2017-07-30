@@ -6,10 +6,11 @@ cache:
     - $HOME/.gradle
     - $HOME/protobuf
 
+dist: trusty
+
 jdk:
-  - oraclejdk7
   - oraclejdk8
-  - openjdk7
+  - openjdk8
 
 # Allow running on a container instead of a traditional VM
 sudo: false
