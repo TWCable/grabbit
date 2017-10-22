@@ -20,21 +20,17 @@ import com.twcable.grabbit.client.batch.ClientBatchJobContext
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import java.util.concurrent.TimeUnit
-import javax.annotation.Nonnull
-import okhttp3.Authenticator
-import okhttp3.Credentials
-import okhttp3.HttpUrl
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import okhttp3.Route
+import okhttp3.*
+import okhttp3.OkHttpClient.Builder as HttpClientBuilder
+import okhttp3.Request.Builder as RequestBuilder
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.StepContribution
 import org.springframework.batch.core.scope.context.ChunkContext
 import org.springframework.batch.core.step.tasklet.Tasklet
 import org.springframework.batch.repeat.RepeatStatus
 
+import javax.annotation.Nonnull
+import java.util.concurrent.TimeUnit
 
 import static javax.servlet.http.HttpServletResponse.SC_OK
 import static okhttp3.HttpUrl.Builder as HttpUrlBuilder
@@ -57,14 +53,7 @@ class CreateHttpConnectionTasklet implements Tasklet {
     RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
         final Map jobParameters = chunkContext.stepContext.jobParameters
 
-        Request request = new Request.Builder()
-            .url(getURLForRequest(jobParameters))
-            .build()
-
-        final String username = (String)jobParameters.get(ClientBatchJob.SERVER_USERNAME)
-        final String password = (String)jobParameters.get(ClientBatchJob.SERVER_PASSWORD)
-
-        final Connection connection = createConnection(request, username, password)
+        final Connection connection = createConnection(jobParameters)
 
         ClientBatchJobContext.setInputStream(connection.inputStream)
 
@@ -79,23 +68,19 @@ class CreateHttpConnectionTasklet implements Tasklet {
     }
 
 
-    Connection createConnection(@Nonnull final Request request, @Nonnull final String username, @Nonnull final String password) {
-        final OkHttpClient client = new OkHttpClient.Builder()
-                                            .authenticator(
-                                                new Authenticator() {
-                                                    @Override
-                                                    Request authenticate(Route route, Response response) throws IOException {
-                                                        return response.request().newBuilder()
-                                                                .addHeader('Authorization', Credentials.basic(username, password))
-                                                                .build()
-                                                    }
-                                                }
-                                            )
-                                            .connectTimeout(1L, TimeUnit.MINUTES)
-                                            .readTimeout(1L, TimeUnit.MINUTES)
-                                            .writeTimeout(1L, TimeUnit.MINUTES)
-                                            .retryOnConnectionFailure(true)
-                                            .build()
+    Connection createConnection(@Nonnull final Map jobParameters) {
+
+        final String username = (String)jobParameters.get(ClientBatchJob.SERVER_USERNAME)
+        final String password = (String)jobParameters.get(ClientBatchJob.SERVER_PASSWORD)
+
+        final Request request = new RequestBuilder()
+                .url(getURLForRequest(jobParameters))
+                .addHeader('Authorization', Credentials.basic(username, password))
+                .build()
+
+
+        final OkHttpClient client = getNewHttpClient()
+
         final Response response = client.newCall(request).execute()
         //We return response information in a connection like this because it's clear, but also because Response is a final class that we can not easily mock
         return new Connection(response.body().byteStream(), response.networkResponse(), response.code())
@@ -121,6 +106,16 @@ class CreateHttpConnectionTasklet implements Tasklet {
         }
 
         return urlBuilder.build()
+    }
+
+
+    private OkHttpClient getNewHttpClient() {
+        return new HttpClientBuilder()
+                .connectTimeout(1L, TimeUnit.MINUTES)
+                .readTimeout(1L, TimeUnit.MINUTES)
+                .writeTimeout(1L, TimeUnit.MINUTES)
+                .retryOnConnectionFailure(true)
+                .build()
     }
 
 

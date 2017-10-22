@@ -25,16 +25,12 @@ import org.springframework.batch.core.scope.context.StepContext
 import org.springframework.batch.repeat.RepeatStatus
 import spock.lang.Specification
 
-
 import static com.twcable.grabbit.client.batch.steps.http.CreateHttpConnectionTasklet.Connection
 import static javax.servlet.http.HttpServletResponse.SC_BAD_GATEWAY
 import static javax.servlet.http.HttpServletResponse.SC_OK
 
 class CreateHttpConnectionTaskletSpec extends Specification {
 
-    def cleanup() {
-        ClientBatchJobContext.inputStream = null
-    }
 
     def getMockJobParameters() {
         return [
@@ -59,7 +55,7 @@ class CreateHttpConnectionTaskletSpec extends Specification {
         }
         final InputStream inputStream = Mock(InputStream)
         final CreateHttpConnectionTasklet tasklet = Spy(CreateHttpConnectionTasklet) {
-            createConnection(_, 'username', 'password') >> Mock(Connection) {
+            createConnection(getMockJobParameters()) >> Mock(Connection) {
                 getStatus() >> SC_OK
                 getInputStream() >> inputStream
             }
@@ -83,7 +79,7 @@ class CreateHttpConnectionTaskletSpec extends Specification {
         }
         final InputStream inputStream = Mock(InputStream)
         final CreateHttpConnectionTasklet tasklet = Spy(CreateHttpConnectionTasklet) {
-            createConnection(_, 'username', 'password') >> Mock(Connection) {
+            createConnection(getMockJobParameters()) >> Mock(Connection) {
                 getStatus() >> SC_BAD_GATEWAY
                 getInputStream() >> inputStream
             }
