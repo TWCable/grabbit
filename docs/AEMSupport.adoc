@@ -4,6 +4,7 @@
 * One-time installation of a system Fragment Bundle is needed. It can be found link:https://bintray.com/artifact/download/twcable/aem/dependencies/Sun-Misc-Fragment-Bundle-1.0.0.zip[here]
 * If running AEM 6.2+ with the AEM Deserialization Firewall enabled, link:https://bintray.com/twcable/aem/download_file?file_path=dependencies%2FGrabbit-Deserialization-Firewall-Configuration-1.0.zip[this package] is required in order
 for Grabbit to work. If running the deserialization firewall with custom blacklist/whitelist rules, check out the package description to gather which additional paths will need to be considered.
+* In Addition to the AEM Deserialization Firewall package, you would need to install link:https://bintray.com/artifact/download/twcable/aem/dependencies/Grabbit-Apache-Sling-Login-Whitelist-1.0.zip[this] to have the grabbit bundle be whitelisted with Apache Sling Login Admin.
 
 == Below details AEM version support for the various releases of Grabbit.
 ```
