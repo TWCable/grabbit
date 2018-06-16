@@ -53,6 +53,6 @@ final class ExcludePathNodeIterator implements Iterator<JcrNode> {
     }
 
     private boolean isPathInExcludedList(String path) {
-        return excludePathList.any { path.startsWith(it) }
+        return excludePathList.any { path.equals(it) || path.startsWith("${it}/") }
     }
 }

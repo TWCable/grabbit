@@ -80,4 +80,34 @@ class ExcludePathNodeIteratorSpec extends Specification {
         root.getName() == "page"
         firstChild.getName() == "jcr:content"
     }
+
+    def "Can create an exclusion iterator for a node with exclusions and similar siblings"() {
+        given:
+        FakeNodeBuilder fakeNodeBuilder =
+                node("page",
+                        node("jcr:content",
+                                property("jcr:data", "foo")
+                        ),
+                        node("childpage",
+                                property("jcr:primaryType", "cq:Page"),
+                        ),
+                        node("childpage1",
+                                property("jcr:primaryType", "cq:Page"),
+                        ),
+                        node("childpage2",
+                                property("jcr:primaryType", "cq:Page"),
+                        )
+                )
+        JcrNode rootNode = fakeNodeBuilder.build()
+
+        when:
+        final nodeIterator = new ExcludePathNodeIterator(new RootNodeWithMandatoryIterator(rootNode), ["page/childpage"] as Collection)
+        final root = nodeIterator.next()
+        def childNodes = nodeIterator.collect()
+
+        then:
+        root.getName() == "page"
+        childNodes.size() == 3
+        childNodes.find { JcrNode node -> node.getName() == "childpage" } == null
+    }
 }
