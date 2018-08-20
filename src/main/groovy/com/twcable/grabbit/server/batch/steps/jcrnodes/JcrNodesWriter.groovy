@@ -41,7 +41,7 @@ class JcrNodesWriter implements ItemWriter<NodeProtos.Node>, ItemWriteListener {
         if (servletOutputStream == null) throw new IllegalStateException("servletOutputStream must be set.")
 
         nodeProtos.each { NodeProtos.Node node ->
-            log.debug "Sending NodeProto : ${node}"
+            log.debug "Sending NodeProto : ${node.name}"
             node.writeDelimitedTo(servletOutputStream)
         }
     }
